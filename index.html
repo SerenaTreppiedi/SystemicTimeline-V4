@@ -405,6 +405,11 @@
             transform: scale(1.25);
         }
 
+        .event.cluster-selected .event-dot {
+            box-shadow: 0 0 0 3px #FFFFFF, 0 0 14px 5px rgba(255, 255, 255, 0.8);
+            transform: scale(1.3);
+        }
+
         /* Eventi corrispondenti a una ricerca attiva: sempre in primo piano */
         .event.force-open {
             z-index: 300001;
@@ -1868,6 +1873,7 @@ if (event.systemdynamic) {
                 if (event.systemdynamic) tagList.push('systemdynamic');
                 eventElement.setAttribute('data-tags', tagList.join(','));
                 eventElement.setAttribute('data-clusters', (event.clusters || []).join(','));
+                eventElement.setAttribute('data-full-key', event.fullKey);
 
                 // Il titolo mostrato dipende dalla lingua attiva (con eventuale
                 // titolo alternativo inglese dal database, se presente)
@@ -2568,16 +2574,36 @@ function buildEventDetailHtml(event, color) {
 let currentDetailEvent = null;
 let currentDetailColor = null;
 
-// Al click su un evento, "illumina" gli altri eventi che condividono
-// almeno un cluster tematico, attenuando tutti gli altri.
+// Al click su un evento (desktop): marca il pallino selezionato, mostra la
+// linea verticale di confronto, e "illumina" gli altri eventi che
+// condividono almeno un cluster tematico, attenuando tutti gli altri.
+// Tutto resta finché la scheda di approfondimento non viene chiusa.
 function highlightCluster(clickedEvent) {
-    document.querySelectorAll('.event').forEach(el => el.classList.remove('cluster-glow', 'cluster-dim'));
+    document.querySelectorAll('.event').forEach(el => el.classList.remove('cluster-glow', 'cluster-dim', 'cluster-selected'));
+
+    let clickedEl = null;
+    document.querySelectorAll('.event').forEach(el => {
+        if (el.getAttribute('data-full-key') === clickedEvent.fullKey) clickedEl = el;
+    });
+    if (!clickedEl) return;
+
+    clickedEl.classList.add('cluster-selected');
+
+    const verticalLine = document.getElementById('verticalLine');
+    if (verticalLine) {
+        const eventRect = clickedEl.getBoundingClientRect();
+        const timelineContainerRect = document.querySelector('.timeline-container').getBoundingClientRect();
+        verticalLine.style.transition = 'opacity 0.2s ease';
+        verticalLine.style.left = (eventRect.left - timelineContainerRect.left + eventRect.width / 2) + 'px';
+        verticalLine.classList.add('active');
+    }
 
     if (!clickedEvent.clusters || clickedEvent.clusters.length === 0) return;
 
     const allEvents = document.querySelectorAll('.event');
     let anyMatch = false;
     allEvents.forEach(el => {
+        if (el === clickedEl) return;
         const elClusters = (el.getAttribute('data-clusters') || '').split(',').filter(Boolean);
         const shared = elClusters.some(c => clickedEvent.clusters.includes(c));
         if (shared) {
@@ -2588,13 +2614,15 @@ function highlightCluster(clickedEvent) {
 
     if (anyMatch) {
         allEvents.forEach(el => {
-            if (!el.classList.contains('cluster-glow')) el.classList.add('cluster-dim');
+            if (el !== clickedEl && !el.classList.contains('cluster-glow')) el.classList.add('cluster-dim');
         });
     }
 }
 
 function clearClusterHighlight() {
-    document.querySelectorAll('.event').forEach(el => el.classList.remove('cluster-glow', 'cluster-dim'));
+    document.querySelectorAll('.event').forEach(el => el.classList.remove('cluster-glow', 'cluster-dim', 'cluster-selected'));
+    const verticalLine = document.getElementById('verticalLine');
+    if (verticalLine) verticalLine.classList.remove('active');
 }
 
 // Versione mobile: l'illuminazione non può restare "agganciata" a un

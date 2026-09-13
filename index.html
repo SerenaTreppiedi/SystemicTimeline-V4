@@ -672,7 +672,7 @@
 
 .detail-desc {
     color: rgba(255, 255, 255, 0.85);
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     line-height: 1.6;
     margin: 0 0 1rem;
 }
@@ -688,8 +688,8 @@
    coprire la timeline, così si può continuare a esplorare mentre è aperto. */
 .detail-panel {
     position: fixed;
-    top: 160px;
-    bottom: 70px;
+    top: 130px;
+    bottom: 100px;
     right: 12px;
     width: 320px;
     max-width: 85vw;
@@ -697,7 +697,7 @@
     border: 2px solid #BF953F;
     border-radius: 10px;
     box-shadow: -8px 0 25px rgba(0, 0, 0, 0.5);
-    z-index: 250000;
+    z-index: 310000;
     padding: 1.3rem 1.1rem;
     overflow-y: auto;
     transform: translateX(calc(100% + 24px));
@@ -1482,6 +1482,7 @@ systemicdesign,
 systemdynamic,
                         image: String(row['Immagine_URL'] || '').trim(),
                         place: String(row['Luogo'] || '').trim(),
+                        placeEN: String(row['Luogo_EN'] || '').trim(),
                         descLong: String(row['Descrizione_estesa'] || '').trim(),
                         descLongEN: String(row['Descrizione_estesa_EN'] || '').trim(),
                         linkUrl: String(row['Link_URL'] || '').trim(),
@@ -1724,6 +1725,10 @@ function resetZoom() {
       
         
 window.addEventListener('wheel', function(e) {
+    if (e.target.closest('.detail-panel') || e.target.closest('.mobile-popup') || e.target.closest('.info-popup')) {
+        // Lascia scrollare normalmente il contenuto interno di pannelli/popup
+        return;
+    }
     const container = document.querySelector('.timeline-container');
     if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
         // Scroll orizzontale del trackpad: lascialo fare normalmente
@@ -2256,7 +2261,8 @@ function buildEventDetailHtml(event, color) {
     if (event.systemdynamic) tags += '<span class="detail-dot" style="background:#A42134" title="System Dynamic"></span>';
 
     const imageHtml = event.image ? `<img class="detail-image" src="${event.image}" alt="" onerror="this.style.display='none'">` : '';
-    const placeHtml = event.place ? `<div class="detail-place">${event.place}</div>` : '';
+    const place = langMode === 'it' ? event.place : (event.placeEN || event.place);
+    const placeHtml = place ? `<div class="detail-place">${place}</div>` : '';
     const descHtml = desc ? `<p class="detail-desc">${desc}</p>` : '';
     const linkHtml = event.linkUrl ? `<a class="detail-link" href="${event.linkUrl}" target="_blank" rel="noopener">${linkLabel} ↗</a>` : '';
 

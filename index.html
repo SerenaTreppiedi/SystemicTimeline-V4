@@ -401,12 +401,12 @@
         }
 
         .event.cluster-glow .event-dot {
-            box-shadow: 0 0 0 3px rgba(191, 149, 63, 0.9), 0 0 12px 4px rgba(191, 149, 63, 0.6);
+            box-shadow: 0 0 0 2px rgba(191, 149, 63, 0.9), 0 0 6px 1px rgba(191, 149, 63, 0.6);
             transform: scale(1.25);
         }
 
         .event.cluster-selected .event-dot {
-            box-shadow: 0 0 0 3px #FFFFFF, 0 0 14px 5px rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 0 2px #FFFFFF, 0 0 6px 1px rgba(255, 255, 255, 0.8);
             transform: scale(1.3);
         }
 
@@ -1890,6 +1890,7 @@ if (event.systemdynamic) {
                 `;
 
                 eventElement.addEventListener('mouseenter', function (e) {
+                    if (verticalLineLocked) return;
                     const verticalLine = document.getElementById('verticalLine');
                     const eventRect = eventElement.getBoundingClientRect();
                     const timelineContainerRect = timelineContainer.getBoundingClientRect();
@@ -1900,6 +1901,7 @@ if (event.systemdynamic) {
                 });
 
                 eventElement.addEventListener('mouseleave', function () {
+                    if (verticalLineLocked) return;
                     const verticalLine = document.getElementById('verticalLine');
                     verticalLine.classList.remove('active');
                 });
@@ -1909,7 +1911,7 @@ if (event.systemdynamic) {
                     const color = getComputedStyle(eventElement.closest('.timeline')).getPropertyValue('--timeline-color').trim();
                     openEventDetail(event, color);
                     if (isMobileViewport()) {
-                        highlightClusterTemporary(event, eventElement);
+                        highlightClusterTemporary(event);
                     } else {
                         highlightCluster(event);
                     }
@@ -1955,8 +1957,22 @@ function reapplyStateAfterRerender() {
         const panelOpen = document.getElementById('detailPanel').classList.contains('active');
         if (panelOpen) highlightCluster(currentDetailEvent);
     }
+    if (isMobileViewport() && mobileHighlightEvent) {
+        highlightClusterTemporary(mobileHighlightEvent);
+    }
 }
         function getCenterFraction() {
+    // Se un evento è selezionato (scheda aperta o illuminazione mobile
+    // attiva), lo zoom si centra su di lui invece che sul centro visibile.
+    const focusEvent = (!isMobileViewport() && currentDetailEvent &&
+        document.getElementById('detailPanel').classList.contains('active'))
+        ? currentDetailEvent
+        : (isMobileViewport() ? mobileHighlightEvent : null);
+
+    if (focusEvent) {
+        return (focusEvent.year - minYear) / (maxYear - minYear);
+    }
+
     const totalWidth = baseWidthPx * currentZoom;
     const viewportWidth = document.body.clientWidth;
     const centerX = document.body.scrollLeft + viewportWidth / 2;
@@ -2573,12 +2589,17 @@ function buildEventDetailHtml(event, color) {
 
 let currentDetailEvent = null;
 let currentDetailColor = null;
+// Quando true, l'hover sui pallini non deve spostare/nascondere la linea
+// verticale: c'è una selezione attiva (click desktop o tap mobile) che
+// deve restare ferma finché non viene chiusa/esaurita.
+let verticalLineLocked = false;
 
 // Al click su un evento (desktop): marca il pallino selezionato, mostra la
 // linea verticale di confronto, e "illumina" gli altri eventi che
 // condividono almeno un cluster tematico, attenuando tutti gli altri.
 // Tutto resta finché la scheda di approfondimento non viene chiusa.
 function highlightCluster(clickedEvent) {
+    verticalLineLocked = true;
     document.querySelectorAll('.event').forEach(el => el.classList.remove('cluster-glow', 'cluster-dim', 'cluster-selected'));
 
     let clickedEl = null;
@@ -2620,6 +2641,7 @@ function highlightCluster(clickedEvent) {
 }
 
 function clearClusterHighlight() {
+    verticalLineLocked = false;
     document.querySelectorAll('.event').forEach(el => el.classList.remove('cluster-glow', 'cluster-dim', 'cluster-selected'));
     const verticalLine = document.getElementById('verticalLine');
     if (verticalLine) verticalLine.classList.remove('active');
@@ -2640,8 +2662,18 @@ function setDotStyle(dotEl, style, duration) {
     dotEl.style.transform = style.transform !== undefined ? style.transform : '';
 }
 
-function highlightClusterTemporary(clickedEvent, clickedEl) {
+let mobileHighlightEvent = null;
+
+function highlightClusterTemporary(clickedEvent) {
     clearTimeout(mobileHighlightTimer);
+    verticalLineLocked = true;
+    mobileHighlightEvent = clickedEvent;
+
+    let clickedEl = null;
+    document.querySelectorAll('.event').forEach(el => {
+        if (el.getAttribute('data-full-key') === clickedEvent.fullKey) clickedEl = el;
+    });
+    if (!clickedEl) return;
 
     const verticalLine = document.getElementById('verticalLine');
     const allDots = document.querySelectorAll('.event-dot');
@@ -2652,7 +2684,7 @@ function highlightClusterTemporary(clickedEvent, clickedEl) {
     // Marca il pallino toccato (in modo diverso dai correlati) e posiziona
     // la linea verticale di confronto tra le timeline
     setDotStyle(clickedEl.querySelector('.event-dot'), {
-        boxShadow: '0 0 0 3px #FFFFFF, 0 0 14px 5px rgba(255,255,255,0.8)',
+        boxShadow: '0 0 0 2px #FFFFFF, 0 0 6px 1px rgba(255,255,255,0.8)',
         transform: 'scale(1.3)'
     }, 150);
 
@@ -2673,7 +2705,7 @@ function highlightClusterTemporary(clickedEvent, clickedEl) {
 
         if (related.length > 0) {
             related.forEach(el => setDotStyle(el.querySelector('.event-dot'), {
-                boxShadow: '0 0 0 3px rgba(191,149,63,0.9), 0 0 12px 4px rgba(191,149,63,0.6)',
+                boxShadow: '0 0 0 2px rgba(191,149,63,0.9), 0 0 6px 1px rgba(191,149,63,0.6)',
                 transform: 'scale(1.25)'
             }, 150));
             document.querySelectorAll('.event').forEach(el => {
@@ -2689,6 +2721,8 @@ function highlightClusterTemporary(clickedEvent, clickedEl) {
         document.querySelectorAll('.event-dot').forEach(d => setDotStyle(d, {}, 6000));
         verticalLine.style.transition = 'opacity 6000ms ease-out';
         verticalLine.classList.remove('active');
+        verticalLineLocked = false;
+        mobileHighlightEvent = null;
     }, 2500);
 }
 

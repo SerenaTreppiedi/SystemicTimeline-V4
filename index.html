@@ -618,6 +618,102 @@
     display: none;
 }
 
+/* Contenuti della scheda di approfondimento: condivisi tra pannello
+   desktop e popup mobile, così restano visivamente coerenti */
+.detail-image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 0.8rem;
+    background: #333333;
+}
+
+.detail-year {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 0.2rem;
+}
+
+.detail-title {
+    font-family: 'Darker Grotesque', sans-serif;
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 1.3rem;
+    line-height: 1.3;
+    margin: 0 0 0.6rem;
+}
+
+.detail-tags {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 0.8rem;
+}
+
+.detail-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.detail-desc {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0 0 1rem;
+}
+
+.detail-link {
+    color: #BF953F;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+/* Pannello di approfondimento, solo desktop: scorre dal bordo destro senza
+   coprire la timeline, così si può continuare a esplorare mentre è aperto. */
+.detail-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 320px;
+    max-width: 85vw;
+    background: #1A1A1A;
+    border-left: 3px solid #BF953F;
+    box-shadow: -8px 0 25px rgba(0, 0, 0, 0.5);
+    z-index: 250000;
+    padding: 1.3rem 1.1rem;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+
+.detail-panel.active {
+    transform: translateX(0);
+}
+
+.detail-panel-close {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.8rem;
+    background: none;
+    border: none;
+    color: #BF953F;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.3rem;
+}
+
+@media (max-width: 768px) {
+    .detail-panel {
+        display: none;
+    }
+}
+
 /* Solo desktop: le fasce non toccano i bordi del popup, come un rientro */
 @media (min-width: 769px) {
     .tutorial-category-row {
@@ -1362,6 +1458,11 @@ const systemdynamic = String(row['SystemDynamic_tag'] || '').toLowerCase() === '
 systemthinking,
 systemicdesign,
 systemdynamic,
+                        image: String(row['Immagine_URL'] || '').trim(),
+                        descLong: String(row['Descrizione_estesa'] || '').trim(),
+                        descLongEN: String(row['Descrizione_estesa_EN'] || '').trim(),
+                        linkUrl: String(row['Link_URL'] || '').trim(),
+                        linkLabel: String(row['Link_testo'] || '').trim(),
                         fullKey: `${year};${title};${category}`
                     });
                 }
@@ -1532,6 +1633,12 @@ if (event.systemdynamic) {
                 eventElement.addEventListener('mouseleave', function () {
                     const verticalLine = document.getElementById('verticalLine');
                     verticalLine.classList.remove('active');
+                });
+
+                // Conserva l'oggetto dati completo per il click
+                eventElement.addEventListener('click', function () {
+                    const color = getComputedStyle(eventElement.closest('.timeline')).getPropertyValue('--timeline-color').trim();
+                    openEventDetail(event, color);
                 });
 
                 container.appendChild(eventElement);
@@ -2006,6 +2113,13 @@ window.addEventListener('wheel', function(e) {
         <div id="mobilePopupBody"></div>
     </div>
 </div>
+
+<!-- Scheda di approfondimento (solo desktop): pannello laterale che scorre
+     dentro dal bordo destro, senza coprire la timeline retrostante. -->
+<div class="detail-panel" id="detailPanel">
+    <button class="detail-panel-close" id="detailPanelClose">×</button>
+    <div id="detailPanelBody"></div>
+</div>
 <script>
 function fixLabels() {
     document.querySelectorAll('.fixed-label').forEach(el => el.remove());
@@ -2105,23 +2219,68 @@ function openMobilePopup(sourceEl, titleText) {
     overlay.classList.add('active');
 }
 
+// Scheda di approfondimento di un evento: pannello laterale su desktop,
+// popup condiviso (già usato per eventi/legenda) su mobile.
+function buildEventDetailHtml(event, color) {
+    const title = langMode === 'it' ? event.title : (event.titleEN || event.title);
+    const desc = langMode === 'it' ? event.descLong : (event.descLongEN || event.descLong);
+    const linkLabel = event.linkLabel || (langMode === 'it' ? 'Approfondisci' : 'Learn more');
+
+    let tags = '';
+    if (event.sustainability) tags += '<span class="detail-dot" style="background:#4CAF50" title="Sostenibilità"></span>';
+    if (event.systemthinking) tags += '<span class="detail-dot" style="background:#BFB11B" title="Systems Thinking"></span>';
+    if (event.systemicdesign) tags += '<span class="detail-dot" style="background:#2564BF" title="Systemic Design"></span>';
+    if (event.systemdynamic) tags += '<span class="detail-dot" style="background:#A42134" title="System Dynamic"></span>';
+
+    const imageHtml = event.image ? `<img class="detail-image" src="${event.image}" alt="" onerror="this.style.display='none'">` : '';
+    const descHtml = desc ? `<p class="detail-desc">${desc}</p>` : '';
+    const linkHtml = event.linkUrl ? `<a class="detail-link" href="${event.linkUrl}" target="_blank" rel="noopener">${linkLabel} ↗</a>` : '';
+
+    return `
+        ${imageHtml}
+        <div class="detail-year" style="color:${color}">${Math.floor(event.year)}</div>
+        <h3 class="detail-title">${title}</h3>
+        <div class="detail-tags">${tags}</div>
+        ${descHtml}
+        ${linkHtml}
+    `;
+}
+
+function openEventDetail(event, color) {
+    const html = buildEventDetailHtml(event, color);
+
+    if (isMobileViewport()) {
+        const overlay = document.getElementById('mobilePopupOverlay');
+        const box = overlay ? overlay.querySelector('.mobile-popup') : null;
+        const body = document.getElementById('mobilePopupBody');
+        if (!overlay || !box || !body) return;
+        body.innerHTML = html;
+        box.style.borderColor = color;
+        overlay.classList.add('active');
+    } else {
+        const panel = document.getElementById('detailPanel');
+        const body = document.getElementById('detailPanelBody');
+        if (!panel || !body) return;
+        body.innerHTML = html;
+        panel.style.borderLeftColor = color;
+        panel.classList.add('active');
+    }
+}
+
 function closeMobilePopup() {
     const overlay = document.getElementById('mobilePopupOverlay');
     if (overlay) overlay.classList.remove('active');
 }
+
+document.getElementById('detailPanelClose') && document.getElementById('detailPanelClose').addEventListener('click', () => {
+    document.getElementById('detailPanel').classList.remove('active');
+});
 
 document.addEventListener('click', function (e) {
     if (!isMobileViewport()) return;
 
     if (e.target.id === 'mobilePopupOverlay' || e.target.id === 'mobilePopupClose') {
         closeMobilePopup();
-        return;
-    }
-
-    const eventEl = e.target.closest('.event');
-    if (eventEl) {
-        const popup = eventEl.querySelector('.event-popup');
-        if (popup) openMobilePopup(popup);
         return;
     }
 

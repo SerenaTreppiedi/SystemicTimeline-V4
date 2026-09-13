@@ -147,7 +147,7 @@
             transform: translateY(-50%);
             display: flex;
             align-items: center;
-            width: 200px;
+            width: 230px;
         }
 
         .search-input {
@@ -158,7 +158,8 @@
             color: #FFFFFF;
             font-size: 0.9rem;
             transition: all 0.3s ease;
-            width: 100%;
+            flex: 1;
+            min-width: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
             outline: none;
             padding-right: 30px;
@@ -190,6 +191,111 @@
         }
 
         .clear-search-btn:hover {
+            color: #FFFFFF;
+        }
+
+        .filter-icon-btn {
+            background: none;
+            border: 1px solid #BF953F;
+            color: #BF953F;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            margin-left: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            padding: 0;
+        }
+
+        .filter-icon-btn.active {
+            background: #BF953F;
+            color: #1A1A1A;
+        }
+
+        .filter-panel {
+            display: none;
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            width: 260px;
+            max-width: 85vw;
+            max-height: 70vh;
+            overflow-y: auto;
+            background: #1A1A1A;
+            border: 2px solid #BF953F;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            z-index: 320000;
+            padding: 1rem;
+        }
+
+        .filter-panel.active {
+            display: block;
+        }
+
+        .filter-panel-section {
+            margin-bottom: 1rem;
+        }
+
+        .filter-panel-label {
+            color: #BF953F;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin: 0 0 0.5rem;
+        }
+
+        .filter-chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .filter-chip {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 14px;
+            padding: 0.3rem 0.65rem;
+            font-size: 0.78rem;
+            color: #FFFFFF;
+            cursor: pointer;
+        }
+
+        .filter-chip.active {
+            border-color: #BF953F;
+            background: rgba(191, 149, 63, 0.25);
+        }
+
+        .filter-chip-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .filter-empty-note {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.78rem;
+            font-style: italic;
+            margin: 0;
+        }
+
+        .filter-reset-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: underline;
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .filter-reset-btn:hover {
             color: #FFFFFF;
         }
 
@@ -286,6 +392,17 @@
         .event.no-match {
             opacity: 0;
             pointer-events: none;
+        }
+
+        /* Effetto "illuminato": al click su un evento, quelli con almeno un
+           cluster in comune si evidenziano, gli altri si attenuano */
+        .event.cluster-dim .event-dot {
+            opacity: 0.25;
+        }
+
+        .event.cluster-glow .event-dot {
+            box-shadow: 0 0 0 3px rgba(191, 149, 63, 0.9), 0 0 12px 4px rgba(191, 149, 63, 0.6);
+            transform: scale(1.25);
         }
 
         /* Eventi corrispondenti a una ricerca attiva: sempre in primo piano */
@@ -989,7 +1106,8 @@
             }
 
             .search-input {
-                width: 100%;
+                flex: 1;
+                min-width: 0;
                 box-sizing: border-box;
                 padding: 0.35rem 0.6rem;
                 font-size: 16px; /* iOS Safari fa zoom automatico sotto i 16px */
@@ -1296,6 +1414,46 @@ if (pulsanteReset) {
                         clearBtn.style.display = 'none';
                     });
                 }
+
+                // --- Pannello filtri (tag + cluster) ---
+                const filterIconBtn = document.getElementById('filterIconBtn');
+                const filterPanel = document.getElementById('filterPanel');
+                const tagChipsContainer = document.getElementById('filterTagChips');
+
+                const TAG_DEFS = [
+                    { key: 'systemthinking', color: '#BFB11B', it: 'Systems Thinking', en: 'Systems Thinking' },
+                    { key: 'systemicdesign', color: '#2564BF', it: 'Systemic Design', en: 'Systemic Design' },
+                    { key: 'systemdynamic', color: '#A42134', it: 'System Dynamic', en: 'System Dynamic' },
+                    { key: 'sustainability', color: '#4CAF50', it: 'Sostenibilità', en: 'Sustainability' }
+                ];
+
+                TAG_DEFS.forEach(tag => {
+                    const chip = document.createElement('button');
+                    chip.className = 'filter-chip';
+                    chip.dataset.filterKey = 'tag:' + tag.key;
+                    chip.innerHTML = `<span class="filter-chip-dot" style="background:${tag.color}"></span><span class="it-lang">${tag.it}</span><span class="en-lang" style="display:none">${tag.en}</span>`;
+                    chip.addEventListener('click', () => toggleFilterChip(chip));
+                    tagChipsContainer.appendChild(chip);
+                });
+
+                if (filterIconBtn) {
+                    filterIconBtn.addEventListener('click', () => {
+                        filterPanel.classList.toggle('active');
+                    });
+                }
+
+                document.addEventListener('click', (e) => {
+                    if (!filterPanel.classList.contains('active')) return;
+                    if (filterPanel.contains(e.target) || e.target === filterIconBtn || filterIconBtn.contains(e.target)) return;
+                    filterPanel.classList.remove('active');
+                });
+
+                const filterResetBtn = document.getElementById('filterResetBtn');
+                const filterResetBtnEn = document.getElementById('filterResetBtnEn');
+                [filterResetBtn, filterResetBtnEn].forEach(btn => {
+                    if (btn) btn.addEventListener('click', resetFilters);
+                });
+
                 const menuIcon = document.getElementById('menuIcon');
 
 
@@ -1369,6 +1527,8 @@ document.getElementById('menuIcon').addEventListener('click', () => {
         // I titoli/descrizioni degli eventi vengono dal database, non dal
         // dizionario statico: vanno ricostruiti esplicitamente al cambio lingua.
         renderTimelines();
+        updateEventVisibility();
+        populateClusterChips();
         if (dataLoadingFinished) {
             hideDataLoadingMessage();
         }
@@ -1376,6 +1536,7 @@ document.getElementById('menuIcon').addEventListener('click', () => {
         const mobilePopupOpen = document.getElementById('mobilePopupOverlay').classList.contains('active');
         if (currentDetailEvent && (panelOpen || mobilePopupOpen)) {
             openEventDetail(currentDetailEvent, currentDetailColor);
+            highlightCluster(currentDetailEvent);
         }
 
     } catch (error) {
@@ -1491,6 +1652,7 @@ systemdynamic,
                         image: String(row['Immagine_URL'] || '').trim(),
                         place: String(row['Luogo'] || '').trim(),
                         placeEN: String(row['Luogo_EN'] || '').trim(),
+                        clusters: String(row['Cluster'] || '').split(',').map(s => s.trim()).filter(Boolean),
                         descLong: String(row['Descrizione_estesa'] || '').trim(),
                         descLongEN: String(row['Descrizione_estesa_EN'] || '').trim(),
                         linkUrl: String(row['Link_URL'] || '').trim(),
@@ -1500,6 +1662,7 @@ systemdynamic,
                 }
             });
             renderTimelines();
+            populateClusterChips();
             hideDataLoadingMessage();
         })
         .catch(error => {
@@ -1528,34 +1691,92 @@ function showDataLoadingError() {
 }
 
 
+        let currentSearchTerm = '';
+        let activeFilterSet = new Set();
+
         function filterEvents(searchTerm) {
-            const term = searchTerm.toLowerCase().trim();
-            const allEvents = document.querySelectorAll('.event');
+            currentSearchTerm = searchTerm.toLowerCase().trim();
+            updateEventVisibility();
+        }
 
-            // 1. Rimuovi tutte le classi di filtro/forza apertura
-            allEvents.forEach(event => {
-                event.classList.remove('force-open', 'no-match');
-            });
+        // Combina ricerca testuale e filtri (tag/cluster) attivi: un evento
+        // è visibile solo se soddisfa entrambe le condizioni.
+        function updateEventVisibility() {
+            document.querySelectorAll('.event').forEach(el => {
+                el.classList.remove('force-open', 'no-match');
 
-            if (term === '') {
-                // Se la ricerca è vuota, tutti gli eventi sono visibili (no classes)
-                return;
-            }
+                const searchText = el.getAttribute('data-search-text') || '';
+                const searchOk = currentSearchTerm === '' || searchText.includes(currentSearchTerm);
 
-            // 2. Filtra gli eventi
-            allEvents.forEach(event => {
-                const searchText = event.getAttribute('data-search-text');
+                let filterOk = true;
+                if (activeFilterSet.size > 0) {
+                    const tags = (el.getAttribute('data-tags') || '').split(',').filter(Boolean);
+                    const clusters = (el.getAttribute('data-clusters') || '').split(',').filter(Boolean);
+                    filterOk = tags.some(t => activeFilterSet.has('tag:' + t)) ||
+                               clusters.some(c => activeFilterSet.has('cluster:' + c));
+                }
 
-                if (searchText && searchText.includes(term)) {
-                    // Match: forza l'apertura con la classe che gestisce l'opacità 60% sul popup
-                    event.classList.add('force-open');
-                } else {
-                    // No match: nascondi
-                    event.classList.add('no-match');
+                if (!searchOk || !filterOk) {
+                    el.classList.add('no-match');
+                } else if (currentSearchTerm !== '') {
+                    el.classList.add('force-open');
                 }
             });
         }
 
+
+        function toggleFilterChip(chip) {
+            const key = chip.dataset.filterKey;
+            if (activeFilterSet.has(key)) {
+                activeFilterSet.delete(key);
+                chip.classList.remove('active');
+            } else {
+                activeFilterSet.add(key);
+                chip.classList.add('active');
+            }
+            updateEventVisibility();
+            const btn = document.getElementById('filterIconBtn');
+            if (btn) btn.classList.toggle('active', activeFilterSet.size > 0);
+        }
+
+        function resetFilters() {
+            activeFilterSet.clear();
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            const btn = document.getElementById('filterIconBtn');
+            if (btn) btn.classList.remove('active');
+            updateEventVisibility();
+        }
+
+        // Ricostruisce l'elenco dei cluster disponibili leggendo i dati
+        // effettivamente presenti nel database, così la lista si aggiorna
+        // da sola man mano che nuovi cluster vengono aggiunti.
+        function populateClusterChips() {
+            const container = document.getElementById('filterClusterChips');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const clusterNames = new Set();
+            Object.values(timelineData).forEach(events => {
+                events.forEach(ev => (ev.clusters || []).forEach(c => clusterNames.add(c)));
+            });
+
+            if (clusterNames.size === 0) {
+                container.innerHTML = '<p class="filter-empty-note it-lang">Nessun cluster disponibile ancora.</p><p class="filter-empty-note en-lang" style="display:none">No clusters available yet.</p>';
+                container.querySelectorAll('.it-lang').forEach(el => el.style.display = langMode === 'it' ? 'block' : 'none');
+                container.querySelectorAll('.en-lang').forEach(el => el.style.display = langMode === 'it' ? 'none' : 'block');
+                return;
+            }
+
+            [...clusterNames].sort().forEach(name => {
+                const chip = document.createElement('button');
+                chip.className = 'filter-chip';
+                chip.dataset.filterKey = 'cluster:' + name;
+                chip.textContent = name;
+                if (activeFilterSet.has(chip.dataset.filterKey)) chip.classList.add('active');
+                chip.addEventListener('click', () => toggleFilterChip(chip));
+                container.appendChild(chip);
+            });
+        }
 
         function renderTimelines() {
             createYearMarkers();
@@ -1638,6 +1859,16 @@ if (event.systemdynamic) {
                const fullText = `${event.year} ${event.title} ${category} ${event.sustainability ? 'Sostenibilità' : ''} ${event.systemthinking ? 'Systems Thinking' : ''} ${event.systemicdesign ? 'Systemic Design' : ''} ${event.systemdynamic ? 'System Dynamic' : ''}`;
                 eventElement.setAttribute('data-search-text', fullText.toLowerCase());
 
+                // Tag e cluster dell'evento: usati dai filtri e dall'effetto
+                // "illuminato" al click su eventi dello stesso cluster
+                const tagList = [];
+                if (event.sustainability) tagList.push('sustainability');
+                if (event.systemthinking) tagList.push('systemthinking');
+                if (event.systemicdesign) tagList.push('systemicdesign');
+                if (event.systemdynamic) tagList.push('systemdynamic');
+                eventElement.setAttribute('data-tags', tagList.join(','));
+                eventElement.setAttribute('data-clusters', (event.clusters || []).join(','));
+
                 // Il titolo mostrato dipende dalla lingua attiva (con eventuale
                 // titolo alternativo inglese dal database, se presente)
                 eventElement.innerHTML = `
@@ -1671,6 +1902,7 @@ if (event.systemdynamic) {
                 eventElement.addEventListener('click', function () {
                     const color = getComputedStyle(eventElement.closest('.timeline')).getPropertyValue('--timeline-color').trim();
                     openEventDetail(event, color);
+                    highlightCluster(event);
                 });
 
                 container.appendChild(eventElement);
@@ -1922,7 +2154,25 @@ window.addEventListener('wheel', function(e) {
         <div class="search-container">
             <input type="text" id="searchInput" placeholder="Cerca eventi..." class="search-input">
             <button class="clear-search-btn" id="clearSearchBtn" title="Cancella ricerca">X</button>
+            <button class="filter-icon-btn" id="filterIconBtn" title="Filtra">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M8 12h8M11 18h2"/></svg>
+            </button>
         </div>
+    </div>
+
+    <div class="filter-panel" id="filterPanel">
+        <div class="filter-panel-section">
+            <p class="filter-panel-label it-lang">Tag</p>
+            <p class="filter-panel-label en-lang" style="display:none">Tags</p>
+            <div class="filter-chip-row" id="filterTagChips"></div>
+        </div>
+        <div class="filter-panel-section">
+            <p class="filter-panel-label it-lang">Cluster</p>
+            <p class="filter-panel-label en-lang" style="display:none">Clusters</p>
+            <div class="filter-chip-row" id="filterClusterChips"></div>
+        </div>
+        <button class="filter-reset-btn it-lang" id="filterResetBtn">Azzera filtri</button>
+        <button class="filter-reset-btn en-lang" id="filterResetBtnEn" style="display:none">Clear filters</button>
     </div>
     <div class="info-popup-overlay" id="infoPopupOverlay">
        <div class="info-popup" id="tutorialPopup" style="width: 78%; max-width: 1400px; padding: 40px; margin-left: auto; margin-right: auto">
@@ -2300,6 +2550,35 @@ function buildEventDetailHtml(event, color) {
 let currentDetailEvent = null;
 let currentDetailColor = null;
 
+// Al click su un evento, "illumina" gli altri eventi che condividono
+// almeno un cluster tematico, attenuando tutti gli altri.
+function highlightCluster(clickedEvent) {
+    document.querySelectorAll('.event').forEach(el => el.classList.remove('cluster-glow', 'cluster-dim'));
+
+    if (!clickedEvent.clusters || clickedEvent.clusters.length === 0) return;
+
+    const allEvents = document.querySelectorAll('.event');
+    let anyMatch = false;
+    allEvents.forEach(el => {
+        const elClusters = (el.getAttribute('data-clusters') || '').split(',').filter(Boolean);
+        const shared = elClusters.some(c => clickedEvent.clusters.includes(c));
+        if (shared) {
+            el.classList.add('cluster-glow');
+            anyMatch = true;
+        }
+    });
+
+    if (anyMatch) {
+        allEvents.forEach(el => {
+            if (!el.classList.contains('cluster-glow')) el.classList.add('cluster-dim');
+        });
+    }
+}
+
+function clearClusterHighlight() {
+    document.querySelectorAll('.event').forEach(el => el.classList.remove('cluster-glow', 'cluster-dim'));
+}
+
 function openEventDetail(event, color) {
     currentDetailEvent = event;
     currentDetailColor = color;
@@ -2326,10 +2605,12 @@ function openEventDetail(event, color) {
 function closeMobilePopup() {
     const overlay = document.getElementById('mobilePopupOverlay');
     if (overlay) overlay.classList.remove('active');
+    clearClusterHighlight();
 }
 
 document.getElementById('detailPanelClose') && document.getElementById('detailPanelClose').addEventListener('click', () => {
     document.getElementById('detailPanel').classList.remove('active');
+    clearClusterHighlight();
 });
 
 document.addEventListener('click', function (e) {

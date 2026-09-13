@@ -630,25 +630,37 @@
     background: #333333;
 }
 
-.detail-year {
-    font-weight: 600;
-    font-size: 0.85rem;
-    margin-bottom: 0.2rem;
-}
-
 .detail-title {
     font-family: 'Darker Grotesque', sans-serif;
     color: #FFFFFF;
     font-weight: 700;
     font-size: 1.3rem;
     line-height: 1.3;
-    margin: 0 0 0.6rem;
+    margin: 0 0 0.4rem;
+}
+
+.detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0.3rem;
+}
+
+.detail-year {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.detail-place {
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+    margin-bottom: 0.7rem;
 }
 
 .detail-tags {
     display: flex;
     gap: 6px;
-    margin-bottom: 0.8rem;
 }
 
 .detail-dot {
@@ -676,18 +688,19 @@
    coprire la timeline, così si può continuare a esplorare mentre è aperto. */
 .detail-panel {
     position: fixed;
-    top: 0;
-    right: 0;
-    height: 100vh;
+    top: 160px;
+    bottom: 70px;
+    right: 12px;
     width: 320px;
     max-width: 85vw;
     background: #1A1A1A;
-    border-left: 3px solid #BF953F;
+    border: 2px solid #BF953F;
+    border-radius: 10px;
     box-shadow: -8px 0 25px rgba(0, 0, 0, 0.5);
     z-index: 250000;
     padding: 1.3rem 1.1rem;
     overflow-y: auto;
-    transform: translateX(100%);
+    transform: translateX(calc(100% + 24px));
     transition: transform 0.3s ease;
 }
 
@@ -1351,6 +1364,15 @@ document.getElementById('menuIcon').addEventListener('click', () => {
             updateModal([...document.getElementsByClassName('it-lang')], 'none');
         }
 
+        // I titoli/descrizioni degli eventi vengono dal database, non dal
+        // dizionario statico: vanno ricostruiti esplicitamente al cambio lingua.
+        renderTimelines();
+        const panelOpen = document.getElementById('detailPanel').classList.contains('active');
+        const mobilePopupOpen = document.getElementById('mobilePopupOverlay').classList.contains('active');
+        if (currentDetailEvent && (panelOpen || mobilePopupOpen)) {
+            openEventDetail(currentDetailEvent, currentDetailColor);
+        }
+
     } catch (error) {
         console.error('Errore nel cambio lingua:', error);
     }
@@ -1459,6 +1481,7 @@ systemthinking,
 systemicdesign,
 systemdynamic,
                         image: String(row['Immagine_URL'] || '').trim(),
+                        place: String(row['Luogo'] || '').trim(),
                         descLong: String(row['Descrizione_estesa'] || '').trim(),
                         descLongEN: String(row['Descrizione_estesa_EN'] || '').trim(),
                         linkUrl: String(row['Link_URL'] || '').trim(),
@@ -2233,20 +2256,29 @@ function buildEventDetailHtml(event, color) {
     if (event.systemdynamic) tags += '<span class="detail-dot" style="background:#A42134" title="System Dynamic"></span>';
 
     const imageHtml = event.image ? `<img class="detail-image" src="${event.image}" alt="" onerror="this.style.display='none'">` : '';
+    const placeHtml = event.place ? `<div class="detail-place">${event.place}</div>` : '';
     const descHtml = desc ? `<p class="detail-desc">${desc}</p>` : '';
     const linkHtml = event.linkUrl ? `<a class="detail-link" href="${event.linkUrl}" target="_blank" rel="noopener">${linkLabel} ↗</a>` : '';
 
     return `
         ${imageHtml}
-        <div class="detail-year" style="color:${color}">${Math.floor(event.year)}</div>
         <h3 class="detail-title">${title}</h3>
-        <div class="detail-tags">${tags}</div>
+        <div class="detail-meta">
+            <span class="detail-year" style="color:${color}">${Math.floor(event.year)}</span>
+            <div class="detail-tags">${tags}</div>
+        </div>
+        ${placeHtml}
         ${descHtml}
         ${linkHtml}
     `;
 }
 
+let currentDetailEvent = null;
+let currentDetailColor = null;
+
 function openEventDetail(event, color) {
+    currentDetailEvent = event;
+    currentDetailColor = color;
     const html = buildEventDetailHtml(event, color);
 
     if (isMobileViewport()) {
@@ -2262,7 +2294,7 @@ function openEventDetail(event, color) {
         const body = document.getElementById('detailPanelBody');
         if (!panel || !body) return;
         body.innerHTML = html;
-        panel.style.borderLeftColor = color;
+        panel.style.borderColor = color;
         panel.classList.add('active');
     }
 }

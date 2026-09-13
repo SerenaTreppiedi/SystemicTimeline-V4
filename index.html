@@ -1983,7 +1983,7 @@ function setCenterFraction(fraction) {
     const totalWidth = baseWidthPx * currentZoom;
     const viewportWidth = document.body.clientWidth;
     const newCenterX = fraction * totalWidth;
-    document.body.scrollLeft = newCenterX - viewportWidth / 2;
+    document.body.scrollTo({ left: newCenterX - viewportWidth / 2, behavior: 'smooth' });
 }
         
 
@@ -2716,14 +2716,23 @@ function highlightClusterTemporary(clickedEvent) {
         }
     }
 
-    // Dopo qualche secondo "acceso", dissolvenza lenta su tutto
+    // La dissolvenza parte alla chiusura del popup (vedi closeMobilePopup),
+    // non da qui: altrimenti, se l'utente impiega più di 2-3 secondi a
+    // leggere il popup che copre la timeline, l'effetto sarebbe già
+    // sparito quando finalmente lo chiude e può guardare i pallini.
+}
+
+function startMobileHighlightFade() {
+    if (!mobileHighlightEvent) return;
+    const verticalLine = document.getElementById('verticalLine');
+    clearTimeout(mobileHighlightTimer);
     mobileHighlightTimer = setTimeout(() => {
-        document.querySelectorAll('.event-dot').forEach(d => setDotStyle(d, {}, 6000));
-        verticalLine.style.transition = 'opacity 6000ms ease-out';
+        document.querySelectorAll('.event-dot').forEach(d => setDotStyle(d, {}, 12000));
+        verticalLine.style.transition = 'opacity 12000ms ease-out';
         verticalLine.classList.remove('active');
         verticalLineLocked = false;
         mobileHighlightEvent = null;
-    }, 2500);
+    }, 400);
 }
 
 function openEventDetail(event, color) {
@@ -2752,7 +2761,7 @@ function openEventDetail(event, color) {
 function closeMobilePopup() {
     const overlay = document.getElementById('mobilePopupOverlay');
     if (overlay) overlay.classList.remove('active');
-    clearClusterHighlight();
+    startMobileHighlightFade();
 }
 
 document.getElementById('detailPanelClose') && document.getElementById('detailPanelClose').addEventListener('click', () => {

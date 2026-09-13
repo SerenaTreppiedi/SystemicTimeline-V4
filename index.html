@@ -1367,6 +1367,9 @@ document.getElementById('menuIcon').addEventListener('click', () => {
         // I titoli/descrizioni degli eventi vengono dal database, non dal
         // dizionario statico: vanno ricostruiti esplicitamente al cambio lingua.
         renderTimelines();
+        if (dataLoadingFinished) {
+            hideDataLoadingMessage();
+        }
         const panelOpen = document.getElementById('detailPanel').classList.contains('active');
         const mobilePopupOpen = document.getElementById('mobilePopupOverlay').classList.contains('active');
         if (currentDetailEvent && (panelOpen || mobilePopupOpen)) {
@@ -1434,7 +1437,10 @@ document.getElementById('menuIcon').addEventListener('click', () => {
 
 
 
+let dataLoadingFinished = false;
+
 function hideDataLoadingMessage() {
+    dataLoadingFinished = true;
     const msgIt = document.getElementById('dataLoadingMessage');
     const msgEn = document.getElementById('dataLoadingMessageEn');
     if (msgIt) msgIt.style.display = 'none';

@@ -699,7 +699,7 @@
     box-shadow: -8px 0 25px rgba(0, 0, 0, 0.5);
     z-index: 310000;
     padding: 1.3rem 1.1rem;
-    overflow-y: scroll;
+    overflow-y: auto;
     transform: translateX(calc(100% + 24px));
     transition: transform 0.3s ease;
 }
@@ -2191,6 +2191,16 @@ function fixLabels() {
 
 window.addEventListener('load', fixLabels);
 window.addEventListener('resize', fixLabels);
+window.addEventListener('resize', function () {
+    // "auto" a volte non si accorge subito che serve lo scroll dopo un
+    // ridimensionamento: forziamo un ricalcolo immediato del pannello.
+    const panel = document.getElementById('detailPanel');
+    if (panel && panel.classList.contains('active')) {
+        panel.style.overflowY = 'hidden';
+        void panel.offsetHeight;
+        panel.style.overflowY = 'auto';
+    }
+});
 
 // --- Popup condiviso per mobile ---
 // Attivo solo sotto i 768px: su desktop questo listener non fa nulla,

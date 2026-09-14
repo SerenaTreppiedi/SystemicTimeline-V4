@@ -1855,7 +1855,11 @@ function showDataLoadingError() {
         // modo naturale insieme al resto, senza "vibrare".
         function computeStableDisplayYears() {
             const yearRange = maxYear - minYear;
-            const refWidth = baseWidthPx; // riferimento fisso: zoom 100%
+            // Stessa larghezza reale (letta dal DOM, non ricalcolata a
+            // mano) usata poi da createTimelineEvents, così il riferimento
+            // "100%" coincide esattamente col binario visibile.
+            const referenceTrack = document.getElementById('timeline-1');
+            const refWidth = referenceTrack ? referenceTrack.clientWidth : baseWidthPx;
 
             Object.keys(timelineData).forEach(category => {
                 const positioned = timelineData[category]
@@ -1882,7 +1886,11 @@ function showDataLoadingError() {
             container.innerHTML = '';
             const events = timelineData[category] || [];
             const yearRange = maxYear - minYear;
-            const totalWidth = baseWidthPx * getEffectiveZoom();
+            // Larghezza REALE e attuale del contenitore in cui i pallini
+            // vengono disegnati (non ricalcolata a mano): così coincide
+            // sempre esattamente col "binario" visibile, padding compreso,
+            // a qualunque livello di zoom.
+            const totalWidth = container.clientWidth;
 
             events.forEach(event => {
                 const displayYear = (event._displayYear !== undefined) ? event._displayYear : event.year;

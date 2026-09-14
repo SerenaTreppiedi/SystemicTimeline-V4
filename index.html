@@ -1674,6 +1674,7 @@ systemdynamic,
                     });
                 }
             });
+            computeStableDisplayYears();
             renderTimelines();
             populateClusterChips();
             hideDataLoadingMessage();
@@ -1840,12 +1841,38 @@ function showDataLoadingError() {
         }
 
         // Un accavallamento fino a metà pallino è accettabile: si interviene
-        // solo sotto questa distanza (il pallino misura 10px → metà = 5px).
+        // solo sotto questa distanza (il pallino misura 10px → metà = 5px,
+        // misurati alla dimensione di riferimento 100%).
         const MIN_DOT_GAP_PX = 5;
         // Quanto al massimo un pallino può essere spostato dalla propria
-        // posizione reale: tenuto volutamente piccolo, per non "stirare"
-        // visivamente i tratti più densi della timeline.
+        // posizione reale (alla dimensione di riferimento 100%).
         const MAX_DOT_SHIFT_PX = 15;
+
+        // Calcola, una sola volta all'avvio (mai più ricalcolato durante lo
+        // zoom), un piccolo scostamento "anno equivalente" per gli eventi
+        // troppo vicini tra loro. Usando il 100% come riferimento fisso,
+        // lo scostamento resta identico a ogni livello di zoom: scala in
+        // modo naturale insieme al resto, senza "vibrare".
+        function computeStableDisplayYears() {
+            const yearRange = maxYear - minYear;
+            const refWidth = baseWidthPx; // riferimento fisso: zoom 100%
+
+            Object.keys(timelineData).forEach(category => {
+                const positioned = timelineData[category]
+                    .map(ev => ({ ev, rawX: ((ev.year - minYear) / yearRange) * refWidth }))
+                    .sort((a, b) => a.rawX - b.rawX);
+
+                let lastX = -Infinity;
+                positioned.forEach(item => {
+                    let x = item.rawX;
+                    if (x - lastX < MIN_DOT_GAP_PX) x = lastX + MIN_DOT_GAP_PX;
+                    if (x - item.rawX > MAX_DOT_SHIFT_PX) x = item.rawX + MAX_DOT_SHIFT_PX;
+                    x = Math.max(0, Math.min(x, refWidth));
+                    lastX = x;
+                    item.ev._displayYear = minYear + (x / refWidth) * yearRange;
+                });
+            });
+        }
 
         function createTimelineEvents(category, containerId) {
 
@@ -1857,26 +1884,10 @@ function showDataLoadingError() {
             const yearRange = maxYear - minYear;
             const totalWidth = baseWidthPx * getEffectiveZoom();
 
-            // Posizione "grezza" (in pixel) di ogni evento, in ordine
-            // cronologico, poi un piccolo scostamento se troppo vicini tra
-            // loro (mai oltre MAX_DOT_SHIFT_PX, e mai oltre i bordi reali
-            // della timeline).
-            const positioned = events
-                .map(ev => ({ data: ev, rawX: ((ev.year - minYear) / yearRange) * totalWidth }))
-                .sort((a, b) => a.rawX - b.rawX);
-
-            let lastX = -Infinity;
-            positioned.forEach(item => {
-                let x = item.rawX;
-                if (x - lastX < MIN_DOT_GAP_PX) x = lastX + MIN_DOT_GAP_PX;
-                if (x - item.rawX > MAX_DOT_SHIFT_PX) x = item.rawX + MAX_DOT_SHIFT_PX;
-                x = Math.max(0, Math.min(x, totalWidth));
-                lastX = x;
-                item.x = x;
-            });
-
-            positioned.forEach(item => {
-                container.appendChild(buildEventElement(item.data, item.x, category));
+            events.forEach(event => {
+                const displayYear = (event._displayYear !== undefined) ? event._displayYear : event.year;
+                const x = ((displayYear - minYear) / yearRange) * totalWidth;
+                container.appendChild(buildEventElement(event, x, category));
             });
         }
 

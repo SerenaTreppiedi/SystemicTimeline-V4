@@ -472,6 +472,36 @@
             box-shadow: 0 0 0 4px rgba(189, 156, 89, 0.4);
         }
 
+        /* Messaggio "ruota il dispositivo": visibile solo su schermi stretti
+           E bassi in orizzontale (telefoni), mai su tablet/desktop, dove
+           l'orizzontale è la modalità normale. */
+        #rotateOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #1A1A1A;
+            z-index: 999999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            color: #FFFFFF;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        #rotateOverlayIcon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            transform: rotate(90deg);
+        }
+
+        @media (orientation: landscape) and (max-height: 500px) {
+            #rotateOverlay {
+                display: flex;
+            }
+        }
+
         .event-popup {
             position: absolute;
             bottom: 30px;
@@ -2182,6 +2212,11 @@ window.addEventListener('wheel', function(e) {
 </head>
 
 <body>
+<div id="rotateOverlay">
+    <div id="rotateOverlayIcon">&#128241;</div>
+    <p class="it-lang">Per la migliore esperienza, ruota il dispositivo in verticale.</p>
+    <p class="en-lang" style="display:none">For the best experience, please rotate your device to portrait.</p>
+</div>
 <div id="intro-overlay">
 <div id="intro-content">
     <img id="intro-logo" src="LOGO SyChro 1.svg" alt="SyChro - Collective Systemic Chronography">

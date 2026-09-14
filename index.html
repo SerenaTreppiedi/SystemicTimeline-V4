@@ -1362,10 +1362,14 @@
 
     <script>
         let currentZoom = 1.0; // Inizializzato a 1.0 (100%)
-        // Moltiplicatore applicato alla larghezza reale a ogni livello di
-        // zoom: la percentuale mostrata (100%-1000%) resta la stessa di
-        // prima, ma l'ingrandimento effettivo è il 25% in più ovunque.
-        const ZOOM_INTENSITY = 1.25;
+        // Il 100% (currentZoom=1) resta esattamente come sempre: nessuna
+        // modifica lì. Salendo di zoom, si aggiunge un'intensità extra che
+        // cresce progressivamente fino a un preciso +25% al livello massimo
+        // (currentZoom=10), senza toccare la calibrazione di base.
+        function getEffectiveZoom() {
+            const EXTRA_SLOPE = 2.5 / 9; // risolto per dare +25% esatto a currentZoom=10
+            return currentZoom + EXTRA_SLOPE * (currentZoom - 1);
+        }
         let timelineContainer;
         let timelineData = {};
         let minYear = 1850;
@@ -1864,14 +1868,15 @@ function showDataLoadingError() {
             }
         }
 
-        // Distanza minima "delicata" tra due pallini adiacenti: se sono più
-        // vicini di così, vengono scostati leggermente (mai stravolti).
-        const MIN_DOT_GAP_PX = 15;
+        // Un accavallamento fino a metà pallino è accettabile: si interviene
+        // solo sotto questa distanza (il pallino misura 10px → metà = 5px).
+        const MIN_DOT_GAP_PX = 5;
         // Quanto al massimo un pallino può essere spostato dalla propria
-        // posizione reale, per restare "delicato" e non stravolgere l'anno.
-        const MAX_DOT_SHIFT_PX = 40;
-        // Da quanti eventi nello stesso anno in poi si passa a una bolla
-        // con contatore invece di mostrarli singolarmente.
+        // posizione reale: tenuto volutamente piccolo, per non "stirare"
+        // visivamente i tratti più densi della timeline.
+        const MAX_DOT_SHIFT_PX = 15;
+        // Da quanti eventi troppo vicini tra loro in poi si passa a una
+        // bolla con contatore invece di mostrarli singolarmente.
         const CLUSTER_THRESHOLD = 6;
 
         function createTimelineEvents(category, containerId) {
@@ -1882,47 +1887,50 @@ function showDataLoadingError() {
             container.innerHTML = '';
             const events = timelineData[category] || [];
             const yearRange = maxYear - minYear;
-            const totalWidth = baseWidthPx * currentZoom * ZOOM_INTENSITY;
-            const pxPerYear = totalWidth / yearRange;
+            const totalWidth = baseWidthPx * getEffectiveZoom();
 
-            // 1. Raggruppa per anno (arrotondato): è la base per decidere
-            // se un anno ha bisogno di una bolla-cluster.
-            const byYear = new Map();
-            events.forEach(ev => {
-                const y = Math.round(ev.year);
-                if (!byYear.has(y)) byYear.set(y, []);
-                byYear.get(y).push(ev);
-            });
+            // 1. Posizione "grezza" (in pixel) di ogni evento, in ordine
+            // cronologico.
+            const positioned = events
+                .map(ev => ({ data: ev, rawX: ((ev.year - minYear) / yearRange) * totalWidth }))
+                .sort((a, b) => a.rawX - b.rawX);
 
-            // 2. Costruisce la lista di "elementi da disegnare": un anno con
-            // troppi eventi diventa un'unica bolla, altrimenti ogni evento
-            // resta un pallino singolo.
-            const capacityPerYear = Math.max(1, Math.floor(pxPerYear / MIN_DOT_GAP_PX));
-            const drawItems = [];
-            [...byYear.keys()].sort((a, b) => a - b).forEach(year => {
-                const group = byYear.get(year);
-                if (group.length >= CLUSTER_THRESHOLD && group.length > capacityPerYear) {
-                    drawItems.push({ type: 'cluster', year, events: group, rawX: ((year - minYear) / yearRange) * totalWidth });
+            // 2. Raggruppa in "catene" gli eventi la cui posizione reale è
+            // più vicina della soglia minima: è un raggruppamento per
+            // vicinanza effettiva sullo schermo, non per anno — così, se si
+            // zooma e lo spazio aumenta, le catene si accorciano da sole e
+            // le bolle-cluster si sciolgono naturalmente.
+            const chains = [];
+            let currentChain = [];
+            positioned.forEach(item => {
+                if (currentChain.length === 0 || item.rawX - currentChain[currentChain.length - 1].rawX < MIN_DOT_GAP_PX) {
+                    currentChain.push(item);
                 } else {
-                    group.forEach(ev => drawItems.push({ type: 'event', data: ev, year: ev.year, rawX: ((ev.year - minYear) / yearRange) * totalWidth }));
+                    chains.push(currentChain);
+                    currentChain = [item];
                 }
             });
-            drawItems.sort((a, b) => a.rawX - b.rawX);
+            if (currentChain.length > 0) chains.push(currentChain);
 
-            // 3. Scostamento "delicato": se due elementi consecutivi sono
-            // troppo vicini, il secondo viene spinto leggermente più in là
-            // (mai oltre MAX_DOT_SHIFT_PX dalla sua posizione reale).
-            let lastX = -Infinity;
-            drawItems.forEach(item => {
-                let x = item.rawX;
-                if (x - lastX < MIN_DOT_GAP_PX) {
-                    x = lastX + MIN_DOT_GAP_PX;
+            // 3. Per ogni catena: se è troppo affollata diventa una bolla,
+            // altrimenti i pallini restano singoli con uno scostamento
+            // minimo (mai oltre MAX_DOT_SHIFT_PX dalla loro posizione reale).
+            const drawItems = [];
+            chains.forEach(chain => {
+                if (chain.length >= CLUSTER_THRESHOLD) {
+                    const centerX = chain.reduce((sum, it) => sum + it.rawX, 0) / chain.length;
+                    const centerYear = chain.reduce((sum, it) => sum + it.data.year, 0) / chain.length;
+                    drawItems.push({ type: 'cluster', year: centerYear, events: chain.map(it => it.data), x: centerX });
+                } else {
+                    let lastX = -Infinity;
+                    chain.forEach(it => {
+                        let x = it.rawX;
+                        if (x - lastX < MIN_DOT_GAP_PX) x = lastX + MIN_DOT_GAP_PX;
+                        if (x - it.rawX > MAX_DOT_SHIFT_PX) x = it.rawX + MAX_DOT_SHIFT_PX;
+                        lastX = x;
+                        drawItems.push({ type: 'event', data: it.data, x });
+                    });
                 }
-                if (x - item.rawX > MAX_DOT_SHIFT_PX) {
-                    x = item.rawX + MAX_DOT_SHIFT_PX;
-                }
-                item.x = x;
-                lastX = x;
             });
 
             drawItems.forEach(item => {
@@ -1945,7 +1953,7 @@ function showDataLoadingError() {
 
             el.addEventListener('click', function () {
                 clusterZoomFocus = { year: item.year };
-                for (let i = 0; i < 3; i++) zoomIn();
+                for (let i = 0; i < 6; i++) zoomIn();
                 clusterZoomFocus = null;
             });
 
@@ -2089,14 +2097,14 @@ function reapplyStateAfterRerender() {
         return (focusEvent.year - minYear) / (maxYear - minYear);
     }
 
-    const totalWidth = baseWidthPx * currentZoom * ZOOM_INTENSITY;
+    const totalWidth = baseWidthPx * getEffectiveZoom();
     const viewportWidth = document.body.clientWidth;
     const centerX = document.body.scrollLeft + viewportWidth / 2;
     return centerX / totalWidth;
 }
 
 function setCenterFraction(fraction) {
-    const totalWidth = baseWidthPx * currentZoom * ZOOM_INTENSITY;
+    const totalWidth = baseWidthPx * getEffectiveZoom();
     const viewportWidth = document.body.clientWidth;
     const newCenterX = fraction * totalWidth;
     document.body.scrollTo({ left: newCenterX - viewportWidth / 2, behavior: 'smooth' });
@@ -2141,7 +2149,7 @@ window.addEventListener('wheel', function(e) {
                 baseWidthPx = Math.min(timelineContainer.clientWidth, 1200);
             }
 
-            timelineContainer.style.width = `${baseWidthPx * currentZoom * ZOOM_INTENSITY}px`;
+            timelineContainer.style.width = `${baseWidthPx * getEffectiveZoom()}px`;
 
             timelineContainer.style.transform = 'none';
             timelineContainer.style.transformOrigin = 'unset';

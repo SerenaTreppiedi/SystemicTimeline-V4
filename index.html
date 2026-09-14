@@ -458,8 +458,8 @@
         }
 
         .event-dot {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: var(--timeline-color);
             border: 2px solid #FFFFFF;
@@ -470,6 +470,35 @@
         .event:hover .event-dot {
             transform: scale(1.3);
             box-shadow: 0 0 0 4px rgba(189, 156, 89, 0.4);
+        }
+
+        /* Bolla che raggruppa 6+ eventi dello stesso anno troppo vicini per
+           essere mostrati singolarmente. Al click, zooma su quel punto. */
+        .event-cluster {
+            cursor: pointer;
+        }
+
+        .cluster-dot {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 6px;
+            border-radius: 11px;
+            background: var(--timeline-color);
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(189, 156, 89, 0.3);
+            color: #1A1A1A;
+            font-size: 0.68rem;
+            font-weight: 700;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .event-cluster:hover .cluster-dot {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 4px rgba(189, 156, 89, 0.5);
         }
 
         .event-popup {
@@ -1333,6 +1362,10 @@
 
     <script>
         let currentZoom = 1.0; // Inizializzato a 1.0 (100%)
+        // Moltiplicatore applicato alla larghezza reale a ogni livello di
+        // zoom: la percentuale mostrata (100%-1000%) resta la stessa di
+        // prima, ma l'ingrandimento effettivo è il 25% in più ovunque.
+        const ZOOM_INTENSITY = 1.25;
         let timelineContainer;
         let timelineData = {};
         let minYear = 1850;
@@ -1831,6 +1864,16 @@ function showDataLoadingError() {
             }
         }
 
+        // Distanza minima "delicata" tra due pallini adiacenti: se sono più
+        // vicini di così, vengono scostati leggermente (mai stravolti).
+        const MIN_DOT_GAP_PX = 15;
+        // Quanto al massimo un pallino può essere spostato dalla propria
+        // posizione reale, per restare "delicato" e non stravolgere l'anno.
+        const MAX_DOT_SHIFT_PX = 40;
+        // Da quanti eventi nello stesso anno in poi si passa a una bolla
+        // con contatore invece di mostrarli singolarmente.
+        const CLUSTER_THRESHOLD = 6;
+
         function createTimelineEvents(category, containerId) {
 
             const container = document.getElementById(containerId);
@@ -1839,11 +1882,80 @@ function showDataLoadingError() {
             container.innerHTML = '';
             const events = timelineData[category] || [];
             const yearRange = maxYear - minYear;
+            const totalWidth = baseWidthPx * currentZoom * ZOOM_INTENSITY;
+            const pxPerYear = totalWidth / yearRange;
 
-            events.forEach(event => {
+            // 1. Raggruppa per anno (arrotondato): è la base per decidere
+            // se un anno ha bisogno di una bolla-cluster.
+            const byYear = new Map();
+            events.forEach(ev => {
+                const y = Math.round(ev.year);
+                if (!byYear.has(y)) byYear.set(y, []);
+                byYear.get(y).push(ev);
+            });
+
+            // 2. Costruisce la lista di "elementi da disegnare": un anno con
+            // troppi eventi diventa un'unica bolla, altrimenti ogni evento
+            // resta un pallino singolo.
+            const capacityPerYear = Math.max(1, Math.floor(pxPerYear / MIN_DOT_GAP_PX));
+            const drawItems = [];
+            [...byYear.keys()].sort((a, b) => a - b).forEach(year => {
+                const group = byYear.get(year);
+                if (group.length >= CLUSTER_THRESHOLD && group.length > capacityPerYear) {
+                    drawItems.push({ type: 'cluster', year, events: group, rawX: ((year - minYear) / yearRange) * totalWidth });
+                } else {
+                    group.forEach(ev => drawItems.push({ type: 'event', data: ev, year: ev.year, rawX: ((ev.year - minYear) / yearRange) * totalWidth }));
+                }
+            });
+            drawItems.sort((a, b) => a.rawX - b.rawX);
+
+            // 3. Scostamento "delicato": se due elementi consecutivi sono
+            // troppo vicini, il secondo viene spinto leggermente più in là
+            // (mai oltre MAX_DOT_SHIFT_PX dalla sua posizione reale).
+            let lastX = -Infinity;
+            drawItems.forEach(item => {
+                let x = item.rawX;
+                if (x - lastX < MIN_DOT_GAP_PX) {
+                    x = lastX + MIN_DOT_GAP_PX;
+                }
+                if (x - item.rawX > MAX_DOT_SHIFT_PX) {
+                    x = item.rawX + MAX_DOT_SHIFT_PX;
+                }
+                item.x = x;
+                lastX = x;
+            });
+
+            drawItems.forEach(item => {
+                if (item.type === 'cluster') {
+                    container.appendChild(buildClusterBubble(item, category));
+                } else {
+                    container.appendChild(buildEventElement(item.data, item.x, category));
+                }
+            });
+        }
+
+        // Bolla che rappresenta un anno con troppi eventi ravvicinati per
+        // essere mostrati singolarmente. Al click, zooma su quel punto.
+        function buildClusterBubble(item, category) {
+            const el = document.createElement('div');
+            el.className = 'event event-cluster';
+            el.style.left = item.x + 'px';
+            el.innerHTML = `<div class="cluster-dot">+${item.events.length}</div>`;
+            el.title = Math.round(item.year) + ': ' + item.events.length + (langMode === 'it' ? ' eventi' : ' events');
+
+            el.addEventListener('click', function () {
+                clusterZoomFocus = { year: item.year };
+                for (let i = 0; i < 3; i++) zoomIn();
+                clusterZoomFocus = null;
+            });
+
+            return el;
+        }
+
+        function buildEventElement(event, xPixels, category) {
                 const eventElement = document.createElement('div');
                 eventElement.className = 'event';
-                eventElement.style.left = ((event.year - minYear) / yearRange * 100) + '%';
+                eventElement.style.left = xPixels + 'px';
 
                 // Pallini indicatori dei tag associati all'evento
                 let indicators = '';
@@ -1917,8 +2029,7 @@ if (event.systemdynamic) {
                     }
                 });
 
-                container.appendChild(eventElement);
-            });
+                return eventElement;
         }
 
         function updateZoomButtons() {
@@ -1962,6 +2073,11 @@ function reapplyStateAfterRerender() {
     }
 }
         function getCenterFraction() {
+    // Cliccando una bolla-cluster, lo zoom deve centrarsi su quell'anno
+    if (clusterZoomFocus) {
+        return (clusterZoomFocus.year - minYear) / (maxYear - minYear);
+    }
+
     // Se un evento è selezionato (scheda aperta o illuminazione mobile
     // attiva), lo zoom si centra su di lui invece che sul centro visibile.
     const focusEvent = (!isMobileViewport() && currentDetailEvent &&
@@ -1973,14 +2089,14 @@ function reapplyStateAfterRerender() {
         return (focusEvent.year - minYear) / (maxYear - minYear);
     }
 
-    const totalWidth = baseWidthPx * currentZoom;
+    const totalWidth = baseWidthPx * currentZoom * ZOOM_INTENSITY;
     const viewportWidth = document.body.clientWidth;
     const centerX = document.body.scrollLeft + viewportWidth / 2;
     return centerX / totalWidth;
 }
 
 function setCenterFraction(fraction) {
-    const totalWidth = baseWidthPx * currentZoom;
+    const totalWidth = baseWidthPx * currentZoom * ZOOM_INTENSITY;
     const viewportWidth = document.body.clientWidth;
     const newCenterX = fraction * totalWidth;
     document.body.scrollTo({ left: newCenterX - viewportWidth / 2, behavior: 'smooth' });
@@ -2025,7 +2141,7 @@ window.addEventListener('wheel', function(e) {
                 baseWidthPx = Math.min(timelineContainer.clientWidth, 1200);
             }
 
-            timelineContainer.style.width = `${baseWidthPx * currentZoom}px`;
+            timelineContainer.style.width = `${baseWidthPx * currentZoom * ZOOM_INTENSITY}px`;
 
             timelineContainer.style.transform = 'none';
             timelineContainer.style.transformOrigin = 'unset';
@@ -2593,6 +2709,8 @@ let currentDetailColor = null;
 // verticale: c'è una selezione attiva (click desktop o tap mobile) che
 // deve restare ferma finché non viene chiusa/esaurita.
 let verticalLineLocked = false;
+// Anno su cui centrare lo zoom dopo il click su una bolla-cluster
+let clusterZoomFocus = null;
 
 // Al click su un evento (desktop): marca il pallino selezionato, mostra la
 // linea verticale di confronto, e "illumina" gli altri eventi che
@@ -2621,6 +2739,8 @@ function highlightCluster(clickedEvent) {
 
     if (!clickedEvent.clusters || clickedEvent.clusters.length === 0) return;
 
+    console.log('[Cluster debug] Evento cliccato:', clickedEvent.title, '| Cluster:', JSON.stringify(clickedEvent.clusters));
+
     const allEvents = document.querySelectorAll('.event');
     let anyMatch = false;
     allEvents.forEach(el => {
@@ -2628,6 +2748,7 @@ function highlightCluster(clickedEvent) {
         const elClusters = (el.getAttribute('data-clusters') || '').split(',').filter(Boolean);
         const shared = elClusters.some(c => clickedEvent.clusters.includes(c));
         if (shared) {
+            console.log('[Cluster debug] → Collegato:', el.querySelector('h4') ? el.querySelector('h4').textContent : '(senza titolo)', '| Suoi cluster:', JSON.stringify(elClusters));
             el.classList.add('cluster-glow');
             anyMatch = true;
         }
@@ -2696,11 +2817,15 @@ function highlightClusterTemporary(clickedEvent) {
 
     // Illumina gli eventi con almeno un cluster in comune, attenua gli altri
     if (clickedEvent.clusters && clickedEvent.clusters.length > 0) {
+        console.log('[Cluster debug] Evento toccato:', clickedEvent.title, '| Cluster:', JSON.stringify(clickedEvent.clusters));
         const related = [];
         document.querySelectorAll('.event').forEach(el => {
             if (el === clickedEl) return;
             const elClusters = (el.getAttribute('data-clusters') || '').split(',').filter(Boolean);
-            if (elClusters.some(c => clickedEvent.clusters.includes(c))) related.push(el);
+            if (elClusters.some(c => clickedEvent.clusters.includes(c))) {
+                console.log('[Cluster debug] → Collegato:', el.querySelector('h4') ? el.querySelector('h4').textContent : '(senza titolo)', '| Suoi cluster:', JSON.stringify(elClusters));
+                related.push(el);
+            }
         });
 
         if (related.length > 0) {

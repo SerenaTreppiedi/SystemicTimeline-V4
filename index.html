@@ -226,6 +226,19 @@
             color: #1A1A1A;
         }
 
+        /* Reazione quando una parola chiave viene "caricata" nei filtri:
+           il bottone si gonfia e il bordo si ispessisce, poi torna normale
+           (volutamente diverso dall'alone/glow, riservato ai cluster). */
+        .filter-icon-btn.filter-btn-bump {
+            animation: filter-btn-bump 0.65s cubic-bezier(0.3, 1.5, 0.5, 1);
+        }
+
+        @keyframes filter-btn-bump {
+            0%   { transform: scale(1);   border-width: 1px; }
+            35%  { transform: scale(1.5); border-width: 4px; border-color: #FFF3D1; }
+            100% { transform: scale(1);   border-width: 1px; }
+        }
+
         .filter-panel {
             display: none;
             position: fixed;
@@ -424,17 +437,6 @@
             z-index: 1;
         }
 
-        /* Eventi che corrispondono a una parola chiave: restano evidenziati
-           (nessun popup, solo il pallino illuminato) finché la parola è attiva */
-        .event.search-match {
-            z-index: 5;
-        }
-
-        .event.search-match .event-dot {
-            box-shadow: 0 0 0 2px rgba(255, 224, 150, 0.95), 0 0 10px 3px rgba(255, 224, 150, 0.55);
-            transform: scale(1.25);
-        }
-
         /* Effetto "illuminato": al click su un evento, quelli con almeno un
            cluster in comune si evidenziano, gli altri si attenuano */
         .event.cluster-dim .event-dot {
@@ -451,30 +453,34 @@
             transform: scale(1.3);
         }
 
+        /* Ricerca/filtri attivi (classe messa sul <body> da JS): la selezione
+           è già espressa dall'opacità (corrispondenti al 100%, esclusi al
+           20%), quindi l'effetto cluster NON deve più attenuare gli altri
+           pallini. Sui corrispondenti resta solo l'anello dorato dei cluster. */
+        body.filters-active .event.cluster-dim .event-dot {
+            opacity: 1;
+        }
+
         /* Eventi che non corrispondono a ricerca/filtri attivi: restano
-           visibili al 10% (non spariscono), così, se un evento illuminato
-           dal cluster è tra questi, si vede comunque. Non sono cliccabili,
-           tranne quelli illuminati dal cluster. */
+           visibili al 20% (non spariscono), non sono cliccabili e stanno
+           dietro agli altri. Fanno eccezione quelli illuminati dal cluster:
+           restano al 20% ma mostrano l'anello e si possono cliccare. */
         .event.no-match {
             pointer-events: none;
+            z-index: 0;
         }
 
-        .event.no-match .event-dot {
-            opacity: 0.1;
-        }
-
-        .event.no-match.cluster-dim .event-dot {
-            opacity: 0.1;
+        body.filters-active .event.no-match .event-dot,
+        body.filters-active .event.no-match.cluster-dim .event-dot,
+        body.filters-active .event.no-match.cluster-glow .event-dot,
+        body.filters-active .event.no-match.cluster-selected .event-dot {
+            opacity: 0.2;
         }
 
         .event.no-match.cluster-glow,
         .event.no-match.cluster-tappable {
             pointer-events: auto;
-        }
-
-        .event.no-match.cluster-glow .event-dot,
-        .event.no-match.cluster-selected .event-dot {
-            opacity: 1;
+            z-index: 1;
         }
 
         .event:hover {
@@ -1834,8 +1840,9 @@ function showDataLoadingError() {
         }
 
         // Parole cercate in questo momento: quelle confermate + quella in
-        // digitazione. Un evento corrisponde se contiene ALMENO UNA di esse
-        // (stessa logica "OR" dei filtri tag/cluster).
+        // digitazione. Un evento corrisponde solo se le contiene TUTTE
+        // (ogni parola in più restringe il risultato, come in un normale
+        // filtro di ricerca).
         function getActiveSearchTerms() {
             const terms = activeKeywords.map(k => k.toLowerCase());
             if (currentSearchTerm !== '') terms.push(currentSearchTerm);
@@ -1843,16 +1850,16 @@ function showDataLoadingError() {
         }
 
         // Combina parole chiave e filtri (tag/cluster) attivi: un evento
-        // è in evidenza solo se soddisfa entrambe le condizioni. Gli altri
-        // non spariscono: restano al 10% (vedi .event.no-match nel CSS).
+        // resta al 100% solo se soddisfa entrambe le condizioni. Gli altri
+        // non spariscono: restano al 20% (vedi .event.no-match nel CSS).
         function updateEventVisibility() {
             const terms = getActiveSearchTerms();
 
             document.querySelectorAll('.event').forEach(el => {
-                el.classList.remove('no-match', 'search-match');
+                el.classList.remove('no-match');
 
                 const searchText = el.getAttribute('data-search-text') || '';
-                const searchOk = terms.length === 0 || terms.some(t => searchText.includes(t));
+                const searchOk = terms.every(t => searchText.includes(t));
 
                 let filterOk = true;
                 if (activeFilterSet.size > 0) {
@@ -1864,13 +1871,26 @@ function showDataLoadingError() {
 
                 if (!searchOk || !filterOk) {
                     el.classList.add('no-match');
-                } else if (terms.length > 0) {
-                    el.classList.add('search-match');
                 }
             });
 
+            // Ricerca o filtri attivi: serve al CSS per far valere le
+            // regole di opacità dei pallini esclusi (vedi body.filters-active)
+            const anyFilter = terms.length > 0 || activeFilterSet.size > 0;
+            document.body.classList.toggle('filters-active', anyFilter);
+
             const btn = document.getElementById('filterIconBtn');
             if (btn) btn.classList.toggle('active', activeFilterSet.size > 0 || activeKeywords.length > 0);
+        }
+
+        // Piccola animazione del bottone filtri: "qualcosa è stato caricato"
+        function pulseFilterButton() {
+            const btn = document.getElementById('filterIconBtn');
+            if (!btn) return;
+            btn.classList.remove('filter-btn-bump');
+            void btn.offsetWidth; // riavvia l'animazione anche se ripetuta di seguito
+            btn.classList.add('filter-btn-bump');
+            btn.addEventListener('animationend', () => btn.classList.remove('filter-btn-bump'), { once: true });
         }
 
         // Invio nella barra di ricerca: il testo diventa una parola chiave
@@ -1882,9 +1902,8 @@ function showDataLoadingError() {
             const keyword = input.value.trim().replace(/\s+/g, ' ');
             if (keyword === '') return;
 
-            if (!activeKeywords.some(k => k.toLowerCase() === keyword.toLowerCase())) {
-                activeKeywords.push(keyword);
-            }
+            const isNew = !activeKeywords.some(k => k.toLowerCase() === keyword.toLowerCase());
+            if (isNew) activeKeywords.push(keyword);
 
             input.value = '';
             currentSearchTerm = '';
@@ -1892,6 +1911,7 @@ function showDataLoadingError() {
 
             renderKeywordChips();
             updateEventVisibility();
+            if (isNew) pulseFilterButton();
         }
 
         function removeKeyword(keyword) {
@@ -2969,24 +2989,27 @@ function highlightClusterTemporary(clickedEvent) {
         });
 
         if (related.length > 0) {
-            // Gli eventi correlati tornano a piena opacità e restano toccabili
-            // anche se in quel momento sono "sbiaditi" da ricerca/filtri.
+            // Gli eventi correlati ricevono l'anello dorato, senza toccarne
+            // l'opacità (se sono esclusi da ricerca/filtri restano al 20%),
+            // e restano toccabili in ogni caso.
             related.forEach(el => {
                 el.classList.add('cluster-tappable');
                 setDotStyle(el.querySelector('.event-dot'), {
-                    opacity: '1',
                     boxShadow: '0 0 0 2px rgba(191,149,63,0.9), 0 0 6px 1px rgba(191,149,63,0.6)',
                     transform: 'scale(1.25)'
                 }, 150);
             });
-            document.querySelectorAll('.event').forEach(el => {
-                if (el !== clickedEl && !related.includes(el)) {
-                    // Gli eventi già al 10% per ricerca/filtri non vanno schiariti al 25%
-                    if (!el.classList.contains('no-match')) {
+
+            // Attenuazione degli altri pallini: solo se non ci sono ricerca/filtri
+            // attivi, perché in quel caso l'opacità è già gestita da quelli
+            // (corrispondenti al 100%, esclusi al 20%).
+            if (!document.body.classList.contains('filters-active')) {
+                document.querySelectorAll('.event').forEach(el => {
+                    if (el !== clickedEl && !related.includes(el)) {
                         setDotStyle(el.querySelector('.event-dot'), { opacity: '0.25' }, 150);
                     }
-                }
-            });
+                });
+            }
         }
     }
 

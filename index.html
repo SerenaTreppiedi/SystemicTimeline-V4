@@ -683,6 +683,7 @@
         .year-marker {
             position: absolute;
             transform: translateX(-50%);
+            line-height: 16px;
             color: #BF953F;
             font-size: 0.8rem;
             font-weight: 500;
@@ -691,27 +692,29 @@
 
         /* Tacche del righello: spessore decrescente decennio > quinquennio > anno
            (le etichette con l'anno sono un livello a parte, sopra le tacche) */
+        /* Le tacche poggiano sulla linea dell'asse, nella fascia libera SOTTO le
+           date (le etichette occupano i primi 16px): non si sovrappongono mai ai numeri */
         .year-tick {
             position: absolute;
-            top: -5px;
-            height: 18px;
+            bottom: 0;
+            height: 7px;
             transform: translateX(-50%);
             pointer-events: none;
         }
 
         .year-tick-decade {
             width: 3px;
-            background: rgba(189, 156, 89, 0.5);
+            background: rgba(189, 156, 89, 0.45);
         }
 
         .year-tick-five {
             width: 2px;
-            background: rgba(189, 156, 89, 0.38);
+            background: rgba(189, 156, 89, 0.3);
         }
 
         .year-tick-year {
             width: 1px;
-            background: rgba(189, 156, 89, 0.28);
+            background: rgba(189, 156, 89, 0.22);
         }
 
         .app-footer {
@@ -2238,13 +2241,17 @@ function showDataLoadingError() {
             });
 
             // Tacche del righello: decennio (più spessa), quinquennio, anno (più
-            // sottile). Le meno importanti si nascondono quando lo spazio è
-            // troppo poco (es. mobile al 100%), per non creare un fitto reticolo.
+            // sottile). Compaiono gradualmente con lo zoom, per non creare un
+            // fitto reticolo: i decenni sempre, i quinquenni da ~6px per anno
+            // (circa il 100% su desktop), gli anni singoli da ~12px per anno
+            // (circa il 300%). Sui telefoni al 100% restano solo i decenni.
+            const MIN_PX_PER_YEAR_FOR_FIVE_TICKS = 6;
+            const MIN_PX_PER_YEAR_FOR_YEAR_TICKS = 12;
             for (let year = minYear; year <= maxYear; year++) {
                 const isDecade = year % 10 === 0;
                 const isFive = !isDecade && year % 5 === 0;
-                if (isFive && pxPerYear * 5 < 8) continue;
-                if (!isDecade && !isFive && pxPerYear < 4) continue;
+                if (isFive && pxPerYear < MIN_PX_PER_YEAR_FOR_FIVE_TICKS) continue;
+                if (!isDecade && !isFive && pxPerYear < MIN_PX_PER_YEAR_FOR_YEAR_TICKS) continue;
                 const tick = document.createElement('div');
                 tick.className = 'year-tick ' + (isDecade ? 'year-tick-decade' : (isFive ? 'year-tick-five' : 'year-tick-year'));
                 tick.style.left = ((year - minYear) / yearRange * 100) + '%';

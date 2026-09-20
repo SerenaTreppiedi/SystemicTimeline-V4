@@ -458,8 +458,8 @@
         }
 
         .event-dot {
-            width: 10px;
-            height: 10px;
+            width: 11px;
+            height: 11px;
             border-radius: 50%;
             background: var(--timeline-color);
             border: 2px solid #FFFFFF;
@@ -910,6 +910,13 @@
             line-height: 1;
         }
 
+        /* Correzione ottica: il glifo +/− del font, pur essendo centrato
+           geometricamente nel cerchio, appare visivamente un filo più in
+           alto del centro reale — questo micro-scarto compensa l'occhio. */
+        #zoomInBtn, #zoomOutBtn {
+            padding-top: 1px;
+        }
+
         /* Il pulsante "+" spicca rispetto agli altri: è l'azione più
            importante per chi non si accorge subito che si può zoomare */
         #zoomInBtn {
@@ -919,7 +926,7 @@
 
         @keyframes zoomInAttention {
             0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-            50% { box-shadow: 0 0 16px 6px rgba(255, 255, 255, 0.85); }
+            50% { box-shadow: 0 0 16px 6px rgba(255, 255, 255, 1); }
         }
 
         #zoomInBtn.attention-glow {
@@ -1388,12 +1395,10 @@
         const ZOOM_STEP = 1.0;
 
         // Il 100% (currentZoom=1) resta identico a sempre. Al livello
-        // massimo (1000%), però, l'ingrandimento reale deve essere molto
-        // più forte: prima mostrava circa 18 anni in vista, ora deve
-        // mostrarne circa 10 (un decennio) — un fattore 1.8 in più,
-        // applicato con la stessa curva progressiva di sempre.
+        // massimo, l'ingrandimento reale è stato aumentato di un ulteriore
+        // 15% rispetto alla calibrazione precedente (che già dava 1.8x).
         function getEffectiveZoom() {
-            const EXTRA_SLOPE = 12.5 / 9; // dà un ingrandimento 1.8x più forte a currentZoom=10 rispetto a prima
+            const EXTRA_SLOPE = (12.5 * 1.15) / 9;
             return currentZoom + EXTRA_SLOPE * (currentZoom - 1);
         }
         let timelineContainer;
@@ -2053,7 +2058,13 @@ function zoomOut() {
     applyZoom();
     renderTimelines();
     reapplyStateAfterRerender();
-    setCenterFraction(fraction);
+    if (currentZoom === 1.0) {
+        // Tornati esattamente al 100%: la vista deve essere sempre la
+        // stessa di quella iniziale, non un punto qualsiasi della timeline.
+        document.body.scrollLeft = 0;
+    } else {
+        setCenterFraction(fraction);
+    }
 }
 
 // renderTimelines() ricrea tutti i pallini da zero: filtri di ricerca/tag
@@ -2715,9 +2726,10 @@ function scheduleZoomHint() {
     if (!zoomInBtn) return;
     zoomInBtn.classList.remove('attention-glow');
     clearTimeout(zoomHintTimer);
+    if (currentZoom !== 1.0) return; // il bagliore ha senso solo per invitare a lasciare il 100%
     zoomHintTimer = setTimeout(() => {
-        zoomInBtn.classList.add('attention-glow');
-    }, 8000);
+        if (currentZoom === 1.0) zoomInBtn.classList.add('attention-glow');
+    }, 5600);
 }
 document.addEventListener('click', scheduleZoomHint);
 document.addEventListener('touchstart', scheduleZoomHint, { passive: true });

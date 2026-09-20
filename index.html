@@ -895,7 +895,7 @@
             background: #BF953F;
             color: #1A1A1A;
             border: none;
-            padding: 0.6rem;
+            padding: 0;
             border-radius: 50%;
             font-weight: 600;
             cursor: pointer;
@@ -907,6 +907,7 @@
             align-items: center;
             justify-content: center;
             font-size: 1.1rem;
+            line-height: 1;
         }
 
         /* Il pulsante "+" spicca rispetto agli altri: è l'azione più
@@ -917,12 +918,12 @@
         }
 
         @keyframes zoomInAttention {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(51, 68, 158, 0.75); }
-            50% { box-shadow: 0 0 0 12px rgba(51, 68, 158, 0); }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+            50% { box-shadow: 0 0 16px 6px rgba(255, 255, 255, 0.85); }
         }
 
         #zoomInBtn.attention-glow {
-            animation: zoomInAttention 1.6s ease-in-out infinite;
+            animation: zoomInAttention 2.8s ease-in-out infinite;
         }
 
         .zoom-btn:hover:not(:disabled) {
@@ -1383,13 +1384,16 @@
         // Il salto di zoom per click è il 25% più grande di prima (da 0.5 a
         // 0.625): non tocca in alcun modo la larghezza al 100%, cambia solo
         // di quanto ci si allontana da lì ad ogni click.
-        const ZOOM_STEP = 0.5 * 1.25;
+        // Il salto di zoom torna a percentuali tonde (100%, 200%... 1000%).
+        const ZOOM_STEP = 1.0;
 
-        // modifica lì. Salendo di zoom, si aggiunge un'intensità extra che
-        // cresce progressivamente fino a un preciso +25% al livello massimo
-        // (currentZoom=10), senza toccare la calibrazione di base.
+        // Il 100% (currentZoom=1) resta identico a sempre. Al livello
+        // massimo (1000%), però, l'ingrandimento reale deve essere molto
+        // più forte: prima mostrava circa 18 anni in vista, ora deve
+        // mostrarne circa 10 (un decennio) — un fattore 1.8 in più,
+        // applicato con la stessa curva progressiva di sempre.
         function getEffectiveZoom() {
-            const EXTRA_SLOPE = 2.5 / 9; // risolto per dare +25% esatto a currentZoom=10
+            const EXTRA_SLOPE = 12.5 / 9; // dà un ingrandimento 1.8x più forte a currentZoom=10 rispetto a prima
             return currentZoom + EXTRA_SLOPE * (currentZoom - 1);
         }
         let timelineContainer;

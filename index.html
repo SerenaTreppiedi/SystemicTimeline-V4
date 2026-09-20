@@ -2100,15 +2100,28 @@ function reapplyStateAfterRerender() {
         return (focusEvent.year - minYear) / (maxYear - minYear);
     }
 
-    const totalWidth = baseWidthPx * getEffectiveZoom();
+    // Lettura diretta della posizione reale a schermo: funziona sia quando
+    // la timeline è più stretta dello schermo (centrata con un margine,
+    // niente scroll) sia quando lo supera (scroll normale) — evitando lo
+    // scarto che si aveva assumendo sempre la seconda situazione.
+    const container = document.querySelector('.timeline-container');
+    const rect = container.getBoundingClientRect();
     const viewportWidth = document.body.clientWidth;
-    const centerX = document.body.scrollLeft + viewportWidth / 2;
-    return centerX / totalWidth;
+    if (!rect.width) return 0.5;
+    const fraction = (viewportWidth / 2 - rect.left) / rect.width;
+    return Math.max(0, Math.min(1, fraction));
 }
 
 function setCenterFraction(fraction) {
     const totalWidth = baseWidthPx * getEffectiveZoom();
     const viewportWidth = document.body.clientWidth;
+
+    if (totalWidth <= viewportWidth) {
+        // La timeline è più stretta dello schermo: resta centrata da sola
+        // via margine automatico, non c'è nulla da scrollare.
+        document.body.scrollLeft = 0;
+        return;
+    }
     const newCenterX = fraction * totalWidth;
     document.body.scrollLeft = newCenterX - viewportWidth / 2;
 }

@@ -689,15 +689,29 @@
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        .year-marker::before {
-            content: '';
+        /* Tacche del righello: spessore decrescente decennio > quinquennio > anno
+           (le etichette con l'anno sono un livello a parte, sopra le tacche) */
+        .year-tick {
             position: absolute;
             top: -5px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 1px;
             height: 18px;
-            background: rgba(189, 156, 89, 0.2);
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .year-tick-decade {
+            width: 3px;
+            background: rgba(189, 156, 89, 0.5);
+        }
+
+        .year-tick-five {
+            width: 2px;
+            background: rgba(189, 156, 89, 0.38);
+        }
+
+        .year-tick-year {
+            width: 1px;
+            background: rgba(189, 156, 89, 0.28);
         }
 
         .app-footer {
@@ -2081,11 +2095,15 @@ function showDataLoadingError() {
 
         function renderTimelines() {
             renderedUngrouped = hasCommittedFilters();
+            // Fotografia di come erano disposti pallini e barrette PRIMA del
+            // ridisegno: serve ad animare il passaggio da una disposizione all'altra
+            const previousLayout = captureLayoutSnapshot();
             createYearMarkers();
 
+            const pendingAnimations = [];
             Object.keys(timelineData).forEach((category, index) => {
                 const containerId = `timeline-${index + 1}`;
-                createTimelineEvents(category, containerId);
+                createTimelineEvents(category, containerId, previousLayout[containerId], pendingAnimations);
             });
 
             // Applica il filtro iniziale se c'è testo di ricerca (es. ricarica pagina)
@@ -2095,6 +2113,109 @@ function showDataLoadingError() {
             } else {
                 updateEventVisibility();
             }
+
+            startLayoutAnimations(pendingAnimations);
+        }
+
+        // ---------------------------------------------------------------
+        // ANIMAZIONE del passaggio tra barrette e pallini
+        // ---------------------------------------------------------------
+        // Ogni elemento ricorda dove si trovava (come frazione della larghezza
+        // totale, quindi confrontabile anche se lo zoom l'ha cambiata) e da quali
+        // eventi era composto. Dopo un ridisegno, ogni nuovo elemento parte dalla
+        // posizione dell'elemento che rappresentava prima quegli eventi e si
+        // sposta/allarga fino alla sua posizione finale:
+        //  - una barretta che si divide: le nuove parti partono dalla barretta
+        //    grande e si restringono ciascuna al proprio tratto;
+        //  - una barretta che si apre in pallini: i pallini escono dal suo centro;
+        //  - più pallini che diventano una barretta: la barretta parte dal tratto
+        //    che occupavano e si allarga fino a coprire l'unità.
+        // Gli elementi che non cambiano posizione non si muovono affatto.
+        const LAYOUT_ANIMATION_MS = 450;
+
+        function captureLayoutSnapshot() {
+            const snapshot = {};
+            document.querySelectorAll('.timeline-events').forEach(container => {
+                snapshot[container.id] = [...container.querySelectorAll('.event')]
+                    .map(el => el._layout)
+                    .filter(Boolean);
+            });
+            return snapshot;
+        }
+
+        function planLayoutAnimations(elements, oldLayouts, totalWidth, pending) {
+            if (!oldLayouts || oldLayouts.length === 0) return;
+            const oldByKey = new Map();
+            oldLayouts.forEach(l => l.keys.forEach(k => oldByKey.set(k, l)));
+            const dotFrac = 11 / totalWidth; // larghezza di un pallino, come frazione
+            const tolerance = 0.5 / totalWidth; // mezzo pixel: sotto, non c'è movimento
+
+            elements.forEach(el => {
+                const cur = el._layout;
+                if (el.classList.contains('event-group')) {
+                    const reps = new Set();
+                    cur.keys.forEach(k => { const r = oldByKey.get(k); if (r) reps.add(r); });
+                    if (reps.size === 0) return;
+                    let lo = Infinity, hi = -Infinity, fromDots = false;
+                    reps.forEach(r => {
+                        const half = (r.w || dotFrac) / 2;
+                        lo = Math.min(lo, r.cx - half);
+                        hi = Math.max(hi, r.cx + half);
+                        if (r.w === 0) fromDots = true;
+                    });
+                    const startCx = (lo + hi) / 2;
+                    const startW = Math.max(hi - lo, dotFrac);
+                    if (Math.abs(startCx - cur.cx) < tolerance && Math.abs(startW - cur.w) < tolerance) return;
+                    pending.push({ el, fromLeft: startCx * totalWidth, fromWidth: startW * totalWidth, fade: fromDots });
+                } else {
+                    const r = oldByKey.get(cur.keys[0]);
+                    if (!r) return;
+                    if (r.w === 0 && Math.abs(r.cx - cur.cx) < tolerance) return;
+                    pending.push({ el, fromLeft: r.cx * totalWidth, fromWidth: null, fade: r.w !== 0 });
+                }
+            });
+        }
+
+        function startLayoutAnimations(pending) {
+            if (!pending || pending.length === 0) return;
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            // 1) stato di partenza, senza transizioni
+            pending.forEach(p => {
+                const bar = p.el.querySelector('.event-bar');
+                p.bar = bar;
+                p.finalLeft = p.el.style.left;
+                p.finalWidth = bar ? bar.style.width : null;
+                p.el.style.transition = 'none';
+                p.el.style.left = p.fromLeft + 'px';
+                if (p.fade) p.el.style.opacity = '0';
+                if (bar && p.fromWidth != null) {
+                    bar.style.transition = 'none';
+                    bar.style.width = p.fromWidth + 'px';
+                }
+            });
+
+            void document.body.offsetWidth; // rende effettivo lo stato di partenza
+
+            // 2) verso lo stato finale
+            const ease = 'cubic-bezier(0.25, 0.8, 0.3, 1)';
+            pending.forEach(p => {
+                p.el.style.transition = `left ${LAYOUT_ANIMATION_MS}ms ${ease}, opacity ${LAYOUT_ANIMATION_MS}ms ease`;
+                p.el.style.left = p.finalLeft;
+                if (p.fade) p.el.style.opacity = '';
+                if (p.bar && p.fromWidth != null) {
+                    p.bar.style.transition = `width ${LAYOUT_ANIMATION_MS}ms ${ease}`;
+                    p.bar.style.width = p.finalWidth;
+                }
+            });
+
+            // 3) a fine animazione si ripristinano le transizioni normali
+            setTimeout(() => {
+                pending.forEach(p => {
+                    p.el.style.transition = '';
+                    if (p.bar) p.bar.style.transition = '';
+                });
+            }, LAYOUT_ANIMATION_MS + 60);
         }
 
         function createYearMarkers() {
@@ -2115,6 +2236,20 @@ function showDataLoadingError() {
             candidateSteps.forEach(s => {
                 if (pxPerYear * s >= MIN_LABEL_SPACING_PX) step = s;
             });
+
+            // Tacche del righello: decennio (più spessa), quinquennio, anno (più
+            // sottile). Le meno importanti si nascondono quando lo spazio è
+            // troppo poco (es. mobile al 100%), per non creare un fitto reticolo.
+            for (let year = minYear; year <= maxYear; year++) {
+                const isDecade = year % 10 === 0;
+                const isFive = !isDecade && year % 5 === 0;
+                if (isFive && pxPerYear * 5 < 8) continue;
+                if (!isDecade && !isFive && pxPerYear < 4) continue;
+                const tick = document.createElement('div');
+                tick.className = 'year-tick ' + (isDecade ? 'year-tick-decade' : (isFive ? 'year-tick-five' : 'year-tick-year'));
+                tick.style.left = ((year - minYear) / yearRange * 100) + '%';
+                yearMarkersContainer.appendChild(tick);
+            }
 
             for (let year = minYear; year <= maxYear; year += step) {
                 const marker = document.createElement('div');
@@ -2236,7 +2371,7 @@ function showDataLoadingError() {
             return { bars, dots };
         }
 
-        function createTimelineEvents(category, containerId) {
+        function createTimelineEvents(category, containerId, oldLayouts, pendingAnimations) {
 
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -2252,8 +2387,25 @@ function showDataLoadingError() {
             const layout = layoutCategory(events, totalWidth);
             // Prima le barrette, poi i pallini: a parità di livello i pallini
             // restano sopra (ordine di disegno).
-            layout.bars.forEach(bar => container.appendChild(buildGroupElement(bar, category, totalWidth)));
-            layout.dots.forEach(dot => container.appendChild(buildEventElement(dot.ev, dot.x, category)));
+            const created = [];
+            layout.bars.forEach(bar => {
+                const el = buildGroupElement(bar, category, totalWidth);
+                el._layout = {
+                    cx: ((bar.x0 + bar.x1) / 2) / totalWidth,
+                    w: (bar.x1 - bar.x0) / totalWidth,
+                    keys: bar.members.map(m => m.fullKey)
+                };
+                container.appendChild(el);
+                created.push(el);
+            });
+            layout.dots.forEach(dot => {
+                const el = buildEventElement(dot.ev, dot.x, category);
+                el._layout = { cx: dot.x / totalWidth, w: 0, keys: [dot.ev.fullKey] };
+                container.appendChild(el);
+                created.push(el);
+            });
+
+            if (pendingAnimations) planLayoutAnimations(created, oldLayouts, totalWidth, pendingAnimations);
         }
 
         // Barretta che raggruppa più eventi. Non apre schede: il suo popup

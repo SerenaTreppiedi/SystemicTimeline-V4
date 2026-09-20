@@ -453,6 +453,38 @@
             transform: scale(1.3);
         }
 
+        /* Barretta di gruppo: sostituisce più pallini ravvicinati. Stesso stile
+           e stessa altezza di un pallino, ma allungata in orizzontale (la
+           larghezza in pixel la imposta JS). Non si ingrandisce mai
+           (altrimenti invaderebbe le barrette vicine): evidenziazioni e hover
+           agiscono solo su bordo e alone. */
+        .event-dot.event-bar {
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        .event .event-dot.event-bar {
+            transform: none !important;
+        }
+
+        /* Popup piccolo e discreto della barretta ("zoom-in") */
+        .event-popup.event-popup-mini {
+            min-width: 0;
+            max-width: none;
+            width: max-content;
+            padding: 0.2rem 0.55rem;
+            bottom: 22px;
+            /* ombra corta e leggera: quella standard dei popup, più grande,
+               scurirebbe la barretta sottostante */
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            backdrop-filter: none;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #FFFFFF;
+            white-space: nowrap;
+        }
+
         /* Ricerca/filtri attivi (classe messa sul <body> da JS): la selezione
            è già espressa dall'opacità (corrispondenti al 100%, esclusi al
            20%), quindi l'effetto cluster NON deve più attenuare gli altri
@@ -1597,7 +1629,12 @@ if (pulsanteReset) {
 
                 document.addEventListener('click', (e) => {
                     if (!filterPanel.classList.contains('active')) return;
-                    if (filterPanel.contains(e.target) || e.target === filterIconBtn || filterIconBtn.contains(e.target)) return;
+                    // Il percorso dell'evento è fissato al momento del click: resta
+                    // valido anche se l'elemento cliccato viene poi rimosso dal DOM
+                    // (es. la × di una parola chiave, che ridisegna i chip), cosa che
+                    // con contains(e.target) faceva chiudere il pannello per errore.
+                    const path = e.composedPath ? e.composedPath() : [];
+                    if (path.includes(filterPanel) || path.includes(filterIconBtn)) return;
                     filterPanel.classList.remove('active');
                 });
 
@@ -1867,26 +1904,49 @@ function showDataLoadingError() {
         // Combina parole chiave e filtri (tag/cluster) attivi: un evento
         // resta al 100% solo se soddisfa entrambe le condizioni. Gli altri
         // non spariscono: restano al 20% (vedi .event.no-match nel CSS).
+        // Dati su cui lavorano ricerca e filtri, per UN singolo evento
+        function getEventFilterData(event, category) {
+            const searchText = `${event.year} ${event.title} ${category} ${event.sustainability ? 'Sostenibilità' : ''} ${event.systemthinking ? 'Systems Thinking' : ''} ${event.systemicdesign ? 'Systemic Design' : ''} ${event.systemdynamic ? 'System Dynamic' : ''}`.toLowerCase();
+            const tags = [];
+            if (event.sustainability) tags.push('sustainability');
+            if (event.systemthinking) tags.push('systemthinking');
+            if (event.systemicdesign) tags.push('systemicdesign');
+            if (event.systemdynamic) tags.push('systemdynamic');
+            return { searchText, tags, clusters: event.clusters || [] };
+        }
+
+        // Un evento passa se contiene TUTTE le parole cercate E (se ci sono
+        // filtri tag/cluster attivi) ne soddisfa almeno uno.
+        function eventPassesFilters(data, terms) {
+            if (!terms.every(t => data.searchText.includes(t))) return false;
+            if (activeFilterSet.size > 0) {
+                return data.tags.some(t => activeFilterSet.has('tag:' + t)) ||
+                       data.clusters.some(c => activeFilterSet.has('cluster:' + c));
+            }
+            return true;
+        }
+
         function updateEventVisibility() {
             const terms = getActiveSearchTerms();
 
             document.querySelectorAll('.event').forEach(el => {
                 el.classList.remove('no-match');
 
-                const searchText = el.getAttribute('data-search-text') || '';
-                const searchOk = terms.every(t => searchText.includes(t));
-
-                let filterOk = true;
-                if (activeFilterSet.size > 0) {
-                    const tags = (el.getAttribute('data-tags') || '').split(',').filter(Boolean);
-                    const clusters = (el.getAttribute('data-clusters') || '').split(',').filter(Boolean);
-                    filterOk = tags.some(t => activeFilterSet.has('tag:' + t)) ||
-                               clusters.some(c => activeFilterSet.has('cluster:' + c));
+                let passes;
+                if (el._filterData) {
+                    // Barretta di gruppo: resta in evidenza se ALMENO UN evento
+                    // che contiene passa i filtri (valutati evento per evento,
+                    // non sull'unione dei testi, per non dare falsi positivi).
+                    passes = el._filterData.some(d => eventPassesFilters(d, terms));
+                } else {
+                    passes = eventPassesFilters({
+                        searchText: el.getAttribute('data-search-text') || '',
+                        tags: (el.getAttribute('data-tags') || '').split(',').filter(Boolean),
+                        clusters: (el.getAttribute('data-clusters') || '').split(',').filter(Boolean)
+                    }, terms);
                 }
 
-                if (!searchOk || !filterOk) {
-                    el.classList.add('no-match');
-                }
+                if (!passes) el.classList.add('no-match');
             });
 
             // Ricerca o filtri attivi: serve al CSS per far valere le
@@ -1926,6 +1986,7 @@ function showDataLoadingError() {
 
             renderKeywordChips();
             updateEventVisibility();
+            syncLayoutWithFilters();
             if (isNew) pulseFilterButton();
         }
 
@@ -1933,6 +1994,7 @@ function showDataLoadingError() {
             activeKeywords = activeKeywords.filter(k => k !== keyword);
             renderKeywordChips();
             updateEventVisibility();
+            syncLayoutWithFilters();
         }
 
         function renderKeywordChips() {
@@ -1974,6 +2036,7 @@ function showDataLoadingError() {
                 chip.classList.add('active');
             }
             updateEventVisibility();
+            syncLayoutWithFilters();
         }
 
         function resetFilters() {
@@ -1982,6 +2045,7 @@ function showDataLoadingError() {
             document.querySelectorAll('#filterTagChips .filter-chip, #filterClusterChips .filter-chip').forEach(c => c.classList.remove('active'));
             renderKeywordChips();
             updateEventVisibility();
+            syncLayoutWithFilters();
         }
 
         // Ricostruisce l'elenco dei cluster disponibili leggendo i dati
@@ -2016,6 +2080,7 @@ function showDataLoadingError() {
         }
 
         function renderTimelines() {
+            renderedUngrouped = hasCommittedFilters();
             createYearMarkers();
 
             Object.keys(timelineData).forEach((category, index) => {
@@ -2060,6 +2125,117 @@ function showDataLoadingError() {
             }
         }
 
+        // ---------------------------------------------------------------
+        // RAGGRUPPAMENTO A BARRETTE (dipende SOLO da dati e livello di zoom)
+        // ---------------------------------------------------------------
+        // Zoom 100-300%: unità = decennio    (es. 1961-1970)  -> barretta se PIÙ DI 15 eventi
+        // Zoom 400-600%: unità = quinquennio (es. 1951-1955)  -> barretta se PIÙ DI 10 eventi
+        // Zoom 700-900%: unità = anno                         -> barretta se PIÙ DI 5 eventi
+        // Zoom 1000%   : nessuna barretta, tutti i pallini singoli
+        // Un'unità sotto soglia resta fatta di pallini, ciascuno sul proprio
+        // anno (quelli dello stesso anno distribuiti equamente dentro quell'anno).
+        // Con un filtro CONFERMATO (parola chiave con Invio, tag o cluster) le
+        // barrette spariscono a ogni zoom e tornano tutti i pallini singoli, così
+        // si vede esattamente quali eventi corrispondono. Mentre si sta solo
+        // digitando (senza Invio) le barrette restano.
+        // A differenza delle vecchie bolle-cluster, il raggruppamento NON
+        // dipende dalla distanza in pixel: le unità sono fisse (calendario),
+        // quindi il risultato è identico a ogni ricarico e non "vibra".
+        const BAR_GAP_PX = 2;          // spazio tra barrette adiacenti (per lato)
+        const BAR_MIN_WIDTH_PX = 13;   // sotto questa larghezza (poco più di un pallino) torna a pallini
+
+        // true se c'è almeno un filtro confermato: parola chiave (Invio), tag o cluster
+        function hasCommittedFilters() {
+            return activeKeywords.length > 0 || activeFilterSet.size > 0;
+        }
+
+        // Ultimo stato con cui sono state disegnate le timeline: serve a
+        // ridisegnarle solo quando i filtri confermati passano da assenti a
+        // presenti (o viceversa), non a ogni piccola modifica.
+        let renderedUngrouped = false;
+
+        // unit: ampiezza in anni dell'unità di raggruppamento
+        // minEvents: da quanti eventi nell'unità compare la barretta
+        //            (Infinity = mai, tutti pallini singoli)
+        function getGroupingMode() {
+            if (hasCommittedFilters()) return { unit: 1, minEvents: Infinity };
+            const level = Math.round(currentZoom);
+            if (level <= 3) return { unit: 10, minEvents: 16 };  // più di 15 nel decennio
+            if (level <= 6) return { unit: 5, minEvents: 11 };   // più di 10 nel quinquennio
+            if (level <= 9) return { unit: 1, minEvents: 6 };    // più di 5 nell'anno
+            return { unit: 1, minEvents: Infinity };
+        }
+
+        // Da chiamare quando cambiano i filtri confermati: se lo stato
+        // "con/senza filtri" è cambiato, ridisegna timeline (barrette <-> pallini).
+        function syncLayoutWithFilters() {
+            if (hasCommittedFilters() === renderedUngrouped) return;
+            renderTimelines();
+            reapplyStateAfterRerender();
+        }
+
+        // Anno intero di un evento. Quando il database avrà le date esatte
+        // (giorno/mese/anno) basterà estendere questa funzione (e la
+        // posizione dentro l'anno più sotto): il resto non cambia.
+        // I vecchi decimali (1978,2) qui vengono ignorati per la posizione,
+        // ma usati come criterio d'ordine tra eventi dello stesso anno.
+        function getEventYear(event) {
+            return Math.floor(event.year + 1e-9);
+        }
+
+        function layoutCategory(events, totalWidth) {
+            const mode = getGroupingMode();
+            const yearRange = maxYear - minYear;
+            const toX = (yearValue) => Math.max(0, Math.min(totalWidth, ((yearValue - minYear) / yearRange) * totalWidth));
+
+            // Ordine stabile: anno intero, poi eventuale decimale, poi ordine nel foglio
+            const items = events
+                .map((ev, index) => ({ ev, index, y: getEventYear(ev) }))
+                .sort((a, b) => (a.y - b.y) || (a.ev.year - b.ev.year) || (a.index - b.index));
+
+            // Raggruppa nelle unità del livello di zoom corrente
+            const units = new Map();
+            items.forEach(item => {
+                const start = mode.unit === 1
+                    ? item.y
+                    : Math.floor((item.y - 1) / mode.unit) * mode.unit + 1;
+                if (!units.has(start)) units.set(start, []);
+                units.get(start).push(item);
+            });
+
+            const bars = [];
+            const dots = [];
+
+            units.forEach((members, start) => {
+                if (members.length >= mode.minEvents) {
+                    // Su schermi stretti (mobile a 100%) un decennio misura ~19px:
+                    // lì lo spazio tra barrette scende da 2px a 1px per lato.
+                    const gap = (toX(start + mode.unit) - toX(start)) < 30 ? 1 : BAR_GAP_PX;
+                    const x0 = toX(start) + gap;
+                    const x1 = toX(start + mode.unit) - gap;
+                    if (x1 - x0 >= BAR_MIN_WIDTH_PX) {
+                        bars.push({ members: members.map(m => m.ev), x0, x1 });
+                        return;
+                    }
+                }
+
+                // Pallini singoli: ognuno sul proprio anno; se nello stesso
+                // anno ce n'è più di uno, distribuiti equamente dentro l'anno.
+                const byYear = new Map();
+                members.forEach(item => {
+                    if (!byYear.has(item.y)) byYear.set(item.y, []);
+                    byYear.get(item.y).push(item);
+                });
+                byYear.forEach((list, y) => {
+                    list.forEach((item, k) => {
+                        dots.push({ ev: item.ev, x: toX(y + k / list.length) });
+                    });
+                });
+            });
+
+            return { bars, dots };
+        }
+
         function createTimelineEvents(category, containerId) {
 
             const container = document.getElementById(containerId);
@@ -2067,17 +2243,50 @@ function showDataLoadingError() {
 
             container.innerHTML = '';
             const events = timelineData[category] || [];
-            const yearRange = maxYear - minYear;
             // Larghezza REALE e attuale del contenitore in cui i pallini
             // vengono disegnati (non ricalcolata a mano): così coincide
             // sempre esattamente col "binario" visibile, padding compreso,
             // a qualunque livello di zoom.
             const totalWidth = container.clientWidth;
 
-            events.forEach(event => {
-                const x = ((event.year - minYear) / yearRange) * totalWidth;
-                container.appendChild(buildEventElement(event, x, category));
+            const layout = layoutCategory(events, totalWidth);
+            // Prima le barrette, poi i pallini: a parità di livello i pallini
+            // restano sopra (ordine di disegno).
+            layout.bars.forEach(bar => container.appendChild(buildGroupElement(bar, category, totalWidth)));
+            layout.dots.forEach(dot => container.appendChild(buildEventElement(dot.ev, dot.x, category)));
+        }
+
+        // Barretta che raggruppa più eventi. Non apre schede: il suo popup
+        // dice solo "zoom-in", e un click ingrandisce la timeline su di lei.
+        function buildGroupElement(bar, category, totalWidth) {
+            const el = document.createElement('div');
+            el.className = 'event event-group';
+            el.style.left = ((bar.x0 + bar.x1) / 2) + 'px';
+
+            const filterData = bar.members.map(ev => getEventFilterData(ev, category));
+            el._members = bar.members;
+            el._filterData = filterData;
+
+            // Unione dei cluster/tag dei membri: serve all'illuminazione per
+            // cluster (la barretta si illumina se ALMENO UN membro è collegato)
+            const clusters = new Set();
+            const tags = new Set();
+            filterData.forEach(d => { d.clusters.forEach(c => clusters.add(c)); d.tags.forEach(t => tags.add(t)); });
+            el.setAttribute('data-clusters', [...clusters].join(','));
+            el.setAttribute('data-tags', [...tags].join(','));
+            el.setAttribute('data-group-size', String(bar.members.length));
+
+            el.innerHTML = `
+                <div class="event-dot event-bar" style="width:${bar.x1 - bar.x0}px"></div>
+                <div class="event-popup event-popup-mini">zoom-in</div>
+            `;
+
+            el.addEventListener('click', function () {
+                if (Math.round(currentZoom) >= 10) return;
+                zoomIn(((bar.x0 + bar.x1) / 2) / totalWidth);
             });
+
+            return el;
         }
 
         function buildEventElement(event, xPixels, category) {
@@ -2169,8 +2378,10 @@ if (event.systemdynamic) {
             zoomInBtn.disabled = currentZoom >= 10.0;
         }
 
-     function zoomIn() {
-    const fraction = getCenterFraction();
+     function zoomIn(centerFraction) {
+    // Di solito si centra come sempre (getCenterFraction); un click su una
+    // barretta di gruppo passa invece il proprio centro.
+    const fraction = (typeof centerFraction === 'number') ? centerFraction : getCenterFraction();
     currentZoom = Math.min(currentZoom + ZOOM_STEP, 10.0);
     applyZoom();
     renderTimelines();
@@ -2893,14 +3104,25 @@ scheduleZoomHint();
 // linea verticale di confronto, e "illumina" gli altri eventi che
 // condividono almeno un cluster tematico, attenuando tutti gli altri.
 // Tutto resta finché la scheda di approfondimento non viene chiusa.
+// Trova l'elemento che rappresenta un evento a schermo: il suo pallino, oppure
+// (se a questo zoom è raggruppato) la barretta che lo contiene.
+function findElementForEvent(ev) {
+    let found = null;
+    document.querySelectorAll('.event').forEach(el => {
+        if (el.getAttribute('data-full-key') === ev.fullKey) found = el;
+    });
+    if (found) return found;
+    document.querySelectorAll('.event-group').forEach(el => {
+        if (el._members && el._members.some(m => m.fullKey === ev.fullKey)) found = el;
+    });
+    return found;
+}
+
 function highlightCluster(clickedEvent) {
     verticalLineLocked = true;
     document.querySelectorAll('.event').forEach(el => el.classList.remove('cluster-glow', 'cluster-dim', 'cluster-selected'));
 
-    let clickedEl = null;
-    document.querySelectorAll('.event').forEach(el => {
-        if (el.getAttribute('data-full-key') === clickedEvent.fullKey) clickedEl = el;
-    });
+    const clickedEl = findElementForEvent(clickedEvent);
     if (!clickedEl) return;
 
     clickedEl.classList.add('cluster-selected');
@@ -2970,10 +3192,7 @@ function highlightClusterTemporary(clickedEvent) {
     verticalLineLocked = true;
     mobileHighlightEvent = clickedEvent;
 
-    let clickedEl = null;
-    document.querySelectorAll('.event').forEach(el => {
-        if (el.getAttribute('data-full-key') === clickedEvent.fullKey) clickedEl = el;
-    });
+    const clickedEl = findElementForEvent(clickedEvent);
     if (!clickedEl) return;
 
     const verticalLine = document.getElementById('verticalLine');

@@ -909,6 +909,22 @@
             font-size: 1.1rem;
         }
 
+        /* Il pulsante "+" spicca rispetto agli altri: è l'azione più
+           importante per chi non si accorge subito che si può zoomare */
+        #zoomInBtn {
+            background: #33449E;
+            color: #FFFFFF;
+        }
+
+        @keyframes zoomInAttention {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(51, 68, 158, 0.75); }
+            50% { box-shadow: 0 0 0 12px rgba(51, 68, 158, 0); }
+        }
+
+        #zoomInBtn.attention-glow {
+            animation: zoomInAttention 1.6s ease-in-out infinite;
+        }
+
         .zoom-btn:hover:not(:disabled) {
             background: #D4A75E;
             transform: translateY(-2px);
@@ -1364,6 +1380,11 @@
     <script>
         let currentZoom = 1.0; // Inizializzato a 1.0 (100%)
         // Il 100% (currentZoom=1) resta esattamente come sempre: nessuna
+        // Il salto di zoom per click è il 25% più grande di prima (da 0.5 a
+        // 0.625): non tocca in alcun modo la larghezza al 100%, cambia solo
+        // di quanto ci si allontana da lì ad ogni click.
+        const ZOOM_STEP = 0.5 * 1.25;
+
         // modifica lì. Salendo di zoom, si aggiunge un'intensità extra che
         // cresce progressivamente fino a un preciso +25% al livello massimo
         // (currentZoom=10), senza toccare la calibrazione di base.
@@ -1841,25 +1862,20 @@ function showDataLoadingError() {
             const yearMarkersContainer = document.getElementById('yearMarkers');
             yearMarkersContainer.innerHTML = '';
             const yearRange = maxYear - minYear;
-            let step = 10;
-            const isMobile = window.innerWidth <= 768;
-            if (isMobile) {
-                if (currentZoom < 3) {
-                    step = 25;
-                } else if (currentZoom < 6) {
-                    step = 10;
-                } else {
-                    step = 5;
-                }
-            } else {
-                if (currentZoom < 1.5) {
-                    step = 25;
-                } else if (currentZoom < 2.5) {
-                    step = 10;
-                } else {
-                    step = 5;
-                }
-            }
+
+            // Spazio minimo (in pixel) perché due etichette non si tocchino.
+            const MIN_LABEL_SPACING_PX = 55;
+            const totalWidth = yearMarkersContainer.clientWidth || (baseWidthPx * getEffectiveZoom());
+            const pxPerYear = totalWidth / yearRange;
+
+            // Sceglie il passo più fine tra quelli "puliti" che garantisce
+            // comunque lo spazio minimo: così, non appena lo zoom libera
+            // spazio a sufficienza, compaiono da sole le tacche intermedie.
+            const candidateSteps = [25, 10, 5, 2, 1];
+            let step = candidateSteps[0];
+            candidateSteps.forEach(s => {
+                if (pxPerYear * s >= MIN_LABEL_SPACING_PX) step = s;
+            });
 
             for (let year = minYear; year <= maxYear; year += step) {
                 const marker = document.createElement('div');
@@ -2020,7 +2036,7 @@ if (event.systemdynamic) {
 
      function zoomIn() {
     const fraction = getCenterFraction();
-    currentZoom = Math.min(currentZoom + 0.5, 10.0);
+    currentZoom = Math.min(currentZoom + ZOOM_STEP, 10.0);
     applyZoom();
     renderTimelines();
     reapplyStateAfterRerender();
@@ -2029,7 +2045,7 @@ if (event.systemdynamic) {
 
 function zoomOut() {
     const fraction = getCenterFraction();
-    currentZoom = Math.max(currentZoom - 0.5, 1.0);
+    currentZoom = Math.max(currentZoom - ZOOM_STEP, 1.0);
     applyZoom();
     renderTimelines();
     reapplyStateAfterRerender();
@@ -2686,6 +2702,23 @@ let currentDetailColor = null;
 // verticale: c'è una selezione attiva (click desktop o tap mobile) che
 // deve restare ferma finché non viene chiusa/esaurita.
 let verticalLineLocked = false;
+
+// Se l'utente non interagisce per un po', il pulsante "+" lampeggia per
+// far notare che si può zoomare (molte persone non se ne accorgono subito).
+let zoomHintTimer = null;
+function scheduleZoomHint() {
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    if (!zoomInBtn) return;
+    zoomInBtn.classList.remove('attention-glow');
+    clearTimeout(zoomHintTimer);
+    zoomHintTimer = setTimeout(() => {
+        zoomInBtn.classList.add('attention-glow');
+    }, 8000);
+}
+document.addEventListener('click', scheduleZoomHint);
+document.addEventListener('touchstart', scheduleZoomHint, { passive: true });
+document.addEventListener('keydown', scheduleZoomHint);
+scheduleZoomHint();
 
 // Al click su un evento (desktop): marca il pallino selezionato, mostra la
 // linea verticale di confronto, e "illumina" gli altri eventi che

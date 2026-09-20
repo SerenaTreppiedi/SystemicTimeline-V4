@@ -487,6 +487,21 @@
             z-index: 300001;
         }
 
+        /* Pallino escluso dal filtro ma illuminato dal cluster: col mouse
+           sopra passa in primo piano (altrimenti il suo popup finirebbe
+           SOTTO le barre delle timeline e il footer, per via dello
+           z-index basso dato agli esclusi) e torna al 100% di opacità. */
+        .event.no-match.cluster-glow:hover,
+        .event.no-match.cluster-tappable:hover {
+            z-index: 300001;
+        }
+
+        body.filters-active .event.no-match.cluster-glow:hover .event-dot,
+        body.filters-active .event.no-match.cluster-selected:hover .event-dot,
+        body.filters-active .event.no-match.cluster-tappable:hover .event-dot {
+            opacity: 1;
+        }
+
         .event:hover .event-popup {
             opacity: 1;
             visibility: visible;
@@ -2864,9 +2879,14 @@ function scheduleZoomHint() {
         if (currentZoom === 1.0) zoomInBtn.classList.add('attention-glow');
     }, 5600);
 }
-document.addEventListener('click', scheduleZoomHint);
-document.addEventListener('touchstart', scheduleZoomHint, { passive: true });
-document.addEventListener('keydown', scheduleZoomHint);
+// Qualsiasi interazione in QUALUNQUE punto del sito azzera l'attesa. Gli
+// ascoltatori sono sulla finestra e in fase di "cattura": scattano prima di
+// ogni altro gestore, quindi non li ferma nulla (né un elemento che blocca
+// la propagazione, né un pulsante disabilitato, né un trascinamento in cui
+// il "click" completo non viene generato).
+['pointerdown', 'mousedown', 'click', 'touchstart', 'keydown'].forEach(evt => {
+    window.addEventListener(evt, scheduleZoomHint, { capture: true, passive: true });
+});
 scheduleZoomHint();
 
 // Al click su un evento (desktop): marca il pallino selezionato, mostra la

@@ -150,6 +150,17 @@
             width: 230px;
         }
 
+        /* Contenitore del solo campo di testo: la X di cancellazione si
+           ancora a lui (non a tutta la barra), così resta sempre dentro il
+           rettangolo di scrittura, a destra, sia su desktop sia su mobile. */
+        .search-input-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+        }
+
         .search-input {
             padding: 0.5rem 0.75rem;
             border-radius: 18px;
@@ -177,7 +188,7 @@
 
         .clear-search-btn {
             position: absolute;
-            right: 8px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
@@ -269,6 +280,31 @@
         .filter-chip.active {
             border-color: #BF953F;
             background: rgba(191, 149, 63, 0.25);
+        }
+
+        /* Chip di una parola chiave confermata con Invio: si rimuove
+           solo dalla sua "x", non cliccando sul testo */
+        .filter-chip.keyword-chip {
+            cursor: default;
+            padding-right: 0.3rem;
+        }
+
+        .keyword-chip-remove {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .keyword-chip-remove:hover {
+            color: #FFFFFF;
+        }
+
+        .filter-panel-section.has-keywords .keyword-hint {
+            display: none !important;
         }
 
         .filter-chip-dot {
@@ -388,10 +424,15 @@
             z-index: 1;
         }
 
-        /* Eventi non corrispondenti a una ricerca attiva: nascosti */
-        .event.no-match {
-            opacity: 0;
-            pointer-events: none;
+        /* Eventi che corrispondono a una parola chiave: restano evidenziati
+           (nessun popup, solo il pallino illuminato) finché la parola è attiva */
+        .event.search-match {
+            z-index: 5;
+        }
+
+        .event.search-match .event-dot {
+            box-shadow: 0 0 0 2px rgba(255, 224, 150, 0.95), 0 0 10px 3px rgba(255, 224, 150, 0.55);
+            transform: scale(1.25);
         }
 
         /* Effetto "illuminato": al click su un evento, quelli con almeno un
@@ -410,28 +451,34 @@
             transform: scale(1.3);
         }
 
-        /* Eventi corrispondenti a una ricerca attiva: sempre in primo piano */
-        .event.force-open {
-            z-index: 300001;
-            opacity: 1;
+        /* Eventi che non corrispondono a ricerca/filtri attivi: restano
+           visibili al 10% (non spariscono), così, se un evento illuminato
+           dal cluster è tra questi, si vede comunque. Non sono cliccabili,
+           tranne quelli illuminati dal cluster. */
+        .event.no-match {
+            pointer-events: none;
         }
 
-        /* Popup dell'evento trovato dalla ricerca: visibile senza hover,
-           ma a opacità ridotta finché l'utente non ci passa sopra */
-        .event.force-open .event-popup {
-            opacity: 0.6 !important;
-            visibility: visible;
-            transform: translateX(-50%) translateY(-5px);
-            box-shadow: 0 0 0 2px var(--timeline-color), 0 8px 30px rgba(0, 0, 0, 0.8);
-            transition: all 0.2s ease, opacity 0.25s ease 0.1s;
+        .event.no-match .event-dot {
+            opacity: 0.1;
+        }
+
+        .event.no-match.cluster-dim .event-dot {
+            opacity: 0.1;
+        }
+
+        .event.no-match.cluster-glow,
+        .event.no-match.cluster-tappable {
+            pointer-events: auto;
+        }
+
+        .event.no-match.cluster-glow .event-dot,
+        .event.no-match.cluster-selected .event-dot {
+            opacity: 1;
         }
 
         .event:hover {
             z-index: 300001;
-        }
-
-        .event.force-open:hover .event-popup {
-            opacity: 1 !important;
         }
 
         .event:hover .event-popup {
@@ -1479,11 +1526,15 @@ if (pulsanteReset) {
                         clearBtn.style.display = term ? 'block' : 'none';
                     });
 
-                    // Su mobile, "Invio" chiude la tastiera invece di dover
-                    // toccare fuori dal campo di ricerca.
+                    // "Invio" memorizza il testo come parola chiave (visibile nel
+                    // pannello filtri) e svuota il campo, pronto per la prossima.
+                    // Su mobile chiude anche la tastiera; su desktop il cursore
+                    // resta nel campo per inserire subito un'altra parola.
                     searchInput.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter') {
-                            searchInput.blur();
+                            e.preventDefault();
+                            commitSearchAsKeyword();
+                            if (isMobileViewport()) searchInput.blur();
                         }
                     });
                 }
@@ -1610,6 +1661,7 @@ document.getElementById('menuIcon').addEventListener('click', () => {
         renderTimelines();
         updateEventVisibility();
         populateClusterChips();
+        renderKeywordChips();
         if (dataLoadingFinished) {
             hideDataLoadingMessage();
         }
@@ -1772,7 +1824,8 @@ function showDataLoadingError() {
 }
 
 
-        let currentSearchTerm = '';
+        let currentSearchTerm = '';   // testo che si sta scrivendo (filtra in tempo reale)
+        let activeKeywords = [];      // parole chiave confermate con Invio
         let activeFilterSet = new Set();
 
         function filterEvents(searchTerm) {
@@ -1780,14 +1833,26 @@ function showDataLoadingError() {
             updateEventVisibility();
         }
 
-        // Combina ricerca testuale e filtri (tag/cluster) attivi: un evento
-        // è visibile solo se soddisfa entrambe le condizioni.
+        // Parole cercate in questo momento: quelle confermate + quella in
+        // digitazione. Un evento corrisponde se contiene ALMENO UNA di esse
+        // (stessa logica "OR" dei filtri tag/cluster).
+        function getActiveSearchTerms() {
+            const terms = activeKeywords.map(k => k.toLowerCase());
+            if (currentSearchTerm !== '') terms.push(currentSearchTerm);
+            return terms;
+        }
+
+        // Combina parole chiave e filtri (tag/cluster) attivi: un evento
+        // è in evidenza solo se soddisfa entrambe le condizioni. Gli altri
+        // non spariscono: restano al 10% (vedi .event.no-match nel CSS).
         function updateEventVisibility() {
+            const terms = getActiveSearchTerms();
+
             document.querySelectorAll('.event').forEach(el => {
-                el.classList.remove('force-open', 'no-match');
+                el.classList.remove('no-match', 'search-match');
 
                 const searchText = el.getAttribute('data-search-text') || '';
-                const searchOk = currentSearchTerm === '' || searchText.includes(currentSearchTerm);
+                const searchOk = terms.length === 0 || terms.some(t => searchText.includes(t));
 
                 let filterOk = true;
                 if (activeFilterSet.size > 0) {
@@ -1799,10 +1864,68 @@ function showDataLoadingError() {
 
                 if (!searchOk || !filterOk) {
                     el.classList.add('no-match');
-                } else if (currentSearchTerm !== '') {
-                    el.classList.add('force-open');
+                } else if (terms.length > 0) {
+                    el.classList.add('search-match');
                 }
             });
+
+            const btn = document.getElementById('filterIconBtn');
+            if (btn) btn.classList.toggle('active', activeFilterSet.size > 0 || activeKeywords.length > 0);
+        }
+
+        // Invio nella barra di ricerca: il testo diventa una parola chiave
+        function commitSearchAsKeyword() {
+            const input = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (!input) return;
+
+            const keyword = input.value.trim().replace(/\s+/g, ' ');
+            if (keyword === '') return;
+
+            if (!activeKeywords.some(k => k.toLowerCase() === keyword.toLowerCase())) {
+                activeKeywords.push(keyword);
+            }
+
+            input.value = '';
+            currentSearchTerm = '';
+            if (clearBtn) clearBtn.style.display = 'none';
+
+            renderKeywordChips();
+            updateEventVisibility();
+        }
+
+        function removeKeyword(keyword) {
+            activeKeywords = activeKeywords.filter(k => k !== keyword);
+            renderKeywordChips();
+            updateEventVisibility();
+        }
+
+        function renderKeywordChips() {
+            const container = document.getElementById('filterKeywordChips');
+            const section = document.getElementById('filterKeywordSection');
+            if (!container) return;
+            container.innerHTML = '';
+
+            activeKeywords.forEach(keyword => {
+                const chip = document.createElement('span');
+                chip.className = 'filter-chip keyword-chip active';
+
+                const text = document.createElement('span');
+                text.textContent = keyword;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'keyword-chip-remove';
+                removeBtn.type = 'button';
+                removeBtn.textContent = '×';
+                removeBtn.title = langMode === 'it' ? 'Rimuovi' : 'Remove';
+                removeBtn.addEventListener('click', () => removeKeyword(keyword));
+
+                chip.appendChild(text);
+                chip.appendChild(removeBtn);
+                container.appendChild(chip);
+            });
+
+            if (section) section.classList.toggle('has-keywords', activeKeywords.length > 0);
         }
 
 
@@ -1816,15 +1939,13 @@ function showDataLoadingError() {
                 chip.classList.add('active');
             }
             updateEventVisibility();
-            const btn = document.getElementById('filterIconBtn');
-            if (btn) btn.classList.toggle('active', activeFilterSet.size > 0);
         }
 
         function resetFilters() {
             activeFilterSet.clear();
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-            const btn = document.getElementById('filterIconBtn');
-            if (btn) btn.classList.remove('active');
+            activeKeywords = [];
+            document.querySelectorAll('#filterTagChips .filter-chip, #filterClusterChips .filter-chip').forEach(c => c.classList.remove('active'));
+            renderKeywordChips();
             updateEventVisibility();
         }
 
@@ -1871,6 +1992,8 @@ function showDataLoadingError() {
             const searchInput = document.getElementById('searchInput');
             if (searchInput && searchInput.value.trim() !== '') {
                 filterEvents(searchInput.value);
+            } else {
+                updateEventVisibility();
             }
         }
 
@@ -2297,8 +2420,10 @@ window.addEventListener('wheel', function(e) {
         <h1 title="Gli step verso un nuovo approccio di pensiero">Gli step verso un nuovo approccio di pensiero</h1>
         <p>Un viaggio attraverso l'evoluzione dell'approccio sistemico nella sostenibilità e nel design</p>
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Cerca eventi..." class="search-input">
-            <button class="clear-search-btn" id="clearSearchBtn" title="Cancella ricerca">X</button>
+            <div class="search-input-wrap">
+                <input type="text" id="searchInput" placeholder="Cerca eventi..." class="search-input">
+                <button class="clear-search-btn" id="clearSearchBtn" title="Cancella ricerca">X</button>
+            </div>
             <button class="filter-icon-btn" id="filterIconBtn" title="Filtra">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M8 12h8M11 18h2"/></svg>
             </button>
@@ -2306,6 +2431,13 @@ window.addEventListener('wheel', function(e) {
     </div>
 
     <div class="filter-panel" id="filterPanel">
+        <div class="filter-panel-section" id="filterKeywordSection">
+            <p class="filter-panel-label it-lang">Parole chiave</p>
+            <p class="filter-panel-label en-lang" style="display:none">Keywords</p>
+            <div class="filter-chip-row" id="filterKeywordChips"></div>
+            <p class="filter-empty-note keyword-hint it-lang">Scrivi una parola nella ricerca e premi Invio.</p>
+            <p class="filter-empty-note keyword-hint en-lang" style="display:none">Type a word in the search bar and press Enter.</p>
+        </div>
         <div class="filter-panel-section">
             <p class="filter-panel-label it-lang">Tag</p>
             <p class="filter-panel-label en-lang" style="display:none">Tags</p>
@@ -2789,9 +2921,12 @@ function setDotStyle(dotEl, style, duration) {
 }
 
 let mobileHighlightEvent = null;
+let mobileTappableTimer = null;
 
 function highlightClusterTemporary(clickedEvent) {
     clearTimeout(mobileHighlightTimer);
+    clearTimeout(mobileTappableTimer);
+    document.querySelectorAll('.event.cluster-tappable').forEach(el => el.classList.remove('cluster-tappable'));
     verticalLineLocked = true;
     mobileHighlightEvent = clickedEvent;
 
@@ -2834,13 +2969,22 @@ function highlightClusterTemporary(clickedEvent) {
         });
 
         if (related.length > 0) {
-            related.forEach(el => setDotStyle(el.querySelector('.event-dot'), {
-                boxShadow: '0 0 0 2px rgba(191,149,63,0.9), 0 0 6px 1px rgba(191,149,63,0.6)',
-                transform: 'scale(1.25)'
-            }, 150));
+            // Gli eventi correlati tornano a piena opacità e restano toccabili
+            // anche se in quel momento sono "sbiaditi" da ricerca/filtri.
+            related.forEach(el => {
+                el.classList.add('cluster-tappable');
+                setDotStyle(el.querySelector('.event-dot'), {
+                    opacity: '1',
+                    boxShadow: '0 0 0 2px rgba(191,149,63,0.9), 0 0 6px 1px rgba(191,149,63,0.6)',
+                    transform: 'scale(1.25)'
+                }, 150);
+            });
             document.querySelectorAll('.event').forEach(el => {
                 if (el !== clickedEl && !related.includes(el)) {
-                    setDotStyle(el.querySelector('.event-dot'), { opacity: '0.25' }, 150);
+                    // Gli eventi già al 10% per ricerca/filtri non vanno schiariti al 25%
+                    if (!el.classList.contains('no-match')) {
+                        setDotStyle(el.querySelector('.event-dot'), { opacity: '0.25' }, 150);
+                    }
                 }
             });
         }
@@ -2858,6 +3002,10 @@ function startMobileHighlightFade() {
     clearTimeout(mobileHighlightTimer);
     mobileHighlightTimer = setTimeout(() => {
         document.querySelectorAll('.event-dot').forEach(d => setDotStyle(d, {}, 12000));
+        // Al termine della dissolvenza i pallini "sbiaditi" tornano non toccabili
+        mobileTappableTimer = setTimeout(() => {
+            document.querySelectorAll('.event.cluster-tappable').forEach(el => el.classList.remove('cluster-tappable'));
+        }, 12000);
         verticalLine.style.transition = 'opacity 12000ms ease-out';
         verticalLine.classList.remove('active');
         verticalLineLocked = false;

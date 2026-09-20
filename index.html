@@ -1397,9 +1397,17 @@
         // Il 100% (currentZoom=1) resta identico a sempre. Al livello
         // massimo, l'ingrandimento reale è stato aumentato di un ulteriore
         // 15% rispetto alla calibrazione precedente (che già dava 1.8x).
+        // Il 100% (currentZoom=1) resta fisso a 1, il 1000% (currentZoom=10)
+        // raggiunge la stessa intensità massima calibrata in precedenza.
+        // A differenza di prima, qui ogni passo MOLTIPLICA per una
+        // proporzione costante (progressione geometrica) invece di
+        // aggiungere una quantità fissa: così nessun salto tra due livelli
+        // risulta più brusco degli altri.
         function getEffectiveZoom() {
-            const EXTRA_SLOPE = (12.5 * 1.15) / 9;
-            return currentZoom + EXTRA_SLOPE * (currentZoom - 1);
+            const MAX_EFFECTIVE_ZOOM = 10 + 9 * ((12.5 * 1.15) / 9); // stessa intensità massima di prima
+            const STEPS = 9; // da currentZoom=1 (100%) a currentZoom=10 (1000%)
+            const ratio = Math.pow(MAX_EFFECTIVE_ZOOM, 1 / STEPS);
+            return Math.pow(ratio, currentZoom - 1);
         }
         let timelineContainer;
         let timelineData = {};

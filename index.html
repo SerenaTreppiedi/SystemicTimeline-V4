@@ -3,14 +3,14 @@
 <html lang="it">
 
 <head>
-<!-- Tema chiaro/scuro: applicato subito, prima del disegno della pagina. Parte sempre nel tema DEFAULT_THEME -->
+<!-- Tema chiaro/scuro: la schermata iniziale (scelta della lingua) è sempre scura; dopo la scelta della lingua il sito si adegua al dispositivo -->
 <script>
 (function () {
-    // Tema con cui parte il sito, schermata iniziale col logo compresa:
-    // 'dark' oppure 'light'. Per cambiarlo basta modificare questa riga.
-    // Il bottone nell'header cambia tema solo per la visita in corso.
-    var DEFAULT_THEME = 'dark';
-    document.documentElement.setAttribute('data-theme', DEFAULT_THEME);
+    // Tema della schermata iniziale col logo e la scelta della lingua: sempre
+    // scuro. Appena l'utente sceglie la lingua, il sito adotta il tema del suo
+    // dispositivo (vedi applySystemTheme più in basso). Il bottone nell'header
+    // cambia tema solo per la visita in corso.
+    document.documentElement.setAttribute('data-theme', 'dark');
     // pulizia di una preferenza salvata da una versione precedente
     try { localStorage.removeItem('sychro-theme'); } catch (e) {}
 })();
@@ -184,8 +184,6 @@
             --pulse-border: #8A6A1F;
             --year-weight: 600;
             --label-weight: 600;
-            --splash-bg: #ECE6DD;
-            --splash-text: #2F292C;
             /* testi di categoria: stessi colori del tema scuro */
             --cat-default-text: #36A2EB;
             --cat-def-text: #ca6b58;
@@ -216,8 +214,6 @@
             --dot-shadow-hover: 0 0 0 4px rgba(189, 156, 89, 0.4);
             --year-weight: 500;
             --label-weight: 400;
-            --splash-bg: #2a2a2a;
-            --splash-text: #FFFFFF;
             --bar-bg: rgba(29, 29, 29, 0.9);
             --panel-bg: #1A1A1A;
             --popup-bg: rgba(26, 26, 26, 0.98);
@@ -2865,7 +2861,7 @@ window.addEventListener('wheel', function(e) {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background-color: var(--splash-bg);
+    background-color: #2a2a2a;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2915,7 +2911,7 @@ window.addEventListener('wheel', function(e) {
     pointer-events: auto;
   }
   #intro-lang-prompt {
-    color: var(--splash-text);
+    color: #FFFFFF;
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.1rem;
     letter-spacing: 0.02em;
@@ -2987,6 +2983,10 @@ window.addEventListener('wheel', function(e) {
     }, 2500);
 
     function closeIntro() {
+      // Il tema del dispositivo si applica ORA, mentre la schermata iniziale
+      // (che è sempre scura) è ancora opaca: la dissolvenza rivela già il sito
+      // nel tema giusto, senza scatti visibili.
+      if (typeof window.applySystemTheme === 'function') window.applySystemTheme();
       overlay.style.opacity = '0';
       setTimeout(() => overlay.remove(), 800);
     }
@@ -3722,11 +3722,9 @@ document.querySelectorAll('.legend-item').forEach(item => {
   
 
 <script>
-// ---- Bottone tema chiaro / scuro ----
+// ---- Tema chiaro / scuro ----
 (function () {
     const root = document.documentElement;
-    const btn = document.getElementById('themeToggle');
-    if (!btn) return;
 
     function applyTheme(theme) {
         root.setAttribute('data-theme', theme);
@@ -3736,14 +3734,23 @@ document.querySelectorAll('.legend-item').forEach(item => {
         if (typeof fixLabels === 'function') fixLabels();
     }
 
+    // Adegua il sito al tema del dispositivo/browser dell'utente (modalità
+    // scura o nera -> scuro; chiara o nessuna preferenza -> chiaro). Chiamata
+    // quando si sceglie la lingua nella schermata iniziale. Se il browser non
+    // sa dire la preferenza, resta il tema scuro.
+    window.applySystemTheme = function () {
+        if (!window.matchMedia) return;
+        const query = window.matchMedia('(prefers-color-scheme: dark), (prefers-color-scheme: light)');
+        if (!query.matches) return; // preferenza non rilevabile: resta com'è (scuro)
+        applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    };
+
+    const btn = document.getElementById('themeToggle');
+    if (!btn) return;
+
     function toggleTheme() {
         applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
     }
-
-    // allinea il colore della barra del browser al tema già impostato all'avvio
-    const initial = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-    const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', initial === 'dark' ? '#1A1A1A' : '#FCFAF6');
 
     btn.addEventListener('click', toggleTheme);
     btn.addEventListener('keydown', (e) => {

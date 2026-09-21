@@ -3,6 +3,19 @@
 <html lang="it">
 
 <head>
+<!-- Tema chiaro/scuro: applicato subito, prima del disegno della pagina. Parte sempre nel tema DEFAULT_THEME -->
+<script>
+(function () {
+    // Tema con cui parte il sito, schermata iniziale col logo compresa:
+    // 'dark' oppure 'light'. Per cambiarlo basta modificare questa riga.
+    // Il bottone nell'header cambia tema solo per la visita in corso.
+    var DEFAULT_THEME = 'dark';
+    document.documentElement.setAttribute('data-theme', DEFAULT_THEME);
+    // pulizia di una preferenza salvata da una versione precedente
+    try { localStorage.removeItem('sychro-theme'); } catch (e) {}
+})();
+</script>
+<meta name="theme-color" content="#1A1A1A">
 <!-- Microsoft Clarity: tracciamento comportamento utenti -->
     <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
@@ -50,8 +63,8 @@
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: 400;
-            background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%);
-            color: #FFFFFF;
+            background: var(--bg-body);
+            color: var(--text);
             min-height: auto;
             max-width: none;
             /* Nessun limite di larghezza: la timeline occupa tutto lo
@@ -80,21 +93,21 @@
         .header {
             text-align: center;
             padding: 0.75rem;
-            background: rgba(29, 29, 29, 0.9);
+            background: var(--bar-bg);
             border-bottom: 2px solid #BF953F;
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 200000;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 12px var(--shade-40);
         }
 
         .header h1 {
             font-family: 'Darker Grotesque', sans-serif;
             font-size: 2.5rem;
             font-weight: 700;
-            color: #BF953F;
+            color: var(--gold-text);
             margin-bottom: 0.25rem;
         }
 
@@ -103,6 +116,169 @@
             opacity: 0.8;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-weight: 400;
+        }
+
+
+        /* ============================================================
+           TEMI CHIARO / SCURO
+           Il tema chiaro è quello di default (:root); il tema scuro è
+           quello originale e si attiva con data-theme="dark" sul tag
+           <html>, impostato da JS (vedi bottone nell'header).
+           Le tinte "oro" usate come testo sono scurite nel tema chiaro
+           per mantenere una leggibilità adeguata.
+           ============================================================ */
+        :root {
+            color-scheme: light;
+            /* TEMA CHIARO. Regola: i colori di marca NON cambiano mai tra i due temi
+               (oro #BF953F dei titoli e del logo, colori delle categorie, colori dei
+               tag). Nel tema chiaro cambiano solo le superfici e i testi neutri:
+               sfondo greige morbido, schede bianco caldo (non bianco puro),
+               testo grigio-bruno scuro (non nero pieno). */
+            --bg-body: linear-gradient(135deg, #ECE6DD 0%, #E4DED3 100%);
+            --text: #2F292C;
+            --text-90: rgba(47, 41, 44, 0.92);
+            --text-85: rgba(47, 41, 44, 0.88);
+            --text-80: rgba(47, 41, 44, 0.84);
+            --text-70: rgba(47, 41, 44, 0.74);
+            --text-60: rgba(47, 41, 44, 0.64);
+            --text-50: rgba(47, 41, 44, 0.56);
+            --gold-text: #BF953F;
+            --gold-title: #d4a34d;
+            --gold-border: #BF953F;
+            --bar-bg: rgba(252, 250, 246, 0.96);
+            --panel-bg: #FBF9F5;
+            --popup-bg: rgba(251, 249, 245, 0.98);
+            --popup-bg-95: rgba(251, 249, 245, 0.96);
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --tooltip-bg: #FBF9F5;
+            --track-bg: rgba(255, 255, 255, 0.62);
+            --tint: rgba(90, 70, 50, 0.07);
+            --tint-strong: rgba(90, 70, 50, 0.1);
+            --tint-border: rgba(90, 70, 50, 0.28);
+            --hairline: rgba(90, 70, 50, 0.28);
+            --overlay: rgba(47, 41, 44, 0.45);
+            --overlay-mobile: rgba(47, 41, 44, 0.55);
+            --shade-30: rgba(80, 60, 40, 0.1);
+            --shade-40: rgba(80, 60, 40, 0.13);
+            --shade-50: rgba(80, 60, 40, 0.16);
+            --shade-60: rgba(80, 60, 40, 0.2);
+            --shade-80: rgba(80, 60, 40, 0.26);
+            --dot-ring: #FFFFFF;
+            --dot-shadow: 0 0 0 1px rgba(70, 55, 45, 0.3), 0 0 0 4px rgba(189, 156, 89, 0.28);
+            --dot-shadow-hover: 0 0 0 1px rgba(70, 55, 45, 0.35), 0 0 0 5px rgba(189, 156, 89, 0.4);
+            --select-ring: #2F292C;
+            --select-glow: rgba(47, 41, 44, 0.45);
+            --line-fade: rgba(90, 70, 50, 0.3);
+            --vline-bg: rgba(47, 41, 44, 0.22);
+            --vline-border: rgba(47, 41, 44, 0.45);
+            --tick-decade: rgba(189, 156, 89, 1);
+            --tick-five: rgba(189, 156, 89, 0.8);
+            --tick-year: rgba(189, 156, 89, 0.6);
+            --disabled-bg: #CFC8BD;
+            --image-bg: #E6DFD3;
+            --icon-bg: rgba(255, 255, 255, 0.55);
+            --icon-bg-hover: rgba(191, 149, 63, 0.2);
+            --icon-border: rgba(191, 149, 63, 0.85);
+            --zoom-glow: rgba(51, 68, 158, 0.75);
+            --zoom-glow-off: rgba(51, 68, 158, 0);
+            --pulse-border: #8A6A1F;
+            --year-weight: 600;
+            --label-weight: 600;
+            --splash-bg: #ECE6DD;
+            --splash-text: #2F292C;
+            /* testi di categoria: stessi colori del tema scuro */
+            --cat-default-text: #36A2EB;
+            --cat-def-text: #ca6b58;
+            --cat-doc-text: #ff964c;
+            --cat-ent-text: #8d6e63;
+            --cat-evt-text: #4db6ac;
+            --cat-sto-text: #3c87b5;
+        }
+
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --bg-body: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%);
+            --text: #FFFFFF;
+            --text-90: rgba(255, 255, 255, 0.9);
+            --text-85: rgba(255, 255, 255, 0.85);
+            --text-80: rgba(255, 255, 255, 0.8);
+            --text-70: rgba(255, 255, 255, 0.7);
+            --text-60: rgba(255, 255, 255, 0.6);
+            --text-50: rgba(255, 255, 255, 0.5);
+            --gold-text: #BF953F;
+            --gold-title: #d4a34d;
+            --gold-border: #BF953F;
+            --icon-bg: rgba(191, 149, 63, 0.2);
+            --icon-bg-hover: rgba(191, 149, 63, 0.3);
+            --icon-border: rgba(191, 149, 63, 0.5);
+            --track-bg: rgba(255, 255, 255, 0.08);
+            --dot-shadow: 0 0 0 3px rgba(189, 156, 89, 0.3);
+            --dot-shadow-hover: 0 0 0 4px rgba(189, 156, 89, 0.4);
+            --year-weight: 500;
+            --label-weight: 400;
+            --splash-bg: #2a2a2a;
+            --splash-text: #FFFFFF;
+            --bar-bg: rgba(29, 29, 29, 0.9);
+            --panel-bg: #1A1A1A;
+            --popup-bg: rgba(26, 26, 26, 0.98);
+            --popup-bg-95: rgba(26, 26, 26, 0.95);
+            --input-bg: rgba(42, 42, 42, 0.7);
+            --tooltip-bg: rgba(42, 42, 42, 0.98);
+            --tint: rgba(255, 255, 255, 0.08);
+            --tint-strong: rgba(255, 255, 255, 0.12);
+            --tint-border: rgba(255, 255, 255, 0.25);
+            --hairline: rgba(255, 255, 255, 0.2);
+            --overlay: rgba(0, 0, 0, 0.7);
+            --overlay-mobile: rgba(26, 26, 26, 0.88);
+            --shade-30: rgba(0, 0, 0, 0.3);
+            --shade-40: rgba(0, 0, 0, 0.4);
+            --shade-50: rgba(0, 0, 0, 0.5);
+            --shade-60: rgba(0, 0, 0, 0.6);
+            --shade-80: rgba(0, 0, 0, 0.8);
+            --dot-ring: #FFFFFF;
+            --select-ring: #FFFFFF;
+            --select-glow: rgba(255, 255, 255, 0.8);
+            --line-fade: rgba(255, 255, 255, 0.3);
+            --vline-bg: rgba(255, 255, 255, 0.3);
+            --vline-border: rgba(255, 255, 255, 0.4);
+            --tick-decade: rgba(189, 156, 89, 0.45);
+            --tick-five: rgba(189, 156, 89, 0.3);
+            --tick-year: rgba(189, 156, 89, 0.22);
+            --disabled-bg: #6e6e6e;
+            --image-bg: #333333;
+            --zoom-glow: rgba(255, 255, 255, 1);
+            --zoom-glow-off: rgba(255, 255, 255, 0);
+            --pulse-border: #FFF3D1;
+            --cat-default-text: #36A2EB;
+            --cat-def-text: #ca6b58;
+            --cat-doc-text: #ff964c;
+            --cat-ent-text: #8d6e63;
+            --cat-evt-text: #4db6ac;
+            --cat-sto-text: #3c87b5;
+        }
+
+        /* Bottone tema: mostra la luna nel tema chiaro (per passare allo scuro)
+           e il sole nel tema scuro (per tornare al chiaro) */
+        #themeToggle svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        :root:not([data-theme="dark"]) #themeToggle .icon-sun,
+        :root[data-theme="dark"] #themeToggle .icon-moon {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            #themeToggle svg {
+                width: 14px;
+                height: 14px;
+            }
         }
 
         .header-icons {
@@ -121,19 +297,19 @@
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: rgba(191, 149, 63, 0.2);
-            border: 1px solid rgba(191, 149, 63, 0.5);
+            background: var(--icon-bg);
+            border: 1px solid var(--icon-border);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            color: #BF953F;
+            color: var(--gold-text);
             font-size: 1rem;
         }
 
         .header-icon:hover {
-            background: rgba(191, 149, 63, 0.3);
+            background: var(--icon-bg-hover);
             border-color: #BF953F;
             transform: scale(1.1);
         }
@@ -164,9 +340,9 @@
         .search-input {
             padding: 0.5rem 0.75rem;
             border-radius: 18px;
-            border: 1px solid #BF953F;
-            background: rgba(42, 42, 42, 0.7);
-            color: #FFFFFF;
+            border: 1px solid var(--gold-border);
+            background: var(--input-bg);
+            color: var(--text);
             font-size: 0.9rem;
             transition: all 0.3s ease;
             flex: 1;
@@ -177,12 +353,12 @@
         }
 
         .search-input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--text-60);
         }
 
         .search-input:focus {
             border-color: #D4A75E;
-            background: #1A1A1A;
+            background: var(--panel-bg);
             box-shadow: 0 0 8px rgba(189, 156, 89, 0.5);
         }
 
@@ -193,7 +369,7 @@
             transform: translateY(-50%);
             background: none;
             border: none;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--text-70);
             font-size: 1rem;
             cursor: pointer;
             padding: 0 4px;
@@ -202,13 +378,13 @@
         }
 
         .clear-search-btn:hover {
-            color: #FFFFFF;
+            color: var(--text);
         }
 
         .filter-icon-btn {
             background: none;
-            border: 1px solid #BF953F;
-            color: #BF953F;
+            border: 1px solid var(--gold-border);
+            color: var(--gold-text);
             border-radius: 50%;
             width: 26px;
             height: 26px;
@@ -235,7 +411,7 @@
 
         @keyframes filter-btn-bump {
             0%   { transform: scale(1);   border-width: 1px; }
-            35%  { transform: scale(1.5); border-width: 4px; border-color: #FFF3D1; }
+            35%  { transform: scale(1.5); border-width: 4px; border-color: var(--pulse-border); }
             100% { transform: scale(1);   border-width: 1px; }
         }
 
@@ -248,10 +424,10 @@
             max-width: 85vw;
             max-height: 70vh;
             overflow-y: auto;
-            background: #1A1A1A;
+            background: var(--panel-bg);
             border: 2px solid #BF953F;
             border-radius: 10px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 8px 25px var(--shade-60);
             z-index: 320000;
             padding: 1rem;
         }
@@ -265,7 +441,7 @@
         }
 
         .filter-panel-label {
-            color: #BF953F;
+            color: var(--gold-text);
             font-weight: 600;
             font-size: 0.85rem;
             margin: 0 0 0.5rem;
@@ -281,12 +457,12 @@
             display: flex;
             align-items: center;
             gap: 5px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: var(--tint);
+            border: 1px solid var(--tint-border);
             border-radius: 14px;
             padding: 0.3rem 0.65rem;
             font-size: 0.78rem;
-            color: #FFFFFF;
+            color: var(--text);
             cursor: pointer;
         }
 
@@ -305,7 +481,7 @@
         .keyword-chip-remove {
             background: none;
             border: none;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--text-70);
             font-size: 0.95rem;
             line-height: 1;
             cursor: pointer;
@@ -313,7 +489,7 @@
         }
 
         .keyword-chip-remove:hover {
-            color: #FFFFFF;
+            color: var(--text);
         }
 
         .filter-panel-section.has-keywords .keyword-hint {
@@ -328,7 +504,7 @@
         }
 
         .filter-empty-note {
-            color: rgba(255, 255, 255, 0.5);
+            color: var(--text-50);
             font-size: 0.78rem;
             font-style: italic;
             margin: 0;
@@ -337,7 +513,7 @@
         .filter-reset-btn {
             background: none;
             border: none;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--text-60);
             text-decoration: underline;
             font-size: 0.8rem;
             cursor: pointer;
@@ -345,7 +521,7 @@
         }
 
         .filter-reset-btn:hover {
-            color: #FFFFFF;
+            color: var(--text);
         }
 
 
@@ -370,20 +546,20 @@
                scroll orizzontale su alcuni browser mobile */
             will-change: transform;
             left: 0;
-            background: rgba(26, 26, 26, 0.95);
+            background: var(--popup-bg-95);
             padding: 0.4rem;
             border-radius: 6px;
             backdrop-filter: blur(10px);
             z-index: 100;
             border-left: 5px solid var(--timeline-color);
-            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 2px 2px 8px var(--shade-30);
         }
 
         .timeline-title {
             font-family: 'Darker Grotesque', sans-serif;
             font-size: 1.2rem;
             font-weight: 400;
-            color: #FFFFFF;
+            color: var(--text);
             /* Invisibile: il testo viene clonato via JS (fixLabels) in un
                elemento a posizione fissa, per restare leggibile durante
                lo scroll orizzontale della timeline */
@@ -393,7 +569,7 @@
         .timeline-track {
             position: relative;
             height: 38px;
-            background: rgba(255, 255, 255, 0.08);
+            background: var(--track-bg);
             border-radius: 8px;
             overflow: visible;
         }
@@ -404,7 +580,7 @@
             left: 0;
             right: 0;
             height: 2px;
-            background: linear-gradient(90deg, var(--timeline-color), rgba(255, 255, 255, 0.3));
+            background: linear-gradient(90deg, var(--timeline-color), var(--line-fade));
             transform: translateY(-50%);
         }
 .timeline-line::after {
@@ -416,7 +592,7 @@
     color: var(--timeline-color);
     font-size: 0.9rem;
     pointer-events: none;
-    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 0 5px var(--shade-50);
     line-height: 1;
     display: flex;
     align-items: center;
@@ -449,7 +625,7 @@
         }
 
         .event.cluster-selected .event-dot {
-            box-shadow: 0 0 0 2px #FFFFFF, 0 0 6px 1px rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 0 2px var(--select-ring), 0 0 6px 1px var(--select-glow);
             transform: scale(1.3);
         }
 
@@ -476,12 +652,12 @@
             bottom: 22px;
             /* ombra corta e leggera: quella standard dei popup, più grande,
                scurirebbe la barretta sottostante */
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 2px 6px var(--shade-40);
             backdrop-filter: none;
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 0.72rem;
             font-weight: 600;
-            color: #FFFFFF;
+            color: var(--text);
             white-space: nowrap;
         }
 
@@ -545,8 +721,8 @@
             top: 0;
             height: 100%;
             width: 2px;
-            background: rgba(255, 255, 255, 0.3);
-            border-left: 1px dashed rgba(255, 255, 255, 0.4);
+            background: var(--vline-bg);
+            border-left: 1px dashed var(--vline-border);
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.2s ease;
@@ -562,14 +738,14 @@
             height: 11px;
             border-radius: 50%;
             background: var(--timeline-color);
-            border: 2px solid #FFFFFF;
-            box-shadow: 0 0 0 3px rgba(189, 156, 89, 0.3);
+            border: 2px solid var(--dot-ring);
+            box-shadow: var(--dot-shadow);
             transition: all 0.2s ease;
         }
 
         .event:hover .event-dot {
             transform: scale(1.3);
-            box-shadow: 0 0 0 4px rgba(189, 156, 89, 0.4);
+            box-shadow: var(--dot-shadow-hover);
         }
 
         /* Messaggio "ruota il dispositivo": visibile solo su schermi stretti
@@ -579,14 +755,14 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: #1A1A1A;
+            background: var(--panel-bg);
             z-index: 999999;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
             padding: 2rem;
-            color: #FFFFFF;
+            color: var(--text);
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
@@ -607,7 +783,7 @@
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(26, 26, 26, 0.98);
+            background: var(--popup-bg);
             padding: 0.6rem;
             border-radius: 6px;
             border: 1px solid var(--timeline-color);
@@ -618,13 +794,13 @@
             transition: all 0.2s ease;
             z-index: 300000;
             backdrop-filter: blur(15px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 8px 25px var(--shade-60);
         }
 
         .event-popup h4 {
             font-family: 'Darker Grotesque', sans-serif;
             font-weight: 700;
-            color: #FFFFFF;
+            color: var(--text);
             margin-bottom: 0.4rem;
             font-size: 1.0rem;
             line-height: 1.4;
@@ -639,7 +815,7 @@
         }
 
         .event-popup .date {
-            color: #BF953F;
+            color: var(--gold-text);
             font-weight: 600;
             font-size: 0.8rem;
             line-height: 1;
@@ -677,16 +853,16 @@
             position: relative;
             height: 25px;
             margin: 0.5rem 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid var(--hairline);
         }
 
         .year-marker {
             position: absolute;
             transform: translateX(-50%);
             line-height: 16px;
-            color: #BF953F;
+            color: var(--gold-text);
             font-size: 0.8rem;
-            font-weight: 500;
+            font-weight: var(--year-weight);
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
@@ -704,17 +880,17 @@
 
         .year-tick-decade {
             width: 3px;
-            background: rgba(189, 156, 89, 0.45);
+            background: var(--tick-decade);
         }
 
         .year-tick-five {
             width: 2px;
-            background: rgba(189, 156, 89, 0.3);
+            background: var(--tick-five);
         }
 
         .year-tick-year {
             width: 1px;
-            background: rgba(189, 156, 89, 0.22);
+            background: var(--tick-year);
         }
 
         .app-footer {
@@ -723,13 +899,13 @@
             left: 0;
             right: 0;
            padding: 0.9rem 1rem;
-            background: rgba(29, 29, 29, 0.9);
+            background: var(--bar-bg);
             border-top: 2px solid #BF953F;
             z-index: 10000;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 -4px 12px var(--shade-40);
         }
 
         /* Legenda dei tag, centrata nel footer */
@@ -746,7 +922,7 @@
             display: flex;
             align-items: center;
             font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--text-80);
         }
 
         .legend-dot {
@@ -770,7 +946,7 @@
             align-items: center;
             gap: 1rem;
             font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--text-70);
         }
 
         .add-to-timeline-btn {
@@ -855,7 +1031,7 @@
 
 .skip-btn {
     background: none;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-60);
     border: none;
     cursor: pointer;
     font-family: 'Plus Jakarta Sans', sans-serif;
@@ -865,7 +1041,7 @@
 }
 
 .skip-btn:hover {
-    color: #FFFFFF;
+    color: var(--text);
 }
 
 .tutorial-indent {
@@ -873,12 +1049,12 @@
 }
 
 .tutorial-category-row {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--tint);
     border-left: 4px solid;
     border-radius: 8px;
     padding: 0.55rem 0.85rem;
     margin-bottom: 0.45rem;
-    color: #ffffff;
+    color: var(--text);
     font-size: 0.9em;
     line-height: 1.35;
 }
@@ -896,12 +1072,12 @@
     object-fit: cover;
     border-radius: 8px;
     margin-bottom: 0.8rem;
-    background: #333333;
+    background: var(--image-bg);
 }
 
 .detail-title {
     font-family: 'Darker Grotesque', sans-serif;
-    color: #FFFFFF;
+    color: var(--text);
     font-weight: 700;
     font-size: 1.3rem;
     line-height: 1.3;
@@ -922,7 +1098,7 @@
 
 .detail-place {
     font-style: italic;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-60);
     font-size: 0.8rem;
     margin-bottom: 0.7rem;
 }
@@ -940,14 +1116,14 @@
 }
 
 .detail-desc {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--text-85);
     font-size: 0.82rem;
     line-height: 1.6;
     margin: 0 0 1rem;
 }
 
 .detail-link {
-    color: #BF953F;
+    color: var(--gold-text);
     font-size: 0.9rem;
     font-weight: 600;
     text-decoration: underline;
@@ -962,10 +1138,10 @@
     right: 12px;
     width: 320px;
     max-width: 85vw;
-    background: #1A1A1A;
+    background: var(--panel-bg);
     border: 2px solid #BF953F;
     border-radius: 10px;
-    box-shadow: -8px 0 25px rgba(0, 0, 0, 0.5);
+    box-shadow: -8px 0 25px var(--shade-50);
     z-index: 310000;
     padding: 1.3rem 1.1rem;
     overflow-y: auto;
@@ -983,7 +1159,7 @@
     right: 0.8rem;
     background: none;
     border: none;
-    color: #BF953F;
+    color: var(--gold-text);
     font-size: 1.5rem;
     line-height: 1;
     cursor: pointer;
@@ -1042,8 +1218,8 @@
         }
 
         @keyframes zoomInAttention {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-            50% { box-shadow: 0 0 16px 6px rgba(255, 255, 255, 1); }
+            0%, 100% { box-shadow: 0 0 0 0 var(--zoom-glow-off); }
+            50% { box-shadow: 0 0 16px 6px var(--zoom-glow); }
         }
 
         #zoomInBtn.attention-glow {
@@ -1057,7 +1233,7 @@
         }
 
         .zoom-btn:disabled {
-            background: #6e6e6e;
+            background: var(--disabled-bg);
             cursor: not-allowed;
             opacity: 0.5;
             transform: none;
@@ -1065,8 +1241,8 @@
         }
 
         .zoom-level {
-            background: rgba(255, 255, 255, 0.12);
-            color: #FFFFFF;
+            background: var(--tint-strong);
+            color: var(--text);
             padding: 0.5rem 1rem;
             border-radius: 22px;
             backdrop-filter: blur(10px);
@@ -1087,7 +1263,7 @@
             right: 0;
             bottom: 0;
           pointer-events: none;
-            background: rgba(0, 0, 0, 0.7);
+            background: var(--overlay);
             z-index: 300000;
             align-items: center;
             justify-content: center;
@@ -1098,12 +1274,12 @@
         }
 
 .info-popup {
-    background: rgba(26, 26, 26, 0.98);
+    background: var(--popup-bg);
     border: 2px solid #BF953F;
     border-radius: 12px;
     padding: 2rem;
     margin: 0;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 8px 32px var(--shade-80);
     position: relative;
     width: calc(100% - 4rem);
     max-width: none;
@@ -1126,7 +1302,7 @@
             right: 1rem;
             background: none;
             border: none;
-            color: #BF953F;
+            color: var(--gold-text);
             font-size: 2rem;
             cursor: pointer;
             width: 32px;
@@ -1144,7 +1320,7 @@
 
         .info-popup h3 {
             font-family: 'Darker Grotesque', sans-serif;
-            color: #BF953F;
+            color: var(--gold-text);
             font-size: 1.8rem;
             margin-bottom: 1rem;
         }
@@ -1160,7 +1336,7 @@
 
         .info-popup p {
             line-height: 1.6;
-            color: rgba(255, 255, 255, 0.9);
+            color: var(--text-90);
         }
 
       .legend-tooltip {
@@ -1168,20 +1344,20 @@
     bottom: 110%;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(42, 42, 42, 0.98);
+    background: var(--tooltip-bg);
     border: 1px solid #BF953F;
     border-radius: 8px;
     padding: 0.7rem 0.8rem;
     width: 240px;
     font-size: 0.7rem;
     line-height: 1.4;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-90);
     opacity: 0;
     visibility: hidden;
     transition: all 0.2s ease;
     z-index: 99999;
     pointer-events: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 12px var(--shade-50);
 
 }
 
@@ -1202,26 +1378,32 @@
            non-.timeline del contenitore, da cui l'offset a partire da 2) */
         .timeline:nth-child(2) {
             --timeline-color: #36A2EB;
+            --timeline-text: var(--cat-default-text);
         }
 
         .timeline:nth-child(3) {
             --timeline-color: #ca6b58;
+            --timeline-text: var(--cat-def-text);
         }
 
         .timeline:nth-child(4) {
             --timeline-color: #ff964c;
+            --timeline-text: var(--cat-doc-text);
         }
 
         .timeline:nth-child(5) {
             --timeline-color: #8d6e63;
+            --timeline-text: var(--cat-ent-text);
         }
 
         .timeline:nth-child(6) {
             --timeline-color: #4db6ac;
+            --timeline-text: var(--cat-evt-text);
         }
 
         .timeline:nth-child(7) {
             --timeline-color: #3c87b5;
+            --timeline-text: var(--cat-sto-text);
         }
 
         /* ============================================================
@@ -1361,7 +1543,7 @@
 
             .legend-tag-prefix {
                 display: inline-block;
-                color: #ffffff;
+                color: var(--text);
                 opacity: 0.7;
                 font-size: 0.72rem;
                 margin-right: 4px;
@@ -1443,7 +1625,7 @@
                 display: none;
                 position: fixed;
                 inset: 0;
-                background: rgba(26, 26, 26, 0.88);
+                background: var(--overlay-mobile);
                 z-index: 400000;
                 align-items: center;
                 justify-content: center;
@@ -1456,7 +1638,7 @@
 
             .mobile-popup {
                 position: relative;
-                background: rgba(26, 26, 26, 0.98);
+                background: var(--popup-bg);
                 border: 1px solid #BF953F;
                 border-radius: 6px;
                 padding: 1.2rem 1rem 1rem;
@@ -1465,11 +1647,11 @@
                 max-height: 60vh;
                 overflow-y: auto;
                 backdrop-filter: blur(15px);
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+                box-shadow: 0 8px 25px var(--shade-60);
             }
 
             .mobile-popup .date {
-                color: #BF953F;
+                color: var(--gold-text);
                 font-weight: 600;
                 font-size: 0.85rem;
             }
@@ -1477,7 +1659,7 @@
             .mobile-popup h4 {
                 font-family: 'Darker Grotesque', sans-serif;
                 font-weight: 700;
-                color: #FFFFFF;
+                color: var(--text);
                 font-size: 1.5rem;
                 line-height: 1.4;
                 margin-top: 0.5rem;
@@ -1489,7 +1671,7 @@
                 right: 0.5rem;
                 background: none;
                 border: none;
-                color: #BF953F;
+                color: var(--gold-text);
                 font-size: 1.5rem;
                 line-height: 1;
                 cursor: pointer;
@@ -2683,7 +2865,7 @@ window.addEventListener('wheel', function(e) {
     position: fixed;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background-color: #2a2a2a;
+    background-color: var(--splash-bg);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2733,7 +2915,7 @@ window.addEventListener('wheel', function(e) {
     pointer-events: auto;
   }
   #intro-lang-prompt {
-    color: #FFFFFF;
+    color: var(--splash-text);
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.1rem;
     letter-spacing: 0.02em;
@@ -2836,6 +3018,10 @@ window.addEventListener('wheel', function(e) {
     <div class="header-icon" id="infoIcon" title="Informazioni">
         i
     </div>
+    <div class="header-icon" id="themeToggle" role="button" tabindex="0" title="Chiaro / Scuro – Light / Dark" aria-label="Chiaro / Scuro – Light / Dark">
+        <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </div>
 </div>
         <h1 title="Gli step verso un nuovo approccio di pensiero">Gli step verso un nuovo approccio di pensiero</h1>
         <p>Un viaggio attraverso l'evoluzione dell'approccio sistemico nella sostenibilità e nel design</p>
@@ -2886,14 +3072,14 @@ window.addEventListener('wheel', function(e) {
 
             <!-- STEP 1 -->
             <div class="tutorial-step active" data-step="1">
-                <h3 class="it-lang" style="text-align: center;color: #d4a34d; font-weight: bold; margin-bottom: 15px;">Benvenut@!</h3>
-                <h3 class="en-lang" style="display:none; text-align: center;color: #d4a34d; font-weight: bold; margin-bottom: 15px;">Welcome!</h3>
-                <div class="it-lang" style="color: #ffffff; line-height: 1.5; text-align: left;">
+                <h3 class="it-lang" style="text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Benvenut@!</h3>
+                <h3 class="en-lang" style="display:none; text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Welcome!</h3>
+                <div class="it-lang" style="color: var(--text); line-height: 1.5; text-align: left;">
                     <p style="text-align: center; margin-bottom: 15px;">Questa timeline multilivello ti permette di esplorare tutti i fattori che storicamente hanno contribuito al delinearsi
                     <br>di un approccio di pensiero olistico, multidisciplinare e sistemico, toccando tematiche ambientali, sociali, economiche, educative e filosofiche.
                     <br>Più imparerai, più guarderai il mondo da una nuova prospettiva!</p>
                 </div>
-                <div class="en-lang" style="display:none; color: #ffffff; line-height: 1.5; text-align: left;">
+                <div class="en-lang" style="display:none; color: var(--text); line-height: 1.5; text-align: left;">
                     <p style="text-align: center; margin-bottom: 15px;">This multilevel timeline allows you to explore all the factors that have historically contributed to the emergence of a holistic,
                     <br>multidisciplinary, and systemic approach to thinking, touching on environmental, social, economic, educational, and philosophical issues.
                     <br>The more you learn, the more you'll see the world from a new perspective!</p>
@@ -2902,63 +3088,63 @@ window.addEventListener('wheel', function(e) {
 
             <!-- STEP 2 -->
             <div class="tutorial-step" data-step="2">
-                <h3 class="it-lang" style="text-align: center;color: #d4a34d; font-weight: bold; margin-bottom: 15px;">Le informazioni della timeline:</h3>
-                <h3 class="en-lang" style="display:none; text-align: center;color: #d4a34d; font-weight: bold; margin-bottom: 15px;">Timeline information:</h3>
-                <div class="it-lang" style="color: #ffffff; line-height: 1.5; text-align: left;">
+                <h3 class="it-lang" style="text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Le informazioni della timeline:</h3>
+                <h3 class="en-lang" style="display:none; text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Timeline information:</h3>
+                <div class="it-lang" style="color: var(--text); line-height: 1.5; text-align: left;">
                     <p style="margin-bottom: 14px;">Al centro troverai cinque linee del tempo per cinque diverse tipologie di contenuti:</p>
-                    <div class="tutorial-category-row" style="border-left-color: #ca6b58;"><strong style="color: #ca6b58;">Definizioni</strong> — formalizzazione e introduzione di termini, concetti, quadri teorici o branche di studio completamente nuovi.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #ff964c;"><strong style="color: #ff964c;">Documentazione</strong> — libri, testi, riviste, articoli, paper, filme e materiali audiovisivi che hanno apportato contribuiti significativi alla letteratura.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #8d6e63;"><strong style="color: #8d6e63;">Enti</strong> — istituzioni, associazioni, centri di ricerca o programmi formativi che hanno contribuito alla definizione del pensiero sistemico.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #4db6ac;"><strong style="color: #4db6ac;">Eventi</strong> — conferenze, congressi, workshop formativi, mostre tematiche che hanno contribuito al dialogo scientifico-culturale sul tema.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #3c87b5; margin-bottom: 0;"><strong style="color: #3c87b5;">Storia Generale</strong> — le tappe storiche significative che danno un quadro di riferimento temporale.</div>
+                    <div class="tutorial-category-row" style="border-left-color: #ca6b58;"><strong style="color: var(--cat-def-text);">Definizioni</strong> — formalizzazione e introduzione di termini, concetti, quadri teorici o branche di studio completamente nuovi.</div>
+                    <div class="tutorial-category-row" style="border-left-color: #ff964c;"><strong style="color: var(--cat-doc-text);">Documentazione</strong> — libri, testi, riviste, articoli, paper, filme e materiali audiovisivi che hanno apportato contribuiti significativi alla letteratura.</div>
+                    <div class="tutorial-category-row" style="border-left-color: #8d6e63;"><strong style="color: var(--cat-ent-text);">Enti</strong> — istituzioni, associazioni, centri di ricerca o programmi formativi che hanno contribuito alla definizione del pensiero sistemico.</div>
+                    <div class="tutorial-category-row" style="border-left-color: #4db6ac;"><strong style="color: var(--cat-evt-text);">Eventi</strong> — conferenze, congressi, workshop formativi, mostre tematiche che hanno contribuito al dialogo scientifico-culturale sul tema.</div>
+                    <div class="tutorial-category-row" style="border-left-color: #3c87b5; margin-bottom: 0;"><strong style="color: var(--cat-sto-text);">Storia Generale</strong> — le tappe storiche significative che danno un quadro di riferimento temporale.</div>
                 </div>
-                <div class="en-lang" style="display:none; color: #ffffff; line-height: 1.5; text-align: left;">
+                <div class="en-lang" style="display:none; color: var(--text); line-height: 1.5; text-align: left;">
                     <p style="margin-bottom: 14px;">In the center you will find five timelines for five different types of content:</p>
-                    <div class="tutorial-category-row" style="border-left-color: #ca6b58;"><strong style="color: #ca6b58;">Definitions</strong> — formalization and introduction of completely new terms, concepts, theoretical frameworks or branches of study.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #ff964c;"><strong style="color: #ff964c;">Documentation</strong> — books, texts, magazines, articles, papers, films and audiovisual materials that have made significant contributions to literature.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #8d6e63;"><strong style="color: #8d6e63;">Organizations</strong> — associations, research centers or training programs that have contributed to the definition of systems thinking.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #4db6ac;"><strong style="color: #4db6ac;">Events</strong> — conferences, congresses, training workshops, thematic exhibitions that have contributed to the scientific-cultural dialogue on the topic.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #3c87b5; margin-bottom: 0;"><strong style="color: #3c87b5;">General History</strong> — the significant historical stages that provide a temporal framework.</div>
+                    <div class="tutorial-category-row" style="border-left-color: #ca6b58;"><strong style="color: var(--cat-def-text);">Definitions</strong> — formalization and introduction of completely new terms, concepts, theoretical frameworks or branches of study.</div>
+                    <div class="tutorial-category-row" style="border-left-color: #ff964c;"><strong style="color: var(--cat-doc-text);">Documentation</strong> — books, texts, magazines, articles, papers, films and audiovisual materials that have made significant contributions to literature.</div>
+                    <div class="tutorial-category-row" style="border-left-color: #8d6e63;"><strong style="color: var(--cat-ent-text);">Organizations</strong> — associations, research centers or training programs that have contributed to the definition of systems thinking.</div>
+                    <div class="tutorial-category-row" style="border-left-color: #4db6ac;"><strong style="color: var(--cat-evt-text);">Events</strong> — conferences, congresses, training workshops, thematic exhibitions that have contributed to the scientific-cultural dialogue on the topic.</div>
+                    <div class="tutorial-category-row" style="border-left-color: #3c87b5; margin-bottom: 0;"><strong style="color: var(--cat-sto-text);">General History</strong> — the significant historical stages that provide a temporal framework.</div>
                 </div>
             </div>
 
             <!-- STEP 3 -->
             <div class="tutorial-step" data-step="3">
-                <h3 class="it-lang" style="text-align: center;color: #d4a34d; font-weight: bold; margin-bottom: 15px;">Come usare la timeline:</h3>
-                <h3 class="en-lang" style="display:none; text-align: center;color: #d4a34d; font-weight: bold; margin-bottom: 15px;">How to use the timeline:</h3>
-                <div class="it-lang" style="color: #ffffff; line-height: 1.5; text-align: left;">
+                <h3 class="it-lang" style="text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Come usare la timeline:</h3>
+                <h3 class="en-lang" style="display:none; text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">How to use the timeline:</h3>
+                <div class="it-lang" style="color: var(--text); line-height: 1.5; text-align: left;">
                     <ul style="list-style: disc; padding-left: 1.4rem; margin: 0;">
-                        <li style="margin-bottom: 14px;"><strong style="color: #d4a34d;">Scopri i contenuti</strong><br>Toccando un punto colorato lungo le timeline si apre un pop-up con i dettagli di un evento.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: #d4a34d;">Tag colorati (●)</strong><br>Ogni contenuto è associato a uno o più tag, spiegati nella legenda in basso.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: #d4a34d;">Zoom (↘ in basso a destra)</strong><br>Usa + / − per zoomare sulle linee temporali, ↺ per tornare alla visualizzazione iniziale.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: #d4a34d;">Ricerca (↗ in alto a destra)</strong><br>Cerca i contenuti per parola chiave o per data.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: #d4a34d;">Cambio lingua (↖ in alto a sinistra)</strong><br>Cambia la lingua dell'interfaccia (IT⇄EN).</li>
-                        <li style="margin-bottom: 0;"><strong style="color: #d4a34d;">Tutorial (ⓘ in alto a sinistra)</strong><br>Riapri questa finestra di istruzioni in qualsiasi momento.</li>
+                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Scopri i contenuti</strong><br>Toccando un punto colorato lungo le timeline si apre un pop-up con i dettagli di un evento.</li>
+                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Tag colorati (●)</strong><br>Ogni contenuto è associato a uno o più tag, spiegati nella legenda in basso.</li>
+                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Zoom (↘ in basso a destra)</strong><br>Usa + / − per zoomare sulle linee temporali, ↺ per tornare alla visualizzazione iniziale.</li>
+                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Ricerca (↗ in alto a destra)</strong><br>Cerca i contenuti per parola chiave o per data.</li>
+                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Cambio lingua (↖ in alto a sinistra)</strong><br>Cambia la lingua dell'interfaccia (IT⇄EN).</li>
+                        <li style="margin-bottom: 0;"><strong style="color: var(--gold-title);">Tutorial (ⓘ in alto a sinistra)</strong><br>Riapri questa finestra di istruzioni in qualsiasi momento.</li>
                     </ul>
                 </div>
-                <div class="en-lang" style="display:none; color: #ffffff; line-height: 1.5; text-align: left;">
+                <div class="en-lang" style="display:none; color: var(--text); line-height: 1.5; text-align: left;">
                     <ul style="list-style: disc; padding-left: 1.4rem; margin: 0;">
-                        <li style="margin-bottom: 14px;"><strong style="color: #d4a34d;">Discover the content</strong><br>Tapping a colored dot along the timelines opens a pop-up with an event's details.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: #d4a34d;">Colored tags (●)</strong><br>Each piece of content is linked to one or more tags, explained in the legend below.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: #d4a34d;">Zoom (↘ bottom right)</strong><br>Use + / − to zoom in on the timelines, ↺ to return to the initial view.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: #d4a34d;">Search (↗ top right)</strong><br>Search for content by keyword or by date.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: #d4a34d;">Language (↖ top left)</strong><br>Switch the interface language (EN⇄IT).</li>
-                        <li style="margin-bottom: 0;"><strong style="color: #d4a34d;">Tutorial (ⓘ top left)</strong><br>Reopen this instructions window anytime.</li>
+                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Discover the content</strong><br>Tapping a colored dot along the timelines opens a pop-up with an event's details.</li>
+                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Colored tags (●)</strong><br>Each piece of content is linked to one or more tags, explained in the legend below.</li>
+                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Zoom (↘ bottom right)</strong><br>Use + / − to zoom in on the timelines, ↺ to return to the initial view.</li>
+                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Search (↗ top right)</strong><br>Search for content by keyword or by date.</li>
+                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Language (↖ top left)</strong><br>Switch the interface language (EN⇄IT).</li>
+                        <li style="margin-bottom: 0;"><strong style="color: var(--gold-title);">Tutorial (ⓘ top left)</strong><br>Reopen this instructions window anytime.</li>
                     </ul>
                 </div>
             </div>
 
             <!-- STEP 4 -->
             <div class="tutorial-step" data-step="4">
-                <h3 class="it-lang" style="text-align: center;color: #d4a34d; font-weight: bold; margin-bottom: 15px;">Come nutrire la timeline:</h3>
-                <h3 class="en-lang" style="display:none; text-align: center;color: #d4a34d; font-weight: bold; margin-bottom: 15px;">Contribute to the timeline:</h3>
-                <div class="it-lang" style="color: #ffffff; line-height: 1.5; text-align: left;">
+                <h3 class="it-lang" style="text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Come nutrire la timeline:</h3>
+                <h3 class="en-lang" style="display:none; text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Contribute to the timeline:</h3>
+                <div class="it-lang" style="color: var(--text); line-height: 1.5; text-align: left;">
                     <p class="tutorial-indent" style="margin-bottom: 15px;">Vuoi contribuire al database sistemico? Clicca sul pulsante in basso a sinistra (↙) per proporre un contenuto o per scrivere un feedback.</p>
-                    <p style="text-align: center; font-weight: bold; color: #d4a34d; margin-top: 6rem; font-size: 1.3em;">Grazie e buona esplorazione!</p>
+                    <p style="text-align: center; font-weight: bold; color: var(--gold-title); margin-top: 6rem; font-size: 1.3em;">Grazie e buona esplorazione!</p>
                 </div>
-                <div class="en-lang" style="display:none; color: #ffffff; line-height: 1.5; text-align: left;">
+                <div class="en-lang" style="display:none; color: var(--text); line-height: 1.5; text-align: left;">
                     <p class="tutorial-indent" style="margin-bottom: 15px;">Want to contribute to the systemic database? Click the button at the bottom left (↙) to submit content or leave feedback.</p>
-                    <p style="text-align: center; font-weight: bold; color: #d4a34d; margin-top: 6rem; font-size: 1.3em;">Thank you and enjoy your exploration!</p>
+                    <p style="text-align: center; font-weight: bold; color: var(--gold-title); margin-top: 6rem; font-size: 1.3em;">Thank you and enjoy your exploration!</p>
                 </div>
             </div>
 
@@ -2976,8 +3162,8 @@ window.addEventListener('wheel', function(e) {
             </div>
         </div>
     </div>
-    <p id="dataLoadingMessage" class="it-lang" style="position: fixed; top: 155px; left: 0; right: 0; z-index: 5000; pointer-events: none; text-align: center; font-style: italic; font-size: 0.8rem; color: #ffffff; opacity: 0.7; margin: 0;">Sistemando i dati nel sistema...</p>
-    <p id="dataLoadingMessageEn" class="en-lang" style="display:none; position: fixed; top: 155px; left: 0; right: 0; z-index: 5000; pointer-events: none; text-align: center; font-style: italic; font-size: 0.8rem; color: #ffffff; opacity: 0.7; margin: 0;">Systemically loading system data...</p>
+    <p id="dataLoadingMessage" class="it-lang" style="position: fixed; top: 155px; left: 0; right: 0; z-index: 5000; pointer-events: none; text-align: center; font-style: italic; font-size: 0.8rem; color: var(--text); opacity: 0.7; margin: 0;">Sistemando i dati nel sistema...</p>
+    <p id="dataLoadingMessageEn" class="en-lang" style="display:none; position: fixed; top: 155px; left: 0; right: 0; z-index: 5000; pointer-events: none; text-align: center; font-style: italic; font-size: 0.8rem; color: var(--text); opacity: 0.7; margin: 0;">Systemically loading system data...</p>
     <div class="timeline-container">
         <div class="vertical-line" id="verticalLine"></div>
 
@@ -3083,7 +3269,7 @@ window.addEventListener('wheel', function(e) {
        <button id="resetBtn" class="zoom-btn" onclick="resetZoom()" title="Reset Zoom">↺</button>
     </div>
 
-  <div class="footer-copyright" style="position: absolute; bottom: 0.2rem; left: 50%; transform: translateX(-50%); font-size: 0.55rem; opacity: 0.5; color: #ffffff; white-space: nowrap;">© 2025 Serena Treppiedi — All rights reserved</div>
+  <div class="footer-copyright" style="position: absolute; bottom: 0.2rem; left: 50%; transform: translateX(-50%); font-size: 0.55rem; opacity: 0.5; color: var(--text); white-space: nowrap;">© 2025 Serena Treppiedi — All rights reserved</div>
 </div>
 </footer>
 
@@ -3114,7 +3300,11 @@ function fixLabels() {
     const headers = document.querySelectorAll('.timeline-header');
     headers.forEach(header => {
         const line = header.closest('.timeline').querySelector('.timeline-line');
-       const borderColor = getComputedStyle(header.closest('.timeline')).getPropertyValue('--timeline-color').trim();
+       const timelineStyle = getComputedStyle(header.closest('.timeline'));
+       const borderColor = timelineStyle.getPropertyValue('--timeline-color').trim();
+       // colore del testo dell'etichetta: più scuro nel tema chiaro
+       const textColor = timelineStyle.getPropertyValue('--timeline-text').trim() || borderColor;
+       const labelWeight = getComputedStyle(document.documentElement).getPropertyValue('--label-weight').trim() || '400';
 
         const rect = header.getBoundingClientRect();
         const title = header.querySelector('.timeline-title');
@@ -3129,10 +3319,10 @@ function fixLabels() {
             z-index: 2000;
             font-family: 'Darker Grotesque', sans-serif;
             font-size: ${labelFontSize};
-            font-weight: 400;
-            color: ${borderColor};
+            font-weight: ${labelWeight};
+            color: ${textColor};
             pointer-events: none;
-            background: rgba(26, 26, 26, 0.95);
+            background: var(--popup-bg-95);
             border-left: 3px solid ${borderColor};
             padding: ${labelPadding};
             border-radius: 6px;
@@ -3214,6 +3404,20 @@ function openMobilePopup(sourceEl, titleText) {
 
 // Scheda di approfondimento di un evento: pannello laterale su desktop,
 // popup condiviso (già usato per eventi/legenda) su mobile.
+// Colore di TESTO da usare per un colore di categoria (più scuro nel tema chiaro)
+function categoryTextColor(color) {
+    const map = {
+        // tema scuro (colori originali) e tema chiaro (tinte più profonde)
+        '#36a2eb': 'var(--cat-default-text)', '#2d86c3': 'var(--cat-default-text)',
+        '#ca6b58': 'var(--cat-def-text)',     '#c06654': 'var(--cat-def-text)',
+        '#ff964c': 'var(--cat-doc-text)',     '#c46f2e': 'var(--cat-doc-text)',
+        '#8d6e63': 'var(--cat-ent-text)',
+        '#4db6ac': 'var(--cat-evt-text)',     '#3b8c84': 'var(--cat-evt-text)',
+        '#3c87b5': 'var(--cat-sto-text)'
+    };
+    return map[String(color).toLowerCase()] || color;
+}
+
 function buildEventDetailHtml(event, color) {
     const title = langMode === 'it' ? event.title : (event.titleEN || event.title);
     const desc = langMode === 'it' ? event.descLong : (event.descLongEN || event.descLong);
@@ -3235,7 +3439,7 @@ function buildEventDetailHtml(event, color) {
         ${imageHtml}
         <h3 class="detail-title">${title}</h3>
         <div class="detail-meta">
-            <span class="detail-year" style="color:${color}">${Math.floor(event.year)}</span>
+            <span class="detail-year" style="color:${categoryTextColor(color)}">${Math.floor(event.year)}</span>
             <div class="detail-tags">${tags}</div>
         </div>
         ${placeHtml}
@@ -3378,7 +3582,7 @@ function highlightClusterTemporary(clickedEvent) {
     // Marca il pallino toccato (in modo diverso dai correlati) e posiziona
     // la linea verticale di confronto tra le timeline
     setDotStyle(clickedEl.querySelector('.event-dot'), {
-        boxShadow: '0 0 0 2px #FFFFFF, 0 0 6px 1px rgba(255,255,255,0.8)',
+        boxShadow: '0 0 0 2px var(--select-ring), 0 0 6px 1px var(--select-glow)',
         transform: 'scale(1.3)'
     }, 150);
 
@@ -3516,6 +3720,37 @@ document.querySelectorAll('.legend-item').forEach(item => {
 });
 </script>
   
+
+<script>
+// ---- Bottone tema chiaro / scuro ----
+(function () {
+    const root = document.documentElement;
+    const btn = document.getElementById('themeToggle');
+    if (!btn) return;
+
+    function applyTheme(theme) {
+        root.setAttribute('data-theme', theme);
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', theme === 'dark' ? '#1A1A1A' : '#FCFAF6');
+        // le etichette fisse delle timeline hanno colori calcolati: vanno rifatte
+        if (typeof fixLabels === 'function') fixLabels();
+    }
+
+    function toggleTheme() {
+        applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    }
+
+    // allinea il colore della barra del browser al tema già impostato all'avvio
+    const initial = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', initial === 'dark' ? '#1A1A1A' : '#FCFAF6');
+
+    btn.addEventListener('click', toggleTheme);
+    btn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTheme(); }
+    });
+})();
+</script>
 </body>
 
 </html>

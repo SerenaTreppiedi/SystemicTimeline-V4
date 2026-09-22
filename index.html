@@ -768,6 +768,32 @@
             transform: rotate(90deg);
         }
 
+        /* Via d'uscita manuale: il rilevamento automatico della modalità
+           "sito desktop" del browser non è affidabile su tutti i telefoni,
+           quindi questo bottone permette comunque di continuare in
+           orizzontale, di proprio pugno. Stesso linguaggio grafico dei
+           bottoni "Italiano/English" della schermata iniziale (opzione
+           secondaria, discreta). */
+        #rotateOverlayContinue,
+        #rotateOverlayContinueEn {
+            margin-top: 1.5rem;
+            background: transparent;
+            color: var(--text-60);
+            border: 1px solid var(--hairline);
+            border-radius: 6px;
+            padding: 0.5rem 1.2rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        #rotateOverlayContinue:hover,
+        #rotateOverlayContinueEn:hover {
+            color: var(--text);
+            border-color: #BF953F;
+        }
+
         @media (orientation: landscape) and (max-height: 500px) {
             #rotateOverlay {
                 display: flex;
@@ -777,8 +803,10 @@
         /* Quando il browser del telefono è in "Visualizza sito desktop" (vedi
            script più in basso), il blocco non deve comparire: la regola qui
            sopra si basa solo su orientamento/altezza, quindi la sovrascrivo
-           per questo caso specifico. */
-        html.desktop-site-requested #rotateOverlay {
+           per questo caso specifico. Stessa cosa se l'utente ha scelto di
+           continuare comunque col bottone qui sopra. */
+        html.desktop-site-requested #rotateOverlay,
+        html.landscape-allowed #rotateOverlay {
             display: none !important;
         }
 
@@ -2978,6 +3006,8 @@ window.addEventListener('wheel', function(e) {
     <div id="rotateOverlayIcon">&#128241;</div>
     <p class="it-lang">Per la migliore esperienza, ruota il dispositivo in verticale.</p>
     <p class="en-lang" style="display:none">For the best experience, please rotate your device to portrait.</p>
+    <button id="rotateOverlayContinue" class="it-lang">Continua comunque in orizzontale</button>
+    <button id="rotateOverlayContinueEn" class="en-lang" style="display:none">Continue in landscape anyway</button>
 </div>
 <div id="intro-overlay">
 <div id="intro-content">
@@ -3377,6 +3407,10 @@ function fixLabels() {
 // caso il blocco "ruota il dispositivo" non deve comparire, perché l'utente
 // sta già vedendo (e può continuare a vedere, in orizzontale) il sito come
 // su un computer.
+// NOTA: questo rilevamento non è garantito su tutti i browser/versioni (il
+// comportamento della modalità desktop non è standardizzato); per questo
+// esiste ANCHE il bottone "Continua comunque in orizzontale" nel blocco
+// stesso, che funziona sempre, indipendentemente dal rilevamento.
 function updateDesktopSiteDetection() {
     const isDesktopSite = document.documentElement.clientWidth > (window.screen.width + 50);
     document.documentElement.classList.toggle('desktop-site-requested', isDesktopSite);
@@ -3385,6 +3419,23 @@ window.addEventListener('load', updateDesktopSiteDetection);
 window.addEventListener('resize', updateDesktopSiteDetection);
 window.addEventListener('orientationchange', updateDesktopSiteDetection);
 updateDesktopSiteDetection();
+
+// ---- "Continua comunque in orizzontale": via d'uscita manuale dal blocco ----
+// Vale per il resto di questa sessione del browser (scheda/finestra), così
+// non ricompare a ogni rotazione se l'utente ha già detto di sapere cosa fa.
+(function () {
+    if (sessionStorage.getItem('sychro-landscape-ok') === '1') {
+        document.documentElement.classList.add('landscape-allowed');
+    }
+    function allowLandscape() {
+        document.documentElement.classList.add('landscape-allowed');
+        try { sessionStorage.setItem('sychro-landscape-ok', '1'); } catch (e) {}
+    }
+    const btnIt = document.getElementById('rotateOverlayContinue');
+    const btnEn = document.getElementById('rotateOverlayContinueEn');
+    if (btnIt) btnIt.addEventListener('click', allowLandscape);
+    if (btnEn) btnEn.addEventListener('click', allowLandscape);
+})();
 
 window.addEventListener('load', fixLabels);
 window.addEventListener('resize', fixLabels);

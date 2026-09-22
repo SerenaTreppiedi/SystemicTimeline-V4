@@ -774,6 +774,14 @@
             }
         }
 
+        /* Quando il browser del telefono è in "Visualizza sito desktop" (vedi
+           script più in basso), il blocco non deve comparire: la regola qui
+           sopra si basa solo su orientamento/altezza, quindi la sovrascrivo
+           per questo caso specifico. */
+        html.desktop-site-requested #rotateOverlay {
+            display: none !important;
+        }
+
         .event-popup {
             position: absolute;
             bottom: 30px;
@@ -3356,6 +3364,27 @@ function fixLabels() {
         document.body.appendChild(clone);
     });
 }
+
+// ---- Rilevamento "Visualizza sito desktop" dal browser del telefono ----
+// Quando questa modalità è attiva, il browser forza una finestra di
+// visualizzazione larga (di solito intorno ai 980-1024px) e ignora la
+// <meta name="viewport" content="width=device-width">: è per questo che il
+// sito appare come su desktop anche su un telefono. window.screen.width
+// invece riflette sempre le dimensioni fisiche reali dello schermo nel suo
+// orientamento attuale (cambia se si ruota il telefono), e NON viene
+// alterato da questa modalità. Se la larghezza della vista è molto più
+// grande dello schermo fisico, il telefono è in modalità desktop: in quel
+// caso il blocco "ruota il dispositivo" non deve comparire, perché l'utente
+// sta già vedendo (e può continuare a vedere, in orizzontale) il sito come
+// su un computer.
+function updateDesktopSiteDetection() {
+    const isDesktopSite = document.documentElement.clientWidth > (window.screen.width + 50);
+    document.documentElement.classList.toggle('desktop-site-requested', isDesktopSite);
+}
+window.addEventListener('load', updateDesktopSiteDetection);
+window.addEventListener('resize', updateDesktopSiteDetection);
+window.addEventListener('orientationchange', updateDesktopSiteDetection);
+updateDesktopSiteDetection();
 
 window.addEventListener('load', fixLabels);
 window.addEventListener('resize', fixLabels);

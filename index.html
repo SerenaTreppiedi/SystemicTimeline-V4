@@ -2924,21 +2924,38 @@ window.addEventListener('wheel', function(e) {
     flex-wrap: wrap;
   }
   .intro-lang-btn {
-    background: #424242;
-    color: #FFFFFF;
-    border: 1px solid #BF953F;
-    padding: 0.6rem 1.6rem;
     border-radius: 6px;
-    font-weight: 600;
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
   }
-  .intro-lang-btn:hover {
-    background: #555555;
+  /* Lingua principale (inglese): invito all'azione pieno, a sinistra */
+  .intro-lang-btn.intro-lang-primary {
+    background: #BF953F;
+    color: #1A1A1A;
+    border: 1px solid #BF953F;
+    padding: 0.65rem 1.8rem;
+    font-weight: 700;
+  }
+  .intro-lang-btn.intro-lang-primary:hover {
+    background: #d4a34d;
     transform: translateY(-2px);
-    box-shadow: 0 3px 10px rgba(189, 156, 89, 0.3);
+    box-shadow: 0 3px 10px rgba(191, 149, 63, 0.4);
+  }
+  /* Altre lingue: opzioni secondarie, più leggere, a destra */
+  .intro-lang-btn.intro-lang-secondary {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.55rem 1.4rem;
+    font-weight: 500;
+    font-size: 0.92rem;
+  }
+  .intro-lang-btn.intro-lang-secondary:hover {
+    color: #FFFFFF;
+    border-color: rgba(191, 149, 63, 0.6);
+    transform: translateY(-2px);
   }
 </style>
   
@@ -2956,8 +2973,8 @@ window.addEventListener('wheel', function(e) {
     <div id="intro-lang-select">
         <p id="intro-lang-prompt">Map your nodes: select a language</p>
         <div id="intro-lang-buttons">
-            <button class="intro-lang-btn" id="introLangIt">Italiano</button>
-            <button class="intro-lang-btn" id="introLangEn">English</button>
+            <button class="intro-lang-btn intro-lang-primary" id="introLangEn">English</button>
+            <button class="intro-lang-btn intro-lang-secondary" id="introLangIt">Italiano</button>
         </div>
     </div>
 </div>

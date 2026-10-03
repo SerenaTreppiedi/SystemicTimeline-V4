@@ -23,7 +23,6 @@
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "w5h1d2y1la");
-        window.clarity("set", "test_context", "jotform_embed");
 
 </script> 
 
@@ -744,72 +743,6 @@
             box-shadow: var(--dot-shadow-hover);
         }
 
-        /* Messaggio "ruota il dispositivo": visibile solo su schermi stretti
-           E bassi in orizzontale (telefoni), mai su tablet/desktop, dove
-           l'orizzontale è la modalità normale. */
-        #rotateOverlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: var(--panel-bg);
-            z-index: 999999;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 2rem;
-            color: var(--text);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        #rotateOverlayIcon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            transform: rotate(90deg);
-        }
-
-        /* Via d'uscita manuale: il rilevamento automatico della modalità
-           "sito desktop" del browser non è affidabile su tutti i telefoni,
-           quindi questo bottone permette comunque di continuare in
-           orizzontale, di proprio pugno. Stesso linguaggio grafico dei
-           bottoni "Italiano/English" della schermata iniziale (opzione
-           secondaria, discreta). */
-        #rotateOverlayContinue,
-        #rotateOverlayContinueEn {
-            margin-top: 1.5rem;
-            background: transparent;
-            color: var(--text-60);
-            border: 1px solid var(--hairline);
-            border-radius: 6px;
-            padding: 0.5rem 1.2rem;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        #rotateOverlayContinue:hover,
-        #rotateOverlayContinueEn:hover {
-            color: var(--text);
-            border-color: #BF953F;
-        }
-
-        @media (orientation: landscape) and (max-height: 500px) {
-            #rotateOverlay {
-                display: flex;
-            }
-        }
-
-        /* Quando il browser del telefono è in "Visualizza sito desktop" (vedi
-           script più in basso), il blocco non deve comparire: la regola qui
-           sopra si basa solo su orientamento/altezza, quindi la sovrascrivo
-           per questo caso specifico. Stessa cosa se l'utente ha scelto di
-           continuare comunque col bottone qui sopra. */
-        html.desktop-site-requested #rotateOverlay,
-        html.landscape-allowed #rotateOverlay {
-            display: none !important;
-        }
-
         .event-popup {
             position: absolute;
             bottom: 30px;
@@ -1438,6 +1371,170 @@
             --timeline-text: var(--cat-sto-text);
         }
 
+        /* Elementi del pannello filtri che esistono solo su mobile (maniglia
+           del pannello dal basso, contatore dei risultati, bottone "Fatto"):
+           su desktop restano nascosti, il pannello è identico a prima. */
+        .filter-sheet-handle,
+        .filter-sheet-footer {
+            display: none;
+        }
+
+        /* ------------------------------------------------------------
+           SEZIONE "COLLEGATI" nella scheda evento (solo popup mobile):
+           elenca gli eventi che condividono almeno un cluster. Toccando
+           una riga il popup si chiude e la timeline porta in vista il
+           pallino corrispondente, che pulsa con un anello dorato.
+           ------------------------------------------------------------ */
+        .related-section {
+            margin-top: 1.1rem;
+            padding-top: 0.9rem;
+            border-top: 1px solid rgba(191, 149, 63, 0.35);
+        }
+
+        .related-head {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .related-title {
+            font-family: 'Darker Grotesque', sans-serif;
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: var(--gold-text);
+            letter-spacing: 0.01em;
+        }
+
+        .related-count {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--gold-text);
+            border: 1px solid rgba(191, 149, 63, 0.6);
+            border-radius: 999px;
+            padding: 0.05rem 0.45rem;
+            line-height: 1.4;
+        }
+
+        .related-via {
+            font-size: 0.72rem;
+            color: var(--text-60);
+            margin: 0 0 0.55rem;
+            line-height: 1.4;
+        }
+
+        .related-via em {
+            font-style: normal;
+            color: var(--text-80);
+        }
+
+        .related-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            max-height: 11.5rem;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            /* sfumatura in fondo: suggerisce che l'elenco continua */
+            -webkit-mask-image: linear-gradient(to bottom, #000 82%, transparent);
+            mask-image: linear-gradient(to bottom, #000 82%, transparent);
+            padding-bottom: 0.9rem;
+        }
+
+        .related-list.is-short {
+            -webkit-mask-image: none;
+            mask-image: none;
+            padding-bottom: 0;
+        }
+
+        .related-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            width: 100%;
+            background: none;
+            border: none;
+            border-radius: 6px;
+            padding: 0.42rem 0.35rem;
+            text-align: left;
+            cursor: pointer;
+            color: var(--text);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: background 0.15s ease;
+        }
+
+        .related-item:active,
+        .related-item:hover {
+            background: var(--tint);
+        }
+
+        .related-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex: 0 0 auto;
+        }
+
+        .related-year {
+            flex: 0 0 auto;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--gold-text);
+            font-variant-numeric: tabular-nums;
+            min-width: 2.4rem;
+        }
+
+        .related-name {
+            flex: 1 1 auto;
+            min-width: 0;
+            font-size: 0.8rem;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .related-arrow {
+            flex: 0 0 auto;
+            color: var(--text-50);
+            font-size: 0.8rem;
+        }
+
+        .related-hint {
+            font-size: 0.68rem;
+            color: var(--text-50);
+            font-style: italic;
+            margin: 0.35rem 0 0;
+        }
+
+        /* Anello che pulsa attorno al pallino raggiunto da "Collegati" */
+        .event.related-ping::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 12px;
+            height: 12px;
+            margin: -6px 0 0 -6px;
+            border-radius: 50%;
+            border: 2px solid #BF953F;
+            pointer-events: none;
+            animation: related-ping 1.1s ease-out 3;
+        }
+
+        @keyframes related-ping {
+            0%   { transform: scale(1);   opacity: 0.95; }
+            100% { transform: scale(3.4); opacity: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .event.related-ping::after {
+                animation: none;
+                transform: scale(1.9);
+                opacity: 0.9;
+            }
+        }
+
         /* ============================================================
            ADATTAMENTO MOBILE
            Tutto racchiuso in questo media query: sopra i 768px il sito
@@ -1467,9 +1564,9 @@
             }
 
             .header-icon {
-                width: 26px;
-                height: 26px;
-                font-size: 0.85rem;
+                width: 27px;   /* +5% */
+                height: 27px;
+                font-size: 0.89rem;
             }
 
             .header h1 {
@@ -1586,18 +1683,19 @@
                 display: none;
             }
 
-            .zoom-controls {
+            /* Contribuisci a SINISTRA dello zoom, come su desktop */
+            .new-event-prompt {
                 order: 2;
             }
 
-            .zoom-btn {
-                width: 32px;
-                height: 32px;
-                font-size: 1rem;
+            .zoom-controls {
+                order: 3;
             }
 
-            .new-event-prompt {
-                order: 3;
+            .zoom-btn {
+                width: 34px;   /* +5% */
+                height: 34px;
+                font-size: 1.05rem;
             }
 
             /* Su schermi stretti resta solo il bottone, il testo occupa troppo spazio */
@@ -1606,8 +1704,8 @@
             }
 
             .add-to-timeline-btn {
-                padding: 0.4rem 0.7rem;
-                font-size: 0.8rem;
+                padding: 0.42rem 0.74rem;   /* +5% */
+                font-size: 0.84rem;
             }
 
             /* Ripristinato in una riga propria, in fondo, per non sovrapporsi
@@ -1630,6 +1728,7 @@
             .info-popup {
                 padding: 20px !important;
                 height: calc(100vh - 225px) !important;
+                height: calc(100dvh - 225px) !important;
                 font-size: 0.85rem !important;
                 width: 85% !important;
                 max-width: none !important;
@@ -1708,6 +1807,417 @@
                 line-height: 1;
                 cursor: pointer;
                 padding: 0.3rem;
+            }
+
+            /* --- CHIP E BOTTONI DEI FILTRI: +5% --- */
+            .filter-icon-btn {
+                width: 27px;
+                height: 27px;
+            }
+
+            .filter-chip {
+                padding: 0.32rem 0.68rem;
+                font-size: 0.82rem;
+            }
+
+            .keyword-chip-remove {
+                font-size: 1rem;
+            }
+
+            .filter-reset-btn {
+                font-size: 0.84rem;
+            }
+
+            /* --- PANNELLO FILTRI: sale dal basso invece di aprirsi sotto
+               l'header (dove copriva la barra di ricerca). Occupa al massimo
+               ~60% dello schermo, così la timeline resta visibile sopra e si
+               vede subito l'effetto dei filtri. --- */
+            .filter-panel {
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                max-width: none;
+                max-height: 62vh;
+                max-height: 62dvh;
+                border: none;
+                border-top: 2px solid #BF953F;
+                border-radius: 16px 16px 0 0;
+                padding: 0.35rem 1.1rem 0;
+                box-shadow: 0 -10px 30px var(--shade-60);
+            }
+
+            .filter-panel.active {
+                animation: filter-sheet-up 0.28s cubic-bezier(0.2, 0.8, 0.3, 1);
+            }
+
+            .filter-sheet-handle {
+                display: block;
+                width: 40px;
+                height: 4px;
+                border-radius: 2px;
+                background: var(--tint-border);
+                margin: 0.25rem auto 0.85rem;
+            }
+
+            .filter-sheet-footer {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                position: sticky;
+                bottom: 0;
+                margin-top: 0.8rem;
+                padding: 0.7rem 0 calc(0.75rem + env(safe-area-inset-bottom));
+                background: var(--panel-bg);
+                border-top: 1px solid var(--hairline);
+            }
+
+            .filter-result-count {
+                font-size: 0.84rem;
+                color: var(--text-70);
+            }
+
+            .filter-result-count strong {
+                color: var(--gold-text);
+                font-weight: 700;
+            }
+
+            .filter-done-btn {
+                background: rgba(191, 149, 63, 0.22);
+                color: var(--text);
+                border: 1.5px solid #BF953F;
+                border-radius: 18px;
+                padding: 0.45rem 1.3rem;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-weight: 700;
+                font-size: 0.86rem;
+                cursor: pointer;
+            }
+        }
+
+        @keyframes filter-sheet-up {
+            from { transform: translateY(100%); }
+            to   { transform: translateY(0); }
+        }
+
+        /* ============================================================
+           TELEFONO IN ORIZZONTALE
+           Si attiva SOLO su schermi touch (pointer: coarse) bassi in
+           orizzontale: un computer non lo attiva mai, nemmeno con la
+           finestra bassa, quindi la versione desktop resta identica.
+           Sta DOPO il blocco mobile per poterlo sovrascrivere sui telefoni
+           piccoli (larghi meno di 768px anche in orizzontale).
+           Impostazione: header e footer su una riga sola, scheda evento
+           laterale come su desktop (la timeline resta visibile accanto).
+           ============================================================ */
+        @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+
+            body {
+                padding-top: 58px;
+                padding-bottom: 56px;
+            }
+
+            /* --- HEADER su una riga: icone a sinistra, titolo al centro,
+               ricerca a destra --- */
+            .header {
+                padding: 0.35rem 0.6rem;
+            }
+
+            .header-icons {
+                position: absolute;
+                top: 50%;
+                left: 0.6rem;
+                transform: translateY(-50%);
+                margin-bottom: 0;
+                gap: 0.45rem;
+            }
+
+            .header-icons a {
+                margin-right: 0.4rem !important;
+            }
+
+            .header-icons a img {
+                height: 22px !important;
+            }
+
+            .header-icon {
+                width: 27px;
+                height: 27px;
+                font-size: 0.89rem;
+            }
+
+            .header h1 {
+                font-size: 1.15rem;
+                line-height: 1.2;
+                margin: 0;
+                padding: 0.25rem 215px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .header p {
+                display: none;
+            }
+
+            .search-container {
+                position: absolute;
+                top: 50%;
+                right: 0.6rem;
+                transform: translateY(-50%);
+                width: 200px;
+                margin-top: 0;
+            }
+
+            .search-input {
+                padding: 0.3rem 0.6rem;
+                padding-right: 28px;
+                font-size: 16px; /* iOS Safari fa zoom automatico sotto i 16px */
+            }
+
+            .filter-icon-btn {
+                width: 27px;
+                height: 27px;
+            }
+
+            #dataLoadingMessage,
+            #dataLoadingMessageEn {
+                top: 62px !important;
+            }
+
+            /* --- TIMELINE: righe un po' più basse, per far stare più
+               categorie nell'altezza ridotta --- */
+            .timeline-container {
+                padding-top: 0.25rem;
+            }
+
+            .year-markers {
+                margin: 0.25rem 0;
+            }
+
+            .timeline {
+                margin-bottom: 0.3rem;
+            }
+
+            .timeline-header {
+                padding: 0.12rem 0.4rem;
+                margin-bottom: 0.12rem;
+            }
+
+            .timeline-title {
+                font-size: 0.85rem;
+            }
+
+            .timeline-track {
+                height: 28px;
+            }
+
+            /* Su touch il popup al passaggio del mouse resterebbe "appeso":
+               le informazioni arrivano dalla scheda laterale al tocco. */
+            .event-popup {
+                display: none !important;
+            }
+
+            /* --- FOOTER su una riga: Contribuisci a sinistra, tag al
+               centro (solo pallini, come in verticale), zoom a destra --- */
+            .app-footer {
+                flex-wrap: nowrap;
+                justify-content: space-between;
+                gap: 0.5rem;
+                padding: 0.3rem 0.6rem 0.5rem;
+            }
+
+            .new-event-prompt {
+                order: 1;
+            }
+
+            .zoom-controls {
+                order: 2;
+                gap: 0.5rem;
+            }
+
+            .new-event-prompt span {
+                display: none;
+            }
+
+            .add-to-timeline-btn {
+                padding: 0.38rem 0.74rem;
+                font-size: 0.84rem;
+            }
+
+            .zoom-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 1rem;
+            }
+
+            .zoom-level {
+                padding: 0.35rem 0.8rem;
+                font-size: 0.82rem;
+            }
+
+            .legend-container {
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                flex: none;
+                overflow: visible;
+                gap: 12px;
+                padding: 0;
+                order: 0;
+            }
+
+            .legend-label {
+                display: none;
+            }
+
+            .legend-tag-prefix {
+                display: inline-block;
+                color: var(--text);
+                opacity: 0.7;
+                font-size: 0.72rem;
+                margin-right: 4px;
+            }
+
+            /* il fumetto della legenda torna quello di desktop (al tocco) */
+            .legend-tooltip {
+                display: block !important;
+            }
+
+            .footer-copyright {
+                position: absolute !important;
+                left: 50% !important;
+                bottom: 0.1rem !important;
+                transform: translateX(-50%) !important;
+                width: auto;
+                margin-top: 0;
+            }
+
+            /* --- SCHEDA EVENTO: pannello laterale come su desktop, ma
+               adattato all'altezza ridotta --- */
+            .detail-panel {
+                display: block;
+                top: 56px;
+                bottom: 54px;
+                width: 300px;
+                max-width: 46vw;
+                padding: 1rem 0.9rem;
+            }
+
+            .detail-image {
+                aspect-ratio: 16 / 9;
+            }
+
+            /* --- PANNELLO FILTRI: a tendina sotto l'header (non dal basso:
+               in orizzontale coprirebbe quasi tutta la timeline) --- */
+            .filter-panel {
+                top: 54px;
+                right: 12px;
+                left: auto;
+                bottom: auto;
+                width: 280px;
+                max-width: 60vw;
+                max-height: calc(100vh - 112px);
+                max-height: calc(100dvh - 112px);
+                border: 2px solid #BF953F;
+                border-radius: 10px;
+                padding: 0.9rem 1rem 0;
+                box-shadow: 0 8px 25px var(--shade-60);
+            }
+
+            .filter-panel.active {
+                animation: none;
+            }
+
+            .filter-sheet-handle {
+                display: none;
+            }
+
+            .filter-chip {
+                padding: 0.32rem 0.68rem;
+                font-size: 0.82rem;
+            }
+
+            .filter-sheet-footer {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                position: sticky;
+                bottom: 0;
+                margin-top: 0.8rem;
+                padding: 0.6rem 0 0.7rem;
+                background: var(--panel-bg);
+                border-top: 1px solid var(--hairline);
+            }
+
+            .filter-result-count {
+                font-size: 0.82rem;
+                color: var(--text-70);
+            }
+
+            .filter-result-count strong {
+                color: var(--gold-text);
+                font-weight: 700;
+            }
+
+            .filter-done-btn {
+                background: rgba(191, 149, 63, 0.22);
+                color: var(--text);
+                border: 1.5px solid #BF953F;
+                border-radius: 18px;
+                padding: 0.4rem 1.2rem;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-weight: 700;
+                font-size: 0.84rem;
+                cursor: pointer;
+            }
+
+            /* --- POPUP ISTRUZIONI: usa quasi tutta l'altezza --- */
+            .info-popup {
+                height: calc(100vh - 32px) !important;
+                height: calc(100dvh - 32px) !important;
+                width: 88% !important;
+                max-width: none !important;
+                padding: 16px 22px !important;
+                font-size: 0.85rem !important;
+            }
+
+            .info-popup h3 {
+                font-size: 1.5rem !important;
+                margin-bottom: 0.8rem !important;
+            }
+
+            .tutorial-breadcrumbs {
+                margin-bottom: 0.6rem;
+            }
+
+            .tutorial-nav {
+                margin-top: 0.6rem;
+                padding-top: 0.6rem;
+            }
+
+            .tutorial-indent {
+                padding-left: 0.5rem !important;
+            }
+
+            /* --- SCHERMATA INIZIALE (logo + lingua): il logo si adatta
+               all'altezza, così i bottoni della lingua restano visibili --- */
+            html #intro-logo {
+                width: auto;
+                max-width: 60vw;
+                max-height: 42vh;
+            }
+
+            html #intro-lang-select {
+                margin-top: 1rem;
+            }
+
+            html #intro-lang-prompt {
+                margin-bottom: 0.6rem;
+                font-size: 1rem;
             }
         }
     </style>
@@ -1874,6 +2384,12 @@ if (pulsanteReset) {
                 [filterResetBtn, filterResetBtnEn].forEach(btn => {
                     if (btn) btn.addEventListener('click', resetFilters);
                 });
+
+                // "Fatto" in fondo al pannello filtri (solo mobile): lo chiude
+                const filterDoneBtn = document.getElementById('filterDoneBtn');
+                if (filterDoneBtn) {
+                    filterDoneBtn.addEventListener('click', () => filterPanel.classList.remove('active'));
+                }
 
                 const menuIcon = document.getElementById('menuIcon');
 
@@ -2136,8 +2652,22 @@ function showDataLoadingError() {
         // resta al 100% solo se soddisfa entrambe le condizioni. Gli altri
         // non spariscono: restano al 20% (vedi .event.no-match nel CSS).
         // Dati su cui lavorano ricerca e filtri, per UN singolo evento
+        // Testo su cui si basa la ricerca, nella LINGUA ATTIVA: in italiano
+        // titolo, categoria e tag italiani; in inglese il titolo inglese del
+        // database (Titolo_EN_override) e i nomi inglesi di categoria e tag.
+        // Al cambio lingua le timeline vengono ridisegnate, quindi questo
+        // testo si aggiorna da solo.
+        function buildSearchText(event, category) {
+            const isEn = langMode !== 'it';
+            const title = isEn ? (event.titleEN || event.title) : event.title;
+            const catName = String(category).replace(/^\s*\d+\.\s*/, '');
+            const cat = isEn ? (translations[catName] || catName) : catName;
+            const sust = event.sustainability ? (isEn ? 'Sustainability' : 'Sostenibilità') : '';
+            return `${event.year} ${title} ${cat} ${sust} ${event.systemthinking ? 'Systems Thinking' : ''} ${event.systemicdesign ? 'Systemic Design' : ''} ${event.systemdynamic ? 'System Dynamic' : ''}`.toLowerCase();
+        }
+
         function getEventFilterData(event, category) {
-            const searchText = `${event.year} ${event.title} ${category} ${event.sustainability ? 'Sostenibilità' : ''} ${event.systemthinking ? 'Systems Thinking' : ''} ${event.systemicdesign ? 'Systemic Design' : ''} ${event.systemdynamic ? 'System Dynamic' : ''}`.toLowerCase();
+            const searchText = buildSearchText(event, category);
             const tags = [];
             if (event.sustainability) tags.push('sustainability');
             if (event.systemthinking) tags.push('systemthinking');
@@ -2187,6 +2717,40 @@ function showDataLoadingError() {
 
             const btn = document.getElementById('filterIconBtn');
             if (btn) btn.classList.toggle('active', activeFilterSet.size > 0 || activeKeywords.length > 0);
+
+            updateFilterResultCount(terms, anyFilter);
+        }
+
+        // Contatore "N eventi corrispondono" in fondo al pannello filtri
+        // (visibile solo su mobile, vedi .filter-sheet-footer). Conta gli
+        // eventi uno per uno, non i pallini/barrette a schermo.
+        function updateFilterResultCount(terms, anyFilter) {
+            const countEl = document.getElementById('filterResultCount');
+            const doneEl = document.getElementById('filterDoneBtn');
+            if (doneEl) doneEl.textContent = langMode === 'it' ? 'Fatto' : 'Done';
+            if (!countEl) return;
+
+            let total = 0;
+            let matching = 0;
+            Object.keys(timelineData).forEach(category => {
+                (timelineData[category] || []).forEach(ev => {
+                    total++;
+                    if (!anyFilter || eventPassesFilters(getEventFilterData(ev, category), terms)) matching++;
+                });
+            });
+
+            const it = langMode === 'it';
+            if (total === 0) {
+                countEl.textContent = '';
+            } else if (!anyFilter) {
+                countEl.innerHTML = it ? `<strong>${total}</strong> eventi` : `<strong>${total}</strong> events`;
+            } else if (matching === 0) {
+                countEl.textContent = it ? 'Nessun evento corrisponde' : 'No matching events';
+            } else {
+                countEl.innerHTML = it
+                    ? `<strong>${matching}</strong> ${matching === 1 ? 'evento' : 'eventi'} su ${total}`
+                    : `<strong>${matching}</strong> of ${total} ${total === 1 ? 'event' : 'events'}`;
+            }
         }
 
         // Piccola animazione del bottone filtri: "qualcosa è stato caricato"
@@ -2687,8 +3251,7 @@ if (event.systemdynamic) {
 }
 
                 // Testo su cui si basa la ricerca (titolo, anno, categoria, tag)
-               const fullText = `${event.year} ${event.title} ${category} ${event.sustainability ? 'Sostenibilità' : ''} ${event.systemthinking ? 'Systems Thinking' : ''} ${event.systemicdesign ? 'Systemic Design' : ''} ${event.systemdynamic ? 'System Dynamic' : ''}`;
-                eventElement.setAttribute('data-search-text', fullText.toLowerCase());
+                eventElement.setAttribute('data-search-text', buildSearchText(event, category));
 
                 // Tag e cluster dell'evento: usati dai filtri e dall'effetto
                 // "illuminato" al click su eventi dello stesso cluster
@@ -2862,18 +3425,32 @@ function resetZoom() {
       
         
 window.addEventListener('wheel', function(e) {
-    if (e.target.closest('.detail-panel') || e.target.closest('.mobile-popup') || e.target.closest('.info-popup')) {
+    if (e.target.closest('.detail-panel') || e.target.closest('.mobile-popup') ||
+        e.target.closest('.info-popup') || e.target.closest('.filter-panel')) {
         // Lascia scrollare normalmente il contenuto interno di pannelli/popup
         return;
     }
-    const container = document.querySelector('.timeline-container');
     if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
         // Scroll orizzontale del trackpad: lascialo fare normalmente
         return;
     }
+    // Ciò che scorre in orizzontale è il <body> (il contenitore della
+    // timeline non ha uno scroll suo: prima si scriveva lì e non succedeva
+    // nulla). Se la timeline non è più larga dello schermo (es. al 100%)
+    // non c'è niente da scorrere: la rotellina resta libera di far
+    // scorrere la pagina in verticale.
+    const scroller = document.body;
+    if (scroller.scrollWidth <= scroller.clientWidth + 1) return;
+
     // Converte lo scroll verticale della rotellina in scroll orizzontale
     e.preventDefault();
-    container.scrollLeft += e.deltaY;
+    // deltaMode 1 = righe (es. Firefox con mouse): le converte in pixel
+    const delta = e.deltaMode === 1 ? e.deltaY * 32 : e.deltaY;
+    const before = scroller.scrollLeft;
+    scroller.scrollLeft += delta;
+    if (scroller.scrollLeft === before && document.scrollingElement) {
+        document.scrollingElement.scrollLeft += delta;
+    }
 }, { passive: false });
 
         function applyZoom() {
@@ -3002,13 +3579,6 @@ window.addEventListener('wheel', function(e) {
 </head>
 
 <body>
-<div id="rotateOverlay">
-    <div id="rotateOverlayIcon">&#128241;</div>
-    <p class="it-lang">Per la migliore esperienza, ruota il dispositivo in verticale.</p>
-    <p class="en-lang" style="display:none">For the best experience, please rotate your device to portrait.</p>
-    <button id="rotateOverlayContinue" class="it-lang">Continua comunque in orizzontale</button>
-    <button id="rotateOverlayContinueEn" class="en-lang" style="display:none">Continue in landscape anyway</button>
-</div>
 <div id="intro-overlay">
 <div id="intro-content">
     <img id="intro-logo" src="LOGO SyChro 1.svg" alt="SyChro - Collective Systemic Chronography">
@@ -3098,6 +3668,7 @@ window.addEventListener('wheel', function(e) {
     </div>
 
     <div class="filter-panel" id="filterPanel">
+        <div class="filter-sheet-handle" aria-hidden="true"></div>
         <div class="filter-panel-section" id="filterKeywordSection">
             <p class="filter-panel-label it-lang">Parole chiave</p>
             <p class="filter-panel-label en-lang" style="display:none">Keywords</p>
@@ -3117,6 +3688,14 @@ window.addEventListener('wheel', function(e) {
         </div>
         <button class="filter-reset-btn it-lang" id="filterResetBtn">Azzera filtri</button>
         <button class="filter-reset-btn en-lang" id="filterResetBtnEn" style="display:none">Clear filters</button>
+        <!-- Solo mobile: quanti eventi corrispondono + chiusura del pannello.
+             Niente classi it-lang/en-lang: i testi li scrive JS nella lingua
+             attiva (quelle classi forzano display:block e lo mostrerebbero
+             anche su desktop). -->
+        <div class="filter-sheet-footer">
+            <span class="filter-result-count" id="filterResultCount" aria-live="polite"></span>
+            <button class="filter-done-btn" id="filterDoneBtn" type="button">Fatto</button>
+        </div>
     </div>
     <div class="info-popup-overlay" id="infoPopupOverlay">
        <div class="info-popup" id="tutorialPopup" style="width: 78%; max-width: 1400px; padding: 40px; margin-left: auto; margin-right: auto">
@@ -3354,7 +3933,8 @@ window.addEventListener('wheel', function(e) {
 function fixLabels() {
     document.querySelectorAll('.fixed-label').forEach(el => el.remove());
 
-    const isMobile = window.innerWidth <= 768;
+    // etichette piccole su telefono, in verticale e in orizzontale
+    const isMobile = window.innerWidth <= 768 || isPhoneLandscape();
     const labelFontSize = isMobile ? '0.9rem' : '1.2rem';
     const labelPadding = isMobile ? '0.25rem 0.5rem' : '0.4rem 0.6rem';
 
@@ -3391,51 +3971,93 @@ function fixLabels() {
             white-space: nowrap;
             backdrop-filter: blur(10px);
         `;
+        clone._sourceHeader = header;
         document.body.appendChild(clone);
     });
 }
 
-// ---- Rilevamento "Visualizza sito desktop" dal browser del telefono ----
-// Quando questa modalità è attiva, il browser forza una finestra di
-// visualizzazione larga (di solito intorno ai 980-1024px) e ignora la
-// <meta name="viewport" content="width=device-width">: è per questo che il
-// sito appare come su desktop anche su un telefono. window.screen.width
-// invece riflette sempre le dimensioni fisiche reali dello schermo nel suo
-// orientamento attuale (cambia se si ruota il telefono), e NON viene
-// alterato da questa modalità. Se la larghezza della vista è molto più
-// grande dello schermo fisico, il telefono è in modalità desktop: in quel
-// caso il blocco "ruota il dispositivo" non deve comparire, perché l'utente
-// sta già vedendo (e può continuare a vedere, in orizzontale) il sito come
-// su un computer.
-// NOTA: questo rilevamento non è garantito su tutti i browser/versioni (il
-// comportamento della modalità desktop non è standardizzato); per questo
-// esiste ANCHE il bottone "Continua comunque in orizzontale" nel blocco
-// stesso, che funziona sempre, indipendentemente dal rilevamento.
-function updateDesktopSiteDetection() {
-    const isDesktopSite = document.documentElement.clientWidth > (window.screen.width + 50);
-    document.documentElement.classList.toggle('desktop-site-requested', isDesktopSite);
+// Le etichette sono "fixed" (restano ferme durante lo scroll orizzontale),
+// ma quando la pagina scorre in VERTICALE (frequente col telefono in
+// orizzontale) devono seguire la propria riga, altrimenti si staccano.
+// Si aggiorna solo la posizione verticale: quella orizzontale resta ferma.
+let labelScrollFrame = null;
+function followLabelsVertically() {
+    if (labelScrollFrame) return;
+    labelScrollFrame = requestAnimationFrame(() => {
+        labelScrollFrame = null;
+        document.querySelectorAll('.fixed-label').forEach(clone => {
+            if (clone._sourceHeader) {
+                clone.style.top = clone._sourceHeader.getBoundingClientRect().top + 'px';
+            }
+        });
+    });
 }
-window.addEventListener('load', updateDesktopSiteDetection);
-window.addEventListener('resize', updateDesktopSiteDetection);
-window.addEventListener('orientationchange', updateDesktopSiteDetection);
-updateDesktopSiteDetection();
+window.addEventListener('scroll', followLabelsVertically, { capture: true, passive: true });
 
-// ---- "Continua comunque in orizzontale": via d'uscita manuale dal blocco ----
-// Vale per il resto di questa sessione del browser (scheda/finestra), così
-// non ricompare a ogni rotazione se l'utente ha già detto di sapere cosa fa.
-(function () {
-    if (sessionStorage.getItem('sychro-landscape-ok') === '1') {
-        document.documentElement.classList.add('landscape-allowed');
+// ---- Rotazione del telefono (verticale <-> orizzontale) ----
+// La larghezza di riferimento della timeline (baseWidthPx) è calcolata una
+// volta sola al caricamento: ruotando il telefono va ricalcolata, e la
+// scheda evento aperta passa dal popup centrale (verticale) al pannello
+// laterale (orizzontale) o viceversa. Vale solo per schermi touch: su un
+// computer il ridimensionamento della finestra si comporta come prima.
+let lastLayoutWidth = window.innerWidth;
+let lastMobileMode = null;
+let viewportChangeTimer = null;
+
+function handleViewportChange() {
+    if (!window.matchMedia('(pointer: coarse)').matches) return;
+    // Le barre del browser che compaiono/scompaiono cambiano solo l'altezza:
+    // si ricalcola solo se è cambiata davvero la larghezza.
+    if (Math.abs(window.innerWidth - lastLayoutWidth) < 2) return;
+    lastLayoutWidth = window.innerWidth;
+    if (!timelineContainer) return;
+
+    const fraction = getCenterFraction();
+    const nowMobile = isMobileViewport();
+
+    if (lastMobileMode !== null && nowMobile !== lastMobileMode) {
+        const panel = document.getElementById('detailPanel');
+        const overlay = document.getElementById('mobilePopupOverlay');
+        const wasOpen = currentDetailEvent &&
+            (panel.classList.contains('active') || overlay.classList.contains('active'));
+
+        panel.classList.remove('active');
+        overlay.classList.remove('active');
+        clearTimeout(mobileHighlightTimer);
+        clearTimeout(mobileTappableTimer);
+        mobileHighlightEvent = null;
+        clearClusterHighlight();
+
+        if (wasOpen) {
+            openEventDetail(currentDetailEvent, currentDetailColor);
+            // l'illuminazione viene riapplicata dopo il ridisegno
+            // (reapplyStateAfterRerender), qui serve solo segnare l'evento
+            if (nowMobile) mobileHighlightEvent = currentDetailEvent;
+        }
     }
-    function allowLandscape() {
-        document.documentElement.classList.add('landscape-allowed');
-        try { sessionStorage.setItem('sychro-landscape-ok', '1'); } catch (e) {}
+    lastMobileMode = nowMobile;
+
+    timelineContainer.style.width = '100%';
+    baseWidthPx = Math.min(timelineContainer.clientWidth, 1200);
+    applyZoom();
+    renderTimelines();
+    reapplyStateAfterRerender();
+    if (currentZoom === 1.0) {
+        document.body.scrollLeft = 0;
+    } else {
+        setCenterFraction(fraction);
     }
-    const btnIt = document.getElementById('rotateOverlayContinue');
-    const btnEn = document.getElementById('rotateOverlayContinueEn');
-    if (btnIt) btnIt.addEventListener('click', allowLandscape);
-    if (btnEn) btnEn.addEventListener('click', allowLandscape);
-})();
+    fixLabels();
+}
+
+function scheduleViewportChange() {
+    clearTimeout(viewportChangeTimer);
+    // piccolo ritardo: durante la rotazione le misure arrivano a scatti
+    viewportChangeTimer = setTimeout(handleViewportChange, 200);
+}
+window.addEventListener('resize', scheduleViewportChange);
+window.addEventListener('orientationchange', scheduleViewportChange);
+lastMobileMode = isMobileViewport();
 
 window.addEventListener('load', fixLabels);
 window.addEventListener('resize', fixLabels);
@@ -3453,8 +4075,18 @@ window.addEventListener('resize', function () {
 // --- Popup condiviso per mobile ---
 // Attivo solo sotto i 768px: su desktop questo listener non fa nulla,
 // il comportamento a :hover resta quello di sempre.
+// Telefono in orizzontale: stessa condizione del blocco CSS "TELEFONO IN
+// ORIZZONTALE". Solo schermi touch: un computer non risulta mai in
+// questa modalità.
+function isPhoneLandscape() {
+    return window.matchMedia('(orientation: landscape) and (max-height: 500px) and (pointer: coarse)').matches;
+}
+
+// Modalità "mobile" (popup centrale, illuminazione temporanea dei cluster):
+// solo il telefono in VERTICALE. In orizzontale il telefono usa la stessa
+// logica di desktop (scheda laterale), adattata dal CSS.
 function isMobileViewport() {
-    return window.matchMedia('(max-width: 768px)').matches;
+    return window.matchMedia('(max-width: 768px)').matches && !isPhoneLandscape();
 }
 
 // --- Correzione popup evento tagliati ai bordi (solo desktop) ---
@@ -3766,8 +4398,9 @@ function openEventDetail(event, color) {
         const box = overlay ? overlay.querySelector('.mobile-popup') : null;
         const body = document.getElementById('mobilePopupBody');
         if (!overlay || !box || !body) return;
-        body.innerHTML = html;
+        body.innerHTML = html + buildRelatedHtml(event);
         box.style.borderColor = color;
+        box.scrollTop = 0;
         overlay.classList.add('active');
     } else {
         const panel = document.getElementById('detailPanel');
@@ -3784,6 +4417,97 @@ function closeMobilePopup() {
     if (overlay) overlay.classList.remove('active');
     startMobileHighlightFade();
 }
+
+// ---------------------------------------------------------------
+// "COLLEGATI" (solo popup mobile in verticale)
+// ---------------------------------------------------------------
+// Elenco degli eventi che condividono almeno un cluster con quello aperto,
+// in ordine cronologico. Toccando una riga il popup si chiude, la timeline
+// scorre fino al pallino corrispondente (già illuminato dal cluster) e lo
+// fa pulsare, così si vede davvero dove si trova.
+let currentRelatedList = [];
+
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function getRelatedEvents(event) {
+    if (!event.clusters || event.clusters.length === 0) return [];
+    const related = [];
+    Object.keys(timelineData).forEach((category, index) => {
+        const wrapper = document.getElementById(`timeline-${index + 1}-wrapper`);
+        const color = wrapper ? getComputedStyle(wrapper).getPropertyValue('--timeline-color').trim() : '#BF953F';
+        (timelineData[category] || []).forEach(ev => {
+            if (ev.fullKey === event.fullKey) return;
+            if ((ev.clusters || []).some(c => event.clusters.includes(c))) {
+                related.push({ ev, color });
+            }
+        });
+    });
+    related.sort((a, b) => a.ev.year - b.ev.year);
+    return related;
+}
+
+function buildRelatedHtml(event) {
+    currentRelatedList = getRelatedEvents(event);
+    if (currentRelatedList.length === 0) return '';
+
+    const it = langMode === 'it';
+    const items = currentRelatedList.map((r, i) => {
+        const title = it ? r.ev.title : (r.ev.titleEN || r.ev.title);
+        return `<li><button type="button" class="related-item" data-related-index="${i}">
+                <span class="related-dot" style="background:${r.color}"></span>
+                <span class="related-year">${Math.floor(r.ev.year)}</span>
+                <span class="related-name">${escapeHtml(title)}</span>
+                <span class="related-arrow" aria-hidden="true">↗</span>
+            </button></li>`;
+    }).join('');
+
+    const clusterNames = event.clusters.map(c => `<em>${escapeHtml(c)}</em>`).join(' · ');
+    const short = currentRelatedList.length <= 5 ? ' is-short' : '';
+
+    return `
+        <div class="related-section">
+            <div class="related-head">
+                <span class="related-title">${it ? 'Collegati' : 'Connected'}</span>
+                <span class="related-count">${currentRelatedList.length}</span>
+            </div>
+            <p class="related-via">${it ? 'Cluster' : 'Cluster'}: ${clusterNames}</p>
+            <ul class="related-list${short}">${items}</ul>
+            <p class="related-hint">${it ? 'Tocca per vederlo sulla timeline' : 'Tap to see it on the timeline'}</p>
+        </div>`;
+}
+
+// Porta in vista un evento sulla timeline e lo fa pulsare
+function focusEventOnTimeline(ev) {
+    const el = findElementForEvent(ev);
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const viewportWidth = document.body.clientWidth;
+    const target = document.body.scrollLeft + rect.left + rect.width / 2 - viewportWidth / 2;
+    try {
+        document.body.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+    } catch (e) {
+        document.body.scrollLeft = Math.max(0, target);
+    }
+    el.classList.remove('related-ping');
+    void el.offsetWidth; // riavvia l'animazione se lo stesso pallino viene ritoccato
+    el.classList.add('related-ping');
+    clearTimeout(el._pingTimer);
+    el._pingTimer = setTimeout(() => el.classList.remove('related-ping'), 3500);
+}
+
+document.getElementById('mobilePopupBody').addEventListener('click', function (e) {
+    const item = e.target.closest('.related-item');
+    if (!item) return;
+    const related = currentRelatedList[parseInt(item.dataset.relatedIndex, 10)];
+    if (!related) return;
+    closeMobilePopup();
+    // la scheda si chiude prima: lo scroll parte appena lo schermo è libero
+    requestAnimationFrame(() => focusEventOnTimeline(related.ev));
+});
 
 document.getElementById('detailPanelClose') && document.getElementById('detailPanelClose').addEventListener('click', () => {
     document.getElementById('detailPanel').classList.remove('active');

@@ -377,11 +377,12 @@
             display: none;
         }
 
-        /* Bottone schermo intero: un interruttore accanto ai filtri, solo
-           sui telefoni (verticale e orizzontale) dove il browser lo permette.
-           Quadrato arrotondato (i filtri sono un cerchio) per distinguerlo.
-           Schermo intero ATTIVO (il caso più frequente): pieno, dorato.
-           NON attivo: solo contorno, tenue. */
+        /* Bottone schermo intero: accanto ai filtri, solo sui telefoni
+           (verticale e orizzontale) dove il browser lo permette. Quadrato
+           arrotondato (i filtri sono un cerchio) per distinguerlo.
+           NON a schermo intero: è un suggerimento -> pieno, oro, icona
+           "allarga". A schermo intero: discreto -> contorno sottile grigio
+           chiaro, icona "riduci". */
         .fs-btn {
             display: none;
             flex-shrink: 0;
@@ -392,17 +393,26 @@
             margin-left: 6px;
             padding: 0;
             border-radius: 7px;
-            border: 1px solid var(--tint-border);
-            background: transparent;
-            color: var(--text-70);
+            border: 1px solid #BF953F;
+            background: #BF953F;
+            color: #1A1A1A;
             cursor: pointer;
             transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
         }
 
         html.is-fullscreen .fs-btn {
-            background: #BF953F;
-            border-color: #BF953F;
-            color: #1A1A1A;
+            background: transparent;
+            border-color: var(--tint-border);
+            color: var(--text-60);
+        }
+
+        html.is-fullscreen .fs-btn svg {
+            stroke-width: 1.6;   /* più sottile quando è discreto */
+        }
+
+        html:not(.is-fullscreen) .fs-btn .icon-fs-exit,
+        html.is-fullscreen .fs-btn .icon-fs-enter {
+            display: none;
         }
 
         .fs-btn svg {
@@ -1623,6 +1633,24 @@ body.detail-open {
             display: none;
         }
 
+        /* Computer (mouse/trackpad): niente "rimbalzo elastico" verticale
+           oltre i bordi della pagina (le etichette delle categorie sono
+           fisse e durante il rimbalzo si staccavano dalle righe). */
+        @media (pointer: fine) {
+            html,
+            body {
+                overscroll-behavior: none;
+            }
+
+            /* se tutte le timeline stanno nello schermo, la pagina non
+               scorre in verticale (classe messa da JS, vedi
+               updateVerticalScrollLock) */
+            html.no-vscroll,
+            html.no-vscroll body {
+                overflow-y: hidden;
+            }
+        }
+
         /* Riga finale del pannello filtri. Desktop: "Azzera filtri" a
            sinistra e, sulla stessa riga, il numero di eventi in piccolo. */
         .filter-sheet-footer {
@@ -2515,17 +2543,17 @@ body.detail-open {
         @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
 
             :root {
-                --land-header: 48px;   /* +20% rispetto a prima: l'header respira */
+                --land-header: 56px;   /* header più alto: respira */
                 --land-footer: 44px;
                 /* spazio da lasciare libero a destra quando la scheda
                    evento è aperta (vedi body.detail-open) */
                 --detail-reserve: min(324px, calc(46vw + 24px));
-                --band: clamp(22px, calc((100vh - var(--land-header) - var(--land-footer) - 42px) / 5 - 4px), 46px);
+                --band: clamp(20px, calc((100vh - var(--land-header) - var(--land-footer) - 52px) / 5 - 4px), 46px);
             }
 
             @supports (height: 100dvh) {
                 :root {
-                    --band: clamp(22px, calc((100dvh - var(--land-header) - var(--land-footer) - 42px) / 5 - 4px), 46px);
+                    --band: clamp(20px, calc((100dvh - var(--land-header) - var(--land-footer) - 52px) / 5 - 4px), 46px);
                 }
             }
 
@@ -2539,13 +2567,13 @@ body.detail-open {
             .header {
                 display: block;
                 height: var(--land-header);
-                padding: 0 0.6rem;
+                padding: 0 1.2rem;
             }
 
             .header-icons {
                 position: absolute;
                 top: 50%;
-                left: 0.6rem;
+                left: 1.2rem;
                 transform: translateY(-50%);
                 margin-bottom: 0;
                 gap: 0.45rem;
@@ -2578,7 +2606,7 @@ body.detail-open {
                 line-height: 1.05;
                 margin: 0;
                 /* spazio libero tra le icone (sinistra) e la ricerca (destra) */
-                padding: 0 300px 0 215px;
+                padding: 0 290px 0 225px;
                 white-space: normal;
                 overflow: visible;
                 text-wrap: balance;
@@ -2591,7 +2619,7 @@ body.detail-open {
             .search-container {
                 position: absolute;
                 top: 50%;
-                right: 0.6rem;
+                right: 1.2rem;
                 transform: translateY(-50%);
                 width: 246px;
                 margin-top: 0;
@@ -2620,9 +2648,10 @@ body.detail-open {
 
             /* --- TIMELINE --- */
             /* a destra lo stesso spazio della colonna delle categorie a
-               sinistra: la timeline resta centrata e respira */
+               sinistra: la timeline resta centrata e respira; sopra, un
+               po' di spazio tra header e anni */
             .timeline-container {
-                padding-top: 0.1rem;
+                padding-top: 0.7rem;
                 padding-bottom: 0.2rem;
                 padding-right: calc(var(--side-gutter, 120px) + 14px);
                 padding-left: calc(var(--side-gutter, 120px) + 14px);
@@ -2928,7 +2957,7 @@ body.detail-open {
 
             html.fs-available .header h1,
             .header h1 {
-                padding: 0 240px 0 210px;
+                padding: 0 222px 0 222px;
                 font-size: 0.9rem;
             }
 
@@ -4527,7 +4556,8 @@ window.addEventListener('wheel', function(e) {
             </button>
             <!-- Schermo intero (solo telefono): interruttore, pieno quando è attivo -->
             <button class="fs-btn" id="fullscreenToggle" type="button" aria-pressed="false" title="Schermo intero – Full screen" aria-label="Schermo intero – Full screen">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+                <svg class="icon-fs-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+                <svg class="icon-fs-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
             </button>
         </div>
     </div>
@@ -4810,6 +4840,7 @@ window.addEventListener('wheel', function(e) {
 </div>
 <script>
 function fixLabels() {
+    if (typeof updateVerticalScrollLock === 'function') updateVerticalScrollLock();
     document.querySelectorAll('.fixed-label').forEach(el => el.remove());
     if (typeof updateSideGutter === 'function') updateSideGutter();
 
@@ -5166,6 +5197,30 @@ try {
         if (t.closest('#cookieSettingsLink')) return track('cookie_settings_open', {});
     }, true);
 })();
+
+// ---- Computer: blocca lo scroll verticale quando non serve ----
+// Se l'ultima timeline sta sopra il footer, la pagina non deve scorrere in
+// verticale (uno scroll involontario spostava le righe sotto le etichette
+// fisse). Se invece lo schermo è troppo basso, lo scroll resta attivo:
+// altrimenti le ultime righe finirebbero nascoste sotto il footer.
+function updateVerticalScrollLock() {
+    const root = document.documentElement;
+    if (!window.matchMedia('(pointer: fine)').matches) { root.classList.remove('no-vscroll'); return; }
+    const last = document.querySelector('.timeline:last-of-type .timeline-track') ||
+                 document.querySelector('#timeline-5-wrapper .timeline-track');
+    const footer = document.querySelector('.app-footer');
+    if (!last || !footer) return;
+    const scrollTop = document.scrollingElement ? document.scrollingElement.scrollTop : 0;
+    const lastBottom = last.getBoundingClientRect().bottom + scrollTop + document.body.scrollTop;
+    const fits = lastBottom <= footer.getBoundingClientRect().top - 4;
+    root.classList.toggle('no-vscroll', fits);
+    if (fits) {
+        if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+    }
+}
+window.addEventListener('resize', updateVerticalScrollLock);
+window.addEventListener('load', updateVerticalScrollLock);
 
 // ---- Altezza reale dell'header (su mobile il titolo può andare a capo) ----
 (function () {

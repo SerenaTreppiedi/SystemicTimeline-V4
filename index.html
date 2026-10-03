@@ -673,11 +673,24 @@
             z-index: 0;
         }
 
+        /* Visibilità dei pallini ESCLUSI da ricerca/filtri: un solo numero
+           da regolare (0 = invisibili, 1 = pieni). Era 0.2, ma sul fondo
+           scuro l'anello bianco e l'alone dorato, sommati quando più pallini
+           si sovrappongono, li facevano sembrare molto più presenti: per
+           questo ora l'alone viene tolto e il valore è più basso. */
+        :root {
+            --dim-opacity: 0.12;
+        }
+
         body.filters-active .event.no-match .event-dot,
         body.filters-active .event.no-match.cluster-dim .event-dot,
         body.filters-active .event.no-match.cluster-glow .event-dot,
         body.filters-active .event.no-match.cluster-selected .event-dot {
-            opacity: 0.2;
+            opacity: var(--dim-opacity);
+        }
+
+        body.filters-active .event.no-match:not(.cluster-glow):not(.cluster-tappable):not(.cluster-selected) .event-dot {
+            box-shadow: none !important;
         }
 
         .event.no-match.cluster-glow,
@@ -1118,6 +1131,28 @@
     transform: translateX(0);
 }
 
+/* Scheda aperta (desktop e telefono in orizzontale): la timeline si fa
+   da parte. Il body riserva a destra lo spazio occupato dalla scheda, così
+   la timeline si ricentra nello spazio libero e, se non ci sta, si può
+   scorrere fino agli anni più recenti invece di restare nascosta sotto. */
+:root {
+    --detail-reserve: 344px;   /* larghezza scheda + margini */
+}
+
+body {
+    transition: padding-right 0.3s ease;
+}
+
+body.detail-open {
+    padding-right: var(--detail-reserve);
+}
+
+/* Nome della categoria dentro la riga: usato solo dal telefono in
+   orizzontale (vedi blocco "TELEFONO IN ORIZZONTALE") */
+.track-label {
+    display: none;
+}
+
 .detail-panel-close {
     position: absolute;
     top: 0.6rem;
@@ -1168,11 +1203,17 @@
             line-height: 1;
         }
 
-        /* Correzione ottica: il glifo +/− del font, pur essendo centrato
-           geometricamente nel cerchio, appare visivamente un filo più in
-           alto del centro reale — questo micro-scarto compensa l'occhio. */
-        #zoomInBtn, #zoomOutBtn {
-            padding-top: 1px;
+        /* + e − sono icone disegnate (non caratteri del font): un carattere
+           porta con sé gli spazi di riga del font e risultava decentrato,
+           un'icona invece è centrata esattamente nel cerchio. */
+        .zoom-icon {
+            width: 42%;
+            height: 42%;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            display: block;
         }
 
         /* Il pulsante "+" spicca rispetto agli altri: è l'azione più
@@ -1374,8 +1415,32 @@
         /* Elementi del pannello filtri che esistono solo su mobile (maniglia
            del pannello dal basso, contatore dei risultati, bottone "Fatto"):
            su desktop restano nascosti, il pannello è identico a prima. */
-        .filter-sheet-handle,
+        .filter-sheet-handle {
+            display: none;
+        }
+
+        /* Riga finale del pannello filtri. Desktop: "Azzera filtri" a
+           sinistra e, sulla stessa riga, il numero di eventi in piccolo. */
         .filter-sheet-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.8rem;
+        }
+
+        .filter-result-count {
+            font-size: 0.72rem;
+            color: var(--text-50);
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .filter-done-btn {
+            display: none;
+        }
+
+        /* Copyright: su desktop resta su una riga ("… — All rights reserved") */
+        .copy-br {
             display: none;
         }
 
@@ -1549,18 +1614,38 @@
 
         @media (max-width: 768px) {
 
-            /* --- HEADER: compatto, una riga di icone + titolo su una riga sola --- */
+            /* --- HEADER su due righe:
+               1) logo, lingua, info, tema + ricerca breve e filtri
+               2) titolo (su una riga, troncato se non ci sta) --- */
             .header {
-                padding: 0.4rem 0.6rem;
+                display: grid;
+                grid-template-columns: auto minmax(0, 1fr);
+                grid-template-areas:
+                    "icons search"
+                    "title title";
+                align-items: center;
+                column-gap: 0.6rem;
+                row-gap: 0.2rem;
+                padding: 0.4rem 0.6rem 0.35rem;
                 text-align: center;
             }
 
             .header-icons {
+                grid-area: icons;
                 position: static;
                 transform: none;
-                justify-content: center;
-                margin-bottom: 0.3rem;
-                gap: 0.5rem;
+                justify-content: flex-start;
+                margin-bottom: 0;
+                gap: 0.45rem;
+            }
+
+            .header-icons a {
+                margin-right: 0.2rem !important;
+            }
+
+            /* logo un filo più piccolo: lascia spazio alla ricerca */
+            .header-icons a img {
+                height: 24px !important;
             }
 
             .header-icon {
@@ -1570,6 +1655,7 @@
             }
 
             .header h1 {
+                grid-area: title;
                 font-size: 1.3rem;
                 line-height: 1.2;
                 padding: 0 0.4rem;
@@ -1586,29 +1672,34 @@
             }
 
             .search-container {
+                grid-area: search;
                 position: static;
                 transform: none;
-                width: 100%;
-                margin-top: 0.4rem;
+                width: auto;
+                min-width: 0;
+                margin-top: 0;
             }
 
             .search-input {
                 flex: 1;
                 min-width: 0;
                 box-sizing: border-box;
-                padding: 0.35rem 0.6rem;
+                padding: 0.28rem 0.6rem;
+                padding-right: 28px;
                 font-size: 16px; /* iOS Safari fa zoom automatico sotto i 16px */
             }
 
-            /* Spazio per header/footer, ora molto più bassi */
+            /* Spazio per header e footer (entrambi più bassi di prima) */
             body {
-                padding-top: 110px;
-                padding-bottom: 115px;
+                padding-top: 84px;
+                padding-bottom: 82px;
             }
 
+            /* Messaggio di caricamento: piccola etichetta con fondo sfocato,
+               così resta leggibile anche sopra i numeri degli anni */
             #dataLoadingMessage,
             #dataLoadingMessageEn {
-                top: 120px !important;
+                top: 90px !important;
             }
 
             /* --- TIMELINE: righe leggermente più alte di prima. Erano state
@@ -1636,27 +1727,30 @@
                 height: 33px;
             }
 
-            /* --- FOOTER: legenda su una riga scorrevole, zoom + Contribuisci
-               affiancati sulla stessa riga sotto --- */
+            /* --- FOOTER su due righe:
+               1) tag a sinistra, copyright (su due righe) a destra
+               2) Contribuisci a sinistra, zoom a destra (come su desktop) --- */
             .app-footer {
-                flex-direction: row;
-                flex-wrap: wrap;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                grid-template-areas:
+                    "legend copy"
+                    "contrib zoom";
                 align-items: center;
-                justify-content: center;
-                gap: 0.35rem 0.7rem;
-                padding: 0.35rem 0.5rem 0.3rem;
+                gap: 0.3rem 0.6rem;
+                padding: 0.35rem 0.75rem calc(0.45rem + env(safe-area-inset-bottom));
             }
 
             .legend-container {
+                grid-area: legend;
                 position: static;
                 transform: none;
-                flex: 1 0 100%;
-                justify-content: center;
+                justify-content: flex-start;
+                align-items: center;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
                 gap: 12px;
-                padding: 0.3rem 0;
-                order: 1;
+                padding: 0.1rem 0;
             }
 
             .legend-item {
@@ -1683,19 +1777,26 @@
                 display: none;
             }
 
-            /* Contribuisci a SINISTRA dello zoom, come su desktop */
             .new-event-prompt {
-                order: 2;
+                grid-area: contrib;
+                justify-self: start;
             }
 
             .zoom-controls {
-                order: 3;
+                grid-area: zoom;
+                justify-self: end;
+                gap: 0.5rem;
             }
 
             .zoom-btn {
                 width: 34px;   /* +5% */
                 height: 34px;
                 font-size: 1.05rem;
+            }
+
+            .zoom-level {
+                padding: 0.45rem 0.85rem;
+                font-size: 0.85rem;
             }
 
             /* Su schermi stretti resta solo il bottone, il testo occupa troppo spazio */
@@ -1708,18 +1809,26 @@
                 font-size: 0.84rem;
             }
 
-            /* Ripristinato in una riga propria, in fondo, per non sovrapporsi
-               a legenda o controlli (l'originale era assoluto e troppo vicino) */
+            /* Copyright a destra dei tag, su due righe */
             .footer-copyright {
+                grid-area: copy;
                 display: block !important;
                 position: static !important;
                 left: auto !important;
                 bottom: auto !important;
                 transform: none !important;
-                order: 4;
-                width: 100%;
-                text-align: center;
-                margin-top: 0.1rem;
+                justify-self: end;
+                text-align: right;
+                line-height: 1.3;
+                margin: 0;
+            }
+
+            .copy-sep {
+                display: none;
+            }
+
+            .copy-br {
+                display: inline;
             }
 
             /* --- POPUP ISTRUZIONI: altezza minima pari allo spazio della
@@ -1809,91 +1918,151 @@
                 padding: 0.3rem;
             }
 
-            /* --- CHIP E BOTTONI DEI FILTRI: +5% --- */
-            .filter-icon-btn {
-                width: 27px;
-                height: 27px;
+            /* --- PANNELLO FILTRI: sale dal basso e si ferma SOPRA il
+               footer (che resta visibile: lo zoom si usa anche a pannello
+               aperto). È compatto: una riga per sezione, i chip scorrono di
+               lato. L'altezza del footer la misura JS (--footer-h). --- */
+            .filter-panel {
+                top: auto;
+                bottom: var(--footer-h, 80px);
+                left: 0;
+                right: 0;
+                width: 100%;
+                max-width: none;
+                max-height: 46vh;
+                max-height: 46dvh;
+                border: none;
+                border-top: 2px solid #BF953F;
+                border-radius: 14px 14px 0 0;
+                padding: 0.25rem 0.85rem 0;
+                box-shadow: 0 -8px 22px var(--shade-60);
+            }
+
+            .filter-panel.active {
+                animation: filter-sheet-up 0.26s cubic-bezier(0.2, 0.8, 0.3, 1);
+            }
+
+            .filter-sheet-handle {
+                display: block;
+                width: 36px;
+                height: 4px;
+                border-radius: 2px;
+                background: var(--tint-border);
+                margin: 0.15rem auto 0.5rem;
+            }
+
+            .filter-done-btn {
+                display: inline-block;
+                background: rgba(191, 149, 63, 0.22);
+                color: var(--text);
+                border: 1.5px solid #BF953F;
+                border-radius: 16px;
+                padding: 0.28rem 0.95rem;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-weight: 700;
+                font-size: 0.8rem;
+                cursor: pointer;
+            }
+
+            .filter-sheet-footer {
+                position: sticky;
+                bottom: 0;
+                margin-top: 0.15rem;
+                padding: 0.4rem 0 0.5rem;
+                background: var(--panel-bg);
+                border-top: 1px solid var(--hairline);
+            }
+
+            .filter-result-count {
+                margin-left: auto;
+            }
+        }
+
+        /* ============================================================
+           PANNELLO FILTRI COMPATTO (telefono, verticale e orizzontale):
+           ogni sezione è una sola riga, etichetta a sinistra e chip che
+           scorrono di lato. Il desktop non è toccato.
+           ============================================================ */
+        @media (max-width: 768px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+            .filter-panel-section {
+                display: flex;
+                align-items: center;
+                gap: 0.55rem;
+                margin-bottom: 0.35rem;
+                min-width: 0;
+            }
+
+            .filter-panel-label {
+                flex: 0 0 5.3rem;
+                margin: 0;
+                font-size: 0.72rem;
+                white-space: nowrap;
+            }
+
+            .filter-chip-row {
+                flex: 1 1 auto;
+                min-width: 0;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                padding: 2px 0;
+                /* sfumatura a destra: fa capire che i chip continuano */
+                -webkit-mask-image: linear-gradient(to right, #000 88%, transparent);
+                mask-image: linear-gradient(to right, #000 88%, transparent);
+            }
+
+            .filter-chip-row::-webkit-scrollbar {
+                display: none;
+            }
+
+            .filter-chip-row:empty {
+                display: none;
             }
 
             .filter-chip {
-                padding: 0.32rem 0.68rem;
-                font-size: 0.82rem;
+                flex: 0 0 auto;
+                white-space: nowrap;
+                padding: 0.3rem 0.66rem;   /* +5% */
+                font-size: 0.8rem;
             }
 
             .keyword-chip-remove {
                 font-size: 1rem;
             }
 
+            .filter-icon-btn {
+                width: 27px;   /* +5% */
+                height: 27px;
+            }
+
+            .keyword-hint {
+                flex: 1 1 auto;
+                min-width: 0;
+                font-size: 0.72rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
             .filter-reset-btn {
-                font-size: 0.84rem;
+                font-size: 0.78rem;
             }
 
-            /* --- PANNELLO FILTRI: sale dal basso invece di aprirsi sotto
-               l'header (dove copriva la barra di ricerca). Occupa al massimo
-               ~60% dello schermo, così la timeline resta visibile sopra e si
-               vede subito l'effetto dei filtri. --- */
-            .filter-panel {
-                top: auto;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                width: 100%;
-                max-width: none;
-                max-height: 62vh;
-                max-height: 62dvh;
-                border: none;
-                border-top: 2px solid #BF953F;
-                border-radius: 16px 16px 0 0;
-                padding: 0.35rem 1.1rem 0;
-                box-shadow: 0 -10px 30px var(--shade-60);
-            }
-
-            .filter-panel.active {
-                animation: filter-sheet-up 0.28s cubic-bezier(0.2, 0.8, 0.3, 1);
-            }
-
-            .filter-sheet-handle {
-                display: block;
-                width: 40px;
-                height: 4px;
-                border-radius: 2px;
-                background: var(--tint-border);
-                margin: 0.25rem auto 0.85rem;
-            }
-
-            .filter-sheet-footer {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
-                position: sticky;
-                bottom: 0;
-                margin-top: 0.8rem;
-                padding: 0.7rem 0 calc(0.75rem + env(safe-area-inset-bottom));
-                background: var(--panel-bg);
-                border-top: 1px solid var(--hairline);
-            }
-
-            .filter-result-count {
-                font-size: 0.84rem;
-                color: var(--text-70);
-            }
-
-            .filter-result-count strong {
-                color: var(--gold-text);
-                font-weight: 700;
-            }
-
-            .filter-done-btn {
-                background: rgba(191, 149, 63, 0.22);
-                color: var(--text);
-                border: 1.5px solid #BF953F;
-                border-radius: 18px;
-                padding: 0.45rem 1.3rem;
-                font-family: 'Plus Jakarta Sans', sans-serif;
-                font-weight: 700;
-                font-size: 0.86rem;
-                cursor: pointer;
+            /* Messaggio di caricamento: etichetta con fondo sfocato */
+            #dataLoadingMessage,
+            #dataLoadingMessageEn {
+                width: fit-content;
+                max-width: calc(100% - 2rem);
+                margin: 0 auto !important;
+                padding: 0.22rem 0.85rem !important;
+                border-radius: 999px;
+                background: var(--popup-bg-95);
+                -webkit-backdrop-filter: blur(8px);
+                backdrop-filter: blur(8px);
+                box-shadow: 0 2px 10px var(--shade-40);
+                opacity: 1 !important;
+                color: var(--text-80) !important;
             }
         }
 
@@ -1909,20 +2078,35 @@
            finestra bassa, quindi la versione desktop resta identica.
            Sta DOPO il blocco mobile per poterlo sovrascrivere sui telefoni
            piccoli (larghi meno di 768px anche in orizzontale).
-           Impostazione: header e footer su una riga sola, scheda evento
-           laterale come su desktop (la timeline resta visibile accanto).
+           Obiettivo: tutte e cinque le timeline visibili senza scroll
+           verticale. Per questo:
+           - header e footer su una riga sola, più bassi;
+           - il nome della categoria non ha più una riga propria: è una
+             piccola etichetta dentro la riga, in alto a sinistra, che resta
+             ferma durante lo scroll (position: sticky, nativo del browser,
+             senza JavaScript: non "galleggia");
+           - l'altezza delle righe si adatta all'altezza dello schermo.
            ============================================================ */
         @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
 
+            :root {
+                --land-header: 40px;
+                --land-footer: 44px;
+                /* spazio da lasciare libero a destra quando la scheda
+                   evento è aperta (vedi body.detail-open) */
+                --detail-reserve: min(324px, calc(46vw + 24px));
+            }
+
             body {
-                padding-top: 58px;
-                padding-bottom: 56px;
+                padding-top: var(--land-header);
+                padding-bottom: var(--land-footer);
             }
 
             /* --- HEADER su una riga: icone a sinistra, titolo al centro,
                ricerca a destra --- */
             .header {
-                padding: 0.35rem 0.6rem;
+                display: block;
+                padding: 0.25rem 0.6rem;
             }
 
             .header-icons {
@@ -1949,10 +2133,10 @@
             }
 
             .header h1 {
-                font-size: 1.15rem;
+                font-size: 1.1rem;
                 line-height: 1.2;
                 margin: 0;
-                padding: 0.25rem 215px;
+                padding: 0.3rem 215px;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -1972,46 +2156,73 @@
             }
 
             .search-input {
-                padding: 0.3rem 0.6rem;
+                padding: 0.18rem 0.6rem;
                 padding-right: 28px;
                 font-size: 16px; /* iOS Safari fa zoom automatico sotto i 16px */
             }
 
-            .filter-icon-btn {
-                width: 27px;
-                height: 27px;
-            }
-
             #dataLoadingMessage,
             #dataLoadingMessageEn {
-                top: 62px !important;
+                top: calc(var(--land-header) + 2px) !important;
             }
 
-            /* --- TIMELINE: righe un po' più basse, per far stare più
-               categorie nell'altezza ridotta --- */
+            /* --- TIMELINE --- */
             .timeline-container {
-                padding-top: 0.25rem;
+                padding-top: 0.1rem;
+                padding-bottom: 0.2rem;
             }
 
             .year-markers {
-                margin: 0.25rem 0;
+                margin: 0.1rem 0 0.25rem;
             }
 
             .timeline {
-                margin-bottom: 0.3rem;
+                margin-bottom: 4px;
             }
 
+            /* la riga del titolo sparisce: il nome va dentro la riga */
             .timeline-header {
-                padding: 0.12rem 0.4rem;
-                margin-bottom: 0.12rem;
+                display: none;
             }
 
-            .timeline-title {
-                font-size: 0.85rem;
+            .fixed-label {
+                display: none !important;
             }
 
+            /* altezza delle righe: lo spazio tra header e footer, meno il
+               righello degli anni, diviso per cinque */
             .timeline-track {
-                height: 28px;
+                height: clamp(22px, calc((100vh - var(--land-header) - var(--land-footer) - 42px) / 5 - 4px), 46px);
+                height: clamp(22px, calc((100dvh - var(--land-header) - var(--land-footer) - 42px) / 5 - 4px), 46px);
+            }
+
+            .track-label {
+                display: block;
+                position: sticky;
+                left: 0;
+                width: 0;
+                height: 0;
+                z-index: 0;
+            }
+
+            /* l'etichetta sta a cavallo tra lo spazio fra le righe e il
+               bordo alto della propria riga: non tocca né la linea né i
+               pallini, che sono centrati nella riga */
+            .track-label > span {
+                position: absolute;
+                top: -5px;
+                left: 2px;
+                white-space: nowrap;
+                font-family: 'Darker Grotesque', sans-serif;
+                font-size: 0.7rem;
+                line-height: 1.1;
+                font-weight: var(--label-weight);
+                color: var(--timeline-text);
+                background: var(--popup-bg-95);
+                border-left: 2px solid var(--timeline-color);
+                border-radius: 0 4px 4px 0;
+                padding: 0 0.35rem 0 0.3rem;
+                pointer-events: none;
             }
 
             /* Su touch il popup al passaggio del mouse resterebbe "appeso":
@@ -2020,22 +2231,14 @@
                 display: none !important;
             }
 
-            /* --- FOOTER su una riga: Contribuisci a sinistra, tag al
-               centro (solo pallini, come in verticale), zoom a destra --- */
+            /* --- FOOTER su una riga: Contribuisci a sinistra, tag e
+               copyright al centro, zoom a destra --- */
             .app-footer {
+                display: flex;
                 flex-wrap: nowrap;
                 justify-content: space-between;
                 gap: 0.5rem;
-                padding: 0.3rem 0.6rem 0.5rem;
-            }
-
-            .new-event-prompt {
-                order: 1;
-            }
-
-            .zoom-controls {
-                order: 2;
-                gap: 0.5rem;
+                padding: 0.25rem 0.6rem 0.35rem;
             }
 
             .new-event-prompt span {
@@ -2043,30 +2246,34 @@
             }
 
             .add-to-timeline-btn {
-                padding: 0.38rem 0.74rem;
-                font-size: 0.84rem;
+                padding: 0.3rem 0.7rem;
+                font-size: 0.82rem;
+            }
+
+            .zoom-controls {
+                gap: 0.45rem;
             }
 
             .zoom-btn {
-                width: 32px;
-                height: 32px;
+                width: 30px;
+                height: 30px;
                 font-size: 1rem;
             }
 
             .zoom-level {
-                padding: 0.35rem 0.8rem;
-                font-size: 0.82rem;
+                padding: 0.3rem 0.75rem;
+                font-size: 0.8rem;
             }
 
             .legend-container {
                 position: absolute;
                 left: 50%;
+                top: 0.3rem;
                 transform: translateX(-50%);
                 flex: none;
                 overflow: visible;
                 gap: 12px;
                 padding: 0;
-                order: 0;
             }
 
             .legend-label {
@@ -2089,18 +2296,26 @@
             .footer-copyright {
                 position: absolute !important;
                 left: 50% !important;
-                bottom: 0.1rem !important;
+                bottom: 0.15rem !important;
                 transform: translateX(-50%) !important;
                 width: auto;
-                margin-top: 0;
+                margin: 0;
+                text-align: center;
             }
 
-            /* --- SCHEDA EVENTO: pannello laterale come su desktop, ma
-               adattato all'altezza ridotta --- */
+            .copy-sep {
+                display: inline;
+            }
+
+            .copy-br {
+                display: none;
+            }
+
+            /* --- SCHEDA EVENTO: pannello laterale come su desktop --- */
             .detail-panel {
                 display: block;
-                top: 56px;
-                bottom: 54px;
+                top: calc(var(--land-header) + 6px);
+                bottom: calc(var(--land-footer) + 6px);
                 width: 300px;
                 max-width: 46vw;
                 padding: 1rem 0.9rem;
@@ -2110,20 +2325,19 @@
                 aspect-ratio: 16 / 9;
             }
 
-            /* --- PANNELLO FILTRI: a tendina sotto l'header (non dal basso:
-               in orizzontale coprirebbe quasi tutta la timeline) --- */
+            /* --- PANNELLO FILTRI: a tendina sotto l'header --- */
             .filter-panel {
-                top: 54px;
-                right: 12px;
+                top: calc(var(--land-header) + 4px);
+                right: 10px;
                 left: auto;
                 bottom: auto;
-                width: 280px;
-                max-width: 60vw;
-                max-height: calc(100vh - 112px);
-                max-height: calc(100dvh - 112px);
+                width: 340px;
+                max-width: 62vw;
+                max-height: calc(100vh - var(--land-header) - var(--land-footer) - 14px);
+                max-height: calc(100dvh - var(--land-header) - var(--land-footer) - 14px);
                 border: 2px solid #BF953F;
                 border-radius: 10px;
-                padding: 0.9rem 1rem 0;
+                padding: 0.7rem 0.8rem 0;
                 box-shadow: 0 8px 25px var(--shade-60);
             }
 
@@ -2135,43 +2349,29 @@
                 display: none;
             }
 
-            .filter-chip {
-                padding: 0.32rem 0.68rem;
-                font-size: 0.82rem;
-            }
-
             .filter-sheet-footer {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 1rem;
                 position: sticky;
                 bottom: 0;
-                margin-top: 0.8rem;
-                padding: 0.6rem 0 0.7rem;
+                margin-top: 0.15rem;
+                padding: 0.4rem 0 0.5rem;
                 background: var(--panel-bg);
                 border-top: 1px solid var(--hairline);
             }
 
             .filter-result-count {
-                font-size: 0.82rem;
-                color: var(--text-70);
-            }
-
-            .filter-result-count strong {
-                color: var(--gold-text);
-                font-weight: 700;
+                margin-left: auto;
             }
 
             .filter-done-btn {
+                display: inline-block;
                 background: rgba(191, 149, 63, 0.22);
                 color: var(--text);
                 border: 1.5px solid #BF953F;
-                border-radius: 18px;
-                padding: 0.4rem 1.2rem;
+                border-radius: 16px;
+                padding: 0.25rem 0.9rem;
                 font-family: 'Plus Jakarta Sans', sans-serif;
                 font-weight: 700;
-                font-size: 0.84rem;
+                font-size: 0.78rem;
                 cursor: pointer;
             }
 
@@ -2376,6 +2576,10 @@ if (pulsanteReset) {
                     // con contains(e.target) faceva chiudere il pannello per errore.
                     const path = e.composedPath ? e.composedPath() : [];
                     if (path.includes(filterPanel) || path.includes(filterIconBtn)) return;
+                    // Su telefono il pannello resta aperto mentre si usa il
+                    // footer (zoom), che resta visibile sotto di esso.
+                    const footerEl = document.querySelector('.app-footer');
+                    if ((isMobileViewport() || isPhoneLandscape()) && footerEl && path.includes(footerEl)) return;
                     filterPanel.classList.remove('active');
                 });
 
@@ -2743,13 +2947,11 @@ function showDataLoadingError() {
             if (total === 0) {
                 countEl.textContent = '';
             } else if (!anyFilter) {
-                countEl.innerHTML = it ? `<strong>${total}</strong> eventi` : `<strong>${total}</strong> events`;
+                countEl.textContent = it ? `${total} eventi` : `${total} events`;
             } else if (matching === 0) {
-                countEl.textContent = it ? 'Nessun evento corrisponde' : 'No matching events';
+                countEl.textContent = it ? 'nessun evento' : 'no events';
             } else {
-                countEl.innerHTML = it
-                    ? `<strong>${matching}</strong> ${matching === 1 ? 'evento' : 'eventi'} su ${total}`
-                    : `<strong>${matching}</strong> of ${total} ${total === 1 ? 'event' : 'events'}`;
+                countEl.textContent = it ? `${matching} su ${total} eventi` : `${matching} of ${total} events`;
             }
         }
 
@@ -3686,13 +3888,15 @@ window.addEventListener('wheel', function(e) {
             <p class="filter-panel-label en-lang" style="display:none">Clusters</p>
             <div class="filter-chip-row" id="filterClusterChips"></div>
         </div>
-        <button class="filter-reset-btn it-lang" id="filterResetBtn">Azzera filtri</button>
-        <button class="filter-reset-btn en-lang" id="filterResetBtnEn" style="display:none">Clear filters</button>
-        <!-- Solo mobile: quanti eventi corrispondono + chiusura del pannello.
-             Niente classi it-lang/en-lang: i testi li scrive JS nella lingua
-             attiva (quelle classi forzano display:block e lo mostrerebbero
-             anche su desktop). -->
+        <!-- Riga finale: "Azzera filtri" a sinistra, quanti eventi
+             corrispondono a destra (discreto) e, solo su mobile, "Fatto".
+             Il bottone "Fatto" e il conteggio non hanno le classi
+             it-lang/en-lang: i testi li scrive JS nella lingua attiva. -->
         <div class="filter-sheet-footer">
+            <span class="filter-reset-wrap">
+                <button class="filter-reset-btn it-lang" id="filterResetBtn">Azzera filtri</button>
+                <button class="filter-reset-btn en-lang" id="filterResetBtnEn" style="display:none">Clear filters</button>
+            </span>
             <span class="filter-result-count" id="filterResultCount" aria-live="polite"></span>
             <button class="filter-done-btn" id="filterDoneBtn" type="button">Fatto</button>
         </div>
@@ -3903,13 +4107,13 @@ window.addEventListener('wheel', function(e) {
     </div>
 
     <div class="zoom-controls">
-        <button class="zoom-btn" id="zoomOutBtn" onclick="zoomOut()">−</button>
+        <button class="zoom-btn" id="zoomOutBtn" onclick="zoomOut()" aria-label="Zoom −"><svg class="zoom-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h9"/></svg></button>
         <div class="zoom-level" id="zoomLevel">100%</div>
-        <button class="zoom-btn" id="zoomInBtn" onclick="zoomIn()">+</button>
+        <button class="zoom-btn" id="zoomInBtn" onclick="zoomIn()" aria-label="Zoom +"><svg class="zoom-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h9M8 3.5v9"/></svg></button>
        <button id="resetBtn" class="zoom-btn" onclick="resetZoom()" title="Reset Zoom">↺</button>
     </div>
 
-  <div class="footer-copyright" style="position: absolute; bottom: 0.2rem; left: 50%; transform: translateX(-50%); font-size: 0.55rem; opacity: 0.5; color: var(--text); white-space: nowrap;">© 2025 Serena Treppiedi — All rights reserved</div>
+  <div class="footer-copyright" style="position: absolute; bottom: 0.2rem; left: 50%; transform: translateX(-50%); font-size: 0.55rem; opacity: 0.5; color: var(--text); white-space: nowrap;">© 2025 Serena Treppiedi<span class="copy-sep"> — </span><br class="copy-br">All rights reserved</div>
 </div>
 </footer>
 
@@ -3956,7 +4160,7 @@ function fixLabels() {
         clone.style.cssText = `
             position: fixed;
             top: ${rect.top}px;
-            left: ${rect.left}px;
+            left: ${rect.left + document.body.scrollLeft}px;
             z-index: 2000;
             font-family: 'Darker Grotesque', sans-serif;
             font-size: ${labelFontSize};
@@ -3994,6 +4198,83 @@ function followLabelsVertically() {
 }
 window.addEventListener('scroll', followLabelsVertically, { capture: true, passive: true });
 
+// ---- Nome della categoria dentro ogni riga (telefono in orizzontale) ----
+// Visibile solo in quella modalità (il CSS lo nasconde altrove). Il testo
+// è lo stesso del titolo della riga, quindi il cambio lingua lo traduce
+// insieme al resto.
+document.querySelectorAll('.timeline').forEach(timeline => {
+    const track = timeline.querySelector('.timeline-track');
+    const title = timeline.querySelector('.timeline-title');
+    if (!track || !title || track.querySelector('.track-label')) return;
+    const label = document.createElement('span');
+    label.className = 'track-label';
+    label.setAttribute('aria-hidden', 'true');
+    const text = document.createElement('span');
+    text.textContent = title.textContent;
+    label.appendChild(text);
+    track.insertBefore(label, track.firstChild);
+});
+
+// ---- Altezza reale del footer (serve al pannello filtri su mobile, che
+// si ferma appena sopra il footer per lasciare usabile lo zoom) ----
+(function () {
+    const footer = document.querySelector('.app-footer');
+    if (!footer) return;
+    const update = () => document.documentElement.style.setProperty('--footer-h', footer.offsetHeight + 'px');
+    update();
+    if (window.ResizeObserver) new ResizeObserver(update).observe(footer);
+    window.addEventListener('resize', update);
+})();
+
+// ---- Scheda di approfondimento (desktop e telefono in orizzontale) ----
+// Aprendola, la timeline si sposta a sinistra (vedi body.detail-open nel
+// CSS); poi, se il pallino selezionato resta sotto la scheda, la pagina
+// scorre quanto basta per mostrarlo. Durante lo spostamento le etichette
+// delle categorie seguono la propria riga.
+let detailReserveTimer = null;
+
+function followLabelsDuring(ms) {
+    const end = performance.now() + ms;
+    const step = () => {
+        document.querySelectorAll('.fixed-label').forEach(clone => {
+            if (!clone._sourceHeader) return;
+            const r = clone._sourceHeader.getBoundingClientRect();
+            clone.style.top = r.top + 'px';
+            // posizione "a scroll zero": l'etichetta non segue lo scroll
+            // orizzontale, segue solo lo spostamento della timeline
+            clone.style.left = (r.left + document.body.scrollLeft) + 'px';
+        });
+        if (performance.now() < end) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+}
+
+function setDetailReserve(open, event) {
+    const changed = document.body.classList.contains('detail-open') !== open;
+    document.body.classList.toggle('detail-open', open);
+    if (changed) followLabelsDuring(380);
+    clearTimeout(detailReserveTimer);
+    detailReserveTimer = setTimeout(() => {
+        fixLabels();
+        if (!open || !event) return;
+        // il pallino selezionato è ancora coperto dalla scheda? scorri
+        const el = findElementForEvent(event);
+        const panel = document.getElementById('detailPanel');
+        if (!el || !panel) return;
+        const r = el.getBoundingClientRect();
+        const limit = panel.getBoundingClientRect().left - 40;
+        let delta = 0;
+        if (r.right > limit) delta = r.right - limit + 40;
+        else if (r.left < 20) delta = r.left - 60;
+        if (delta !== 0) {
+            const target = Math.max(0, document.body.scrollLeft + delta);
+            try { document.body.scrollTo({ left: target, behavior: 'smooth' }); }
+            catch (e) { document.body.scrollLeft = target; }
+            followLabelsDuring(700);
+        }
+    }, changed ? 340 : 20);
+}
+
 // ---- Rotazione del telefono (verticale <-> orizzontale) ----
 // La larghezza di riferimento della timeline (baseWidthPx) è calcolata una
 // volta sola al caricamento: ruotando il telefono va ricalcolata, e la
@@ -4023,6 +4304,7 @@ function handleViewportChange() {
 
         panel.classList.remove('active');
         overlay.classList.remove('active');
+        document.body.classList.remove('detail-open');
         clearTimeout(mobileHighlightTimer);
         clearTimeout(mobileTappableTimer);
         mobileHighlightEvent = null;
@@ -4037,8 +4319,16 @@ function handleViewportChange() {
     }
     lastMobileMode = nowMobile;
 
+    // La larghezza di riferimento va misurata SENZA lo spazio riservato
+    // alla scheda aperta (body.detail-open) e senza la sua transizione.
+    const reserved = document.body.classList.contains('detail-open');
+    document.body.style.transition = 'none';
+    document.body.classList.remove('detail-open');
     timelineContainer.style.width = '100%';
     baseWidthPx = Math.min(timelineContainer.clientWidth, 1200);
+    if (reserved) document.body.classList.add('detail-open');
+    void document.body.offsetWidth;
+    document.body.style.transition = '';
     applyZoom();
     renderTimelines();
     reapplyStateAfterRerender();
@@ -4409,6 +4699,7 @@ function openEventDetail(event, color) {
         body.innerHTML = html;
         panel.style.borderColor = color;
         panel.classList.add('active');
+        setDetailReserve(true, event);
     }
 }
 
@@ -4511,6 +4802,7 @@ document.getElementById('mobilePopupBody').addEventListener('click', function (e
 
 document.getElementById('detailPanelClose') && document.getElementById('detailPanelClose').addEventListener('click', () => {
     document.getElementById('detailPanel').classList.remove('active');
+    setDetailReserve(false);
     clearClusterHighlight();
 });
 

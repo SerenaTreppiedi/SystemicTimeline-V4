@@ -15,24 +15,106 @@
     try { localStorage.removeItem('sychro-theme'); } catch (e) {}
 })();
 </script>
-<!-- Microsoft Clarity: tracciamento comportamento utenti -->
-    <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "w5h1d2y1la");
-
-</script> 
-
-<!-- Google Analytics: statistiche di visita -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-NBMV13VE1L"></script>
+<!-- ============================================================
+     STATISTICHE (Microsoft Clarity + Google Analytics 4) CON CONSENSO
+     Nessuno dei due script viene caricato finché il visitatore non
+     sceglie "Accetta" nel banner dei cookie (vedi #cookieBanner più in
+     basso). La scelta è ricordata nel browser (localStorage); il link
+     "Cookie" nel footer permette di cambiarla in ogni momento.
+     Gli ID sono gli stessi di prima: Clarity w5h1d2y1la, GA4 G-NBMV13VE1L.
+     ============================================================ -->
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+(function () {
+    var CONSENT_KEY = 'sychro-analytics-consent';
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { dataLayer.push(arguments); };
 
-  gtag('config', 'G-NBMV13VE1L');
+    window.sychroGetConsent = function () {
+        try { return localStorage.getItem(CONSENT_KEY); } catch (e) { return null; }
+    };
+    window.sychroSetConsent = function (value) {
+        try { localStorage.setItem(CONSENT_KEY, value); } catch (e) {}
+    };
+
+    // Carica Clarity e GA4 (una volta sola)
+    window.sychroLoadAnalytics = function () {
+        if (window.__sychroAnalyticsLoaded) return;
+        window.__sychroAnalyticsLoaded = true;
+
+        // Microsoft Clarity: tracciamento comportamento utenti
+        (function (c, l, a, r, i, t, y) {
+            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+            t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "w5h1d2y1la");
+        window.clarity('consent');
+
+        // Google Analytics 4: statistiche di visita
+        var g = document.createElement('script');
+        g.async = true;
+        g.src = 'https://www.googletagmanager.com/gtag/js?id=G-NBMV13VE1L';
+        document.head.appendChild(g);
+        gtag('js', new Date());
+        gtag('config', 'G-NBMV13VE1L');
+    };
+
+    // ---------------------------------------------------------------
+    // GOATCOUNTER: statistiche SENZA cookie e senza dati personali, quindi
+    // attive per TUTTI i visitatori (non richiedono il banner). Danno i
+    // numeri "di massima": visite e conteggio di ogni azione.
+    // >>> Inserisci qui il codice del tuo account GoatCounter (la parte
+    //     prima di ".goatcounter.com"). Finché è vuoto, GoatCounter non
+    //     viene caricato e il resto funziona normalmente. <<<
+    // ---------------------------------------------------------------
+    var GOATCOUNTER_CODE = '';
+
+    var goatQueue = [];
+    function goatSend(item) {
+        if (window.goatcounter && window.goatcounter.count) {
+            try { window.goatcounter.count(item); } catch (e) {}
+        } else {
+            goatQueue.push(item);
+        }
+    }
+    if (GOATCOUNTER_CODE) {
+        var gc = document.createElement('script');
+        gc.async = true;
+        gc.src = 'https://gc.zgo.at/count.js';
+        gc.setAttribute('data-goatcounter', 'https://' + GOATCOUNTER_CODE + '.goatcounter.com/count');
+        gc.onload = function () { while (goatQueue.length) goatSend(goatQueue.shift()); };
+        document.head.appendChild(gc);
+    }
+
+    // ---------------------------------------------------------------
+    // Evento personalizzato.
+    // - GA4 e Clarity: con tutti i dettagli, SOLO se il visitatore ha
+    //   accettato i cookie.
+    // - GoatCounter: sempre, come semplice conteggio. "goatLabel" è il
+    //   dettaglio che compare nel conteggio (es. "cluster:Food"); per testi
+    //   scritti liberamente dai visitatori (la ricerca) NON si passa, così
+    //   GoatCounter non riceve mai dati che potrebbero essere personali.
+    // ---------------------------------------------------------------
+    window.sychroTrack = function (name, params, goatLabel) {
+        params = params || {};
+        if (window.__sychroAnalyticsLoaded) {
+            try { gtag('event', name, params); } catch (e) {}
+            try {
+                if (window.clarity) {
+                    window.clarity('event', name);
+                    Object.keys(params).forEach(function (k) {
+                        window.clarity('set', name + '_' + k, String(params[k]));
+                    });
+                }
+            } catch (e) {}
+        }
+        if (GOATCOUNTER_CODE) {
+            var label = (goatLabel === undefined || goatLabel === null || goatLabel === '') ? '' : '/' + String(goatLabel).slice(0, 120);
+            goatSend({ path: 'azione/' + name + label, title: name, event: true });
+        }
+    };
+
+    if (window.sychroGetConsent() === 'granted') window.sychroLoadAnalytics();
+})();
 </script>
   
     <meta charset="UTF-8">
@@ -41,6 +123,26 @@
     <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <meta name="theme-color" content="#1A1A1A">
+    <!-- Diritti: autrice e titolare dei diritti su testi, struttura e database -->
+    <meta name="author" content="Serena Treppiedi">
+    <meta name="copyright" content="© 2025 Serena Treppiedi. Tutti i diritti riservati / All rights reserved.">
+    <meta name="rights" content="© 2025 Serena Treppiedi. Tutti i diritti riservati / All rights reserved.">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "SyChro – Collective Systemic Chronography",
+        "alternateName": "Gli step verso un nuovo approccio di pensiero / The Steps Towards a New Thinking Approach",
+        "description": "Timeline interattiva della storia del pensiero sistemico, della system dynamics, del systemic design e della sostenibilità. Interactive timeline of the history of systems thinking, system dynamics, systemic design and sustainability.",
+        "url": "https://serenatreppiedi.github.io/SystemicTimeline-V4/",
+        "creator": { "@type": "Person", "name": "Serena Treppiedi" },
+        "author": { "@type": "Person", "name": "Serena Treppiedi" },
+        "copyrightHolder": { "@type": "Person", "name": "Serena Treppiedi" },
+        "copyrightYear": 2025,
+        "copyrightNotice": "© 2025 Serena Treppiedi. Tutti i diritti riservati / All rights reserved.",
+        "isAccessibleForFree": true
+    }
+    </script>
     <title>Gli step verso un nuovo approccio di pensiero</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -278,13 +380,25 @@
         /* Bottone schermo intero: compare solo col telefono in orizzontale
            (vedi blocco "TELEFONO IN ORIZZONTALE"). Icona "allarga" fuori
            dallo schermo intero, "riduci" dentro. */
+        /* icona secondaria: niente cerchio pieno, più piccola e più tenue
+           delle altre icone dell'header */
         #fullscreenToggle {
             display: none;
+            background: transparent;
+            border-color: transparent;
+            opacity: 0.6;
+        }
+
+        #fullscreenToggle:hover,
+        #fullscreenToggle:active {
+            opacity: 1;
+            background: transparent;
+            transform: none;
         }
 
         #fullscreenToggle svg {
-            width: 14px;
-            height: 14px;
+            width: 13px;
+            height: 13px;
             fill: none;
             stroke: currentColor;
             stroke-width: 2;
@@ -1515,6 +1629,102 @@ body.detail-open {
             font-variant-numeric: tabular-nums;
         }
 
+        /* Nota sui diritti in fondo al tutorial: discreta */
+        .rights-note {
+            text-align: center;
+            font-size: 0.72em;
+            color: var(--text-50);
+            margin-top: 2.2rem;
+            line-height: 1.5;
+        }
+
+        /* ---- Banner cookie ---- */
+        .cookie-banner {
+            position: fixed;
+            left: 50%;
+            bottom: calc(var(--footer-h, 70px) + 12px);
+            transform: translateX(-50%);
+            width: min(560px, calc(100% - 24px));
+            z-index: 330000;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1rem;
+            background: var(--popup-bg);
+            border: 1.5px solid #BF953F;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px var(--shade-50);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            animation: cookie-in 0.35s ease;
+        }
+
+        .cookie-banner[hidden] {
+            display: none;
+        }
+
+        @keyframes cookie-in {
+            from { opacity: 0; transform: translate(-50%, 10px); }
+            to   { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        .cookie-text {
+            flex: 1 1 auto;
+            margin: 0;
+            font-size: 0.78rem;
+            line-height: 1.45;
+            color: var(--text-85);
+        }
+
+        .cookie-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex: 0 0 auto;
+        }
+
+        /* stesso peso visivo per le due scelte */
+        .cookie-btn {
+            background: transparent;
+            color: var(--text);
+            border: 1.5px solid #BF953F;
+            border-radius: 16px;
+            padding: 0.35rem 0.95rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .cookie-btn:hover {
+            background: rgba(191, 149, 63, 0.2);
+        }
+
+        @media (max-width: 520px) {
+            /* in verticale sta in alto, sotto l'header: così non copre il
+               pannello filtri né il footer, che stanno in basso */
+            .cookie-banner {
+                top: calc(var(--header-h, 84px) + 8px);
+                bottom: auto;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.6rem;
+            }
+
+            .cookie-actions .cookie-btn {
+                flex: 1 1 0;
+            }
+        }
+
+        /* link "Cookie" nel footer, per cambiare la scelta */
+        .cookie-link {
+            background: none;
+            border: none;
+            padding: 0;
+            color: inherit;
+            font: inherit;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
         /* il numero degli eventi visibili: oro, ma non in grassetto */
         .filter-result-count .count-num {
             color: var(--gold-text);
@@ -1708,9 +1918,12 @@ body.detail-open {
             position: absolute;
             left: 50%;
             top: 50%;
-            width: 12px;
-            height: 12px;
-            margin: -6px 0 0 -6px;
+            /* border-box: il bordo è compreso nei 14px, così il centro
+               dell'anello coincide esattamente con quello del pallino */
+            box-sizing: border-box;
+            width: 14px;
+            height: 14px;
+            margin: -7px 0 0 -7px;
             border-radius: 50%;
             border: 2px solid #BF953F;
             pointer-events: none;
@@ -1797,15 +2010,17 @@ body.detail-open {
                 font-size: 0.89rem;
             }
 
+            /* il titolo non viene mai tagliato: se non sta su una riga va a
+               capo (l'altezza dell'header si adatta, vedi --header-h) */
             .header h1 {
                 grid-area: title;
-                font-size: 1.3rem;
-                line-height: 1.2;
+                font-size: 1.22rem;
+                line-height: 1.1;
                 padding: 0 0.4rem;
                 margin-bottom: 0;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                white-space: normal;
+                overflow: visible;
+                text-wrap: balance;
             }
 
             /* Il sottotitolo resta disponibile nel popup di istruzioni (i):
@@ -1832,9 +2047,10 @@ body.detail-open {
                 font-size: 16px; /* iOS Safari fa zoom automatico sotto i 16px */
             }
 
-            /* Spazio per header e footer (entrambi più bassi di prima) */
+            /* Spazio per header e footer. L'altezza reale dell'header (che
+               cresce se il titolo va a capo) la misura JS: --header-h */
             body {
-                padding-top: 84px;
+                padding-top: var(--header-h, 84px);
                 padding-bottom: 82px;
             }
 
@@ -1842,7 +2058,7 @@ body.detail-open {
                così resta leggibile anche sopra i numeri degli anni */
             #dataLoadingMessage,
             #dataLoadingMessageEn {
-                top: 90px !important;
+                top: calc(var(--header-h, 84px) + 6px) !important;
             }
 
             /* --- TIMELINE: righe leggermente più alte di prima. Erano state
@@ -2137,22 +2353,6 @@ body.detail-open {
             .filter-result-count {
                 margin-left: auto;
             }
-
-            /* A pannello aperto le righe delle timeline si stringono un po',
-               così restano visibili sopra la scheda dei filtri */
-            body.filter-open .timeline-track {
-                height: 26px;
-            }
-
-            body.filter-open .timeline {
-                margin-bottom: 0.3rem;
-            }
-
-            body.filter-open .timeline-header {
-                padding-top: 0.08rem;
-                padding-bottom: 0.08rem;
-                margin-bottom: 0.08rem;
-            }
         }
 
         @keyframes filter-sheet-up {
@@ -2338,15 +2538,22 @@ body.detail-open {
                 position: static;
             }
 
+            /* titolo mai tagliato: se non sta su una riga va su due,
+               sempre centrato in verticale nell'header */
             html.fs-available .header h1,
             .header h1 {
-                font-size: 1.2rem;
-                line-height: calc(var(--land-header) - 2px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: calc(var(--land-header) - 2px);
+                font-size: clamp(0.92rem, 2.3vw, 1.2rem);
+                line-height: 1.05;
                 margin: 0;
-                padding: 0 250px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                /* spazio libero tra le icone (sinistra) e la ricerca (destra) */
+                padding: 0 270px 0 250px;
+                white-space: normal;
+                overflow: visible;
+                text-wrap: balance;
             }
 
             .header p {
@@ -2679,6 +2886,17 @@ body.detail-open {
         /* Telefoni in orizzontale più stretti: i nomi dei tag non ci stanno
            tra Contribuisci e lo zoom, si torna ai soli pallini con "Tag:" */
         @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) and (max-width: 760px) {
+            /* ricerca più corta, per lasciare al titolo due righe comode */
+            .search-container {
+                width: 150px;
+            }
+
+            html.fs-available .header h1,
+            .header h1 {
+                padding: 0 205px 0 245px;
+                font-size: 0.9rem;
+            }
+
             .legend-label {
                 display: none;
             }
@@ -2851,6 +3069,8 @@ if (pulsanteReset) {
                     // footer (zoom), che resta visibile sotto di esso.
                     const footerEl = document.querySelector('.app-footer');
                     if ((isMobileViewport() || isPhoneLandscape()) && footerEl && path.includes(footerEl)) return;
+                    const cookieEl = document.getElementById('cookieBanner');
+                    if (cookieEl && path.includes(cookieEl)) return;
                     filterPanel.classList.remove('active');
                 });
 
@@ -3120,6 +3340,9 @@ function showDataLoadingError() {
         function filterEvents(searchTerm) {
             currentSearchTerm = searchTerm.toLowerCase().trim();
             updateEventVisibility();
+            // anche le parole in digitazione evidenziano: le barrette che
+            // contengono un risultato si aprono (dopo una breve pausa)
+            syncGroupingWithHighlight(260);
         }
 
         // Parole cercate in questo momento: quelle confermate + quella in
@@ -3259,6 +3482,23 @@ function showDataLoadingError() {
             const isNew = !activeKeywords.some(k => k.toLowerCase() === keyword.toLowerCase());
             if (isNew) activeKeywords.push(keyword);
 
+            // statistiche: cosa si cerca e se trova qualcosa. Il testo va solo
+            // a GA4/Clarity (con consenso); a GoatCounter solo "trovato o no".
+            if (isNew && window.sychroTrack) {
+                const k = keyword.toLowerCase();
+                let found = 0;
+                Object.keys(timelineData).forEach(category => {
+                    (timelineData[category] || []).forEach(ev => {
+                        if (getEventFilterData(ev, category).searchText.includes(k)) found++;
+                    });
+                });
+                window.sychroTrack('search_keyword', {
+                    search_term: keyword.slice(0, 60),
+                    results: found,
+                    language: langMode
+                }, found > 0 ? 'con-risultati' : 'nessun-risultato');
+            }
+
             input.value = '';
             currentSearchTerm = '';
             if (clearBtn) clearBtn.style.display = 'none';
@@ -3313,6 +3553,15 @@ function showDataLoadingError() {
             } else {
                 activeFilterSet.add(key);
                 chip.classList.add('active');
+                // statistiche: quali tag e cluster vengono scelti (solo quando
+                // si ATTIVA il filtro, non quando lo si toglie)
+                if (window.sychroTrack) {
+                    const sep = key.indexOf(':');
+                    window.sychroTrack('filter_select', {
+                        filter_type: key.slice(0, sep),        // "tag" oppure "cluster"
+                        filter_name: key.slice(sep + 1)
+                    }, key);
+                }
             }
             updateEventVisibility();
             syncLayoutWithFilters();
@@ -3359,7 +3608,9 @@ function showDataLoadingError() {
         }
 
         function renderTimelines() {
-            renderedUngrouped = hasCommittedFilters();
+            // insieme degli eventi evidenziati con cui si disegna questa volta
+            const highlighted = getHighlightedKeys();
+            renderedHighlightSig = [...highlighted].sort().join('|');
             // Fotografia di come erano disposti pallini e barrette PRIMA del
             // ridisegno: serve ad animare il passaggio da una disposizione all'altra
             const previousLayout = captureLayoutSnapshot();
@@ -3368,7 +3619,7 @@ function showDataLoadingError() {
             const pendingAnimations = [];
             Object.keys(timelineData).forEach((category, index) => {
                 const containerId = `timeline-${index + 1}`;
-                createTimelineEvents(category, containerId, previousLayout[containerId], pendingAnimations);
+                createTimelineEvents(category, containerId, previousLayout[containerId], pendingAnimations, highlighted);
             });
 
             // Applica il filtro iniziale se c'è testo di ricerca (es. ricarica pagina)
@@ -3530,7 +3781,7 @@ function showDataLoadingError() {
         }
 
         // ---------------------------------------------------------------
-        // RAGGRUPPAMENTO A BARRETTE (dipende SOLO da dati e livello di zoom)
+        // RAGGRUPPAMENTO A BARRETTE (dipende da dati, zoom ed evidenziazione)
         // ---------------------------------------------------------------
         // Zoom 100-300%: unità = decennio    (es. 1961-1970)  -> barretta se PIÙ DI 15 eventi
         // Zoom 400-600%: unità = quinquennio (es. 1951-1955)  -> barretta se PIÙ DI 10 eventi
@@ -3538,44 +3789,84 @@ function showDataLoadingError() {
         // Zoom 1000%   : nessuna barretta, tutti i pallini singoli
         // Un'unità sotto soglia resta fatta di pallini, ciascuno sul proprio
         // anno (quelli dello stesso anno distribuiti equamente dentro quell'anno).
-        // Con un filtro CONFERMATO (parola chiave con Invio, tag o cluster) le
-        // barrette spariscono a ogni zoom e tornano tutti i pallini singoli, così
-        // si vede esattamente quali eventi corrispondono. Mentre si sta solo
-        // digitando (senza Invio) le barrette restano.
-        // A differenza delle vecchie bolle-cluster, il raggruppamento NON
-        // dipende dalla distanza in pixel: le unità sono fisse (calendario),
-        // quindi il risultato è identico a ogni ricarico e non "vibra".
+        //
+        // EVIDENZIAZIONE: quando alcuni eventi sono evidenziati (corrispondono
+        // a ricerca/filtri, oppure sono collegati per cluster all'evento
+        // aperto), una barretta che ne contiene uno "esplode", ma solo fin
+        // dove serve: decennio -> quinquenni -> anni. Si scompone solo il
+        // pezzo che contiene l'evento evidenziato, fino all'anno, dove i suoi
+        // eventi diventano pallini; gli altri pezzi restano barrette (più
+        // corte). Le barrette senza eventi evidenziati restano intere.
+        //
+        // Le unità sono fisse (calendario), quindi il risultato è identico a
+        // ogni ricarico e non "vibra".
         const BAR_GAP_PX = 2;          // spazio tra barrette adiacenti (per lato)
         const BAR_MIN_WIDTH_PX = 13;   // sotto questa larghezza (poco più di un pallino) torna a pallini
+        const SUB_UNIT = { 10: 5, 5: 1 };  // decennio -> quinquenni -> anni
 
-        // true se c'è almeno un filtro confermato: parola chiave (Invio), tag o cluster
-        function hasCommittedFilters() {
-            return activeKeywords.length > 0 || activeFilterSet.size > 0;
+        // Evento attorno a cui è accesa l'illuminazione per cluster (scheda
+        // aperta su desktop, o tocco recente su mobile); null se nessuno.
+        let clusterFocusEvent = null;
+
+        // Insieme (per fullKey) degli eventi evidenziati in questo momento
+        function getHighlightedKeys() {
+            const keys = new Set();
+            const terms = getActiveSearchTerms();
+            if (terms.length > 0 || activeFilterSet.size > 0) {
+                Object.keys(timelineData).forEach(category => {
+                    (timelineData[category] || []).forEach(ev => {
+                        if (eventPassesFilters(getEventFilterData(ev, category), terms)) keys.add(ev.fullKey);
+                    });
+                });
+            }
+            if (clusterFocusEvent) {
+                keys.add(clusterFocusEvent.fullKey);
+                const clusters = clusterFocusEvent.clusters || [];
+                if (clusters.length > 0) {
+                    Object.values(timelineData).forEach(events => events.forEach(ev => {
+                        if ((ev.clusters || []).some(c => clusters.includes(c))) keys.add(ev.fullKey);
+                    }));
+                }
+            }
+            return keys;
         }
 
-        // Ultimo stato con cui sono state disegnate le timeline: serve a
-        // ridisegnarle solo quando i filtri confermati passano da assenti a
-        // presenti (o viceversa), non a ogni piccola modifica.
-        let renderedUngrouped = false;
+        function getHighlightSignature() {
+            return [...getHighlightedKeys()].sort().join('|');
+        }
+
+        // Evidenziazione con cui sono state disegnate le timeline l'ultima
+        // volta: si ridisegna solo quando cambia davvero.
+        let renderedHighlightSig = '';
+        let highlightSyncTimer = null;
+
+        // Da chiamare quando cambiano filtri o illuminazione: se l'insieme
+        // degli eventi evidenziati è cambiato, ridisegna (barrette <-> pallini).
+        // Il piccolo ritardo raccoglie più cambiamenti ravvicinati (es. la
+        // digitazione nella ricerca) in un solo ridisegno.
+        function syncGroupingWithHighlight(delay) {
+            clearTimeout(highlightSyncTimer);
+            highlightSyncTimer = setTimeout(() => {
+                if (getHighlightSignature() === renderedHighlightSig) return;
+                renderTimelines();
+                reapplyStateAfterRerender();
+            }, typeof delay === 'number' ? delay : 90);
+        }
+
+        // nome storico, usato dai filtri
+        function syncLayoutWithFilters() {
+            syncGroupingWithHighlight();
+        }
 
         // unit: ampiezza in anni dell'unità di raggruppamento
         // minEvents: da quanti eventi nell'unità compare la barretta
         //            (Infinity = mai, tutti pallini singoli)
         function getGroupingMode() {
-            if (hasCommittedFilters()) return { unit: 1, minEvents: Infinity };
             const level = Math.round(currentZoom);
             if (level <= 3) return { unit: 10, minEvents: 16 };  // più di 15 nel decennio
             if (level <= 6) return { unit: 5, minEvents: 11 };   // più di 10 nel quinquennio
             if (level <= 9) return { unit: 1, minEvents: 6 };    // più di 5 nell'anno
             return { unit: 1, minEvents: Infinity };
-        }
-
-        // Da chiamare quando cambiano i filtri confermati: se lo stato
-        // "con/senza filtri" è cambiato, ridisegna timeline (barrette <-> pallini).
-        function syncLayoutWithFilters() {
-            if (hasCommittedFilters() === renderedUngrouped) return;
-            renderTimelines();
-            reapplyStateAfterRerender();
         }
 
         // Anno intero di un evento. Quando il database avrà le date esatte
@@ -3587,10 +3878,11 @@ function showDataLoadingError() {
             return Math.floor(event.year + 1e-9);
         }
 
-        function layoutCategory(events, totalWidth) {
+        function layoutCategory(events, totalWidth, highlighted) {
             const mode = getGroupingMode();
             const yearRange = maxYear - minYear;
             const toX = (yearValue) => Math.max(0, Math.min(totalWidth, ((yearValue - minYear) / yearRange) * totalWidth));
+            const isHl = (item) => highlighted && highlighted.has(item.ev.fullKey);
 
             // Ordine stabile: anno intero, poi eventuale decimale, poi ordine nel foglio
             const items = events
@@ -3610,21 +3902,21 @@ function showDataLoadingError() {
             const bars = [];
             const dots = [];
 
-            units.forEach((members, start) => {
-                if (members.length >= mode.minEvents) {
-                    // Su schermi stretti (mobile a 100%) un decennio misura ~19px:
-                    // lì lo spazio tra barrette scende da 2px a 1px per lato.
-                    const gap = (toX(start + mode.unit) - toX(start)) < 30 ? 1 : BAR_GAP_PX;
-                    const x0 = toX(start) + gap;
-                    const x1 = toX(start + mode.unit) - gap;
-                    if (x1 - x0 >= BAR_MIN_WIDTH_PX) {
-                        bars.push({ members: members.map(m => m.ev), x0, x1 });
-                        return;
-                    }
-                }
+            // Prova a disegnare l'unità come barretta; false se troppo stretta
+            function pushBar(start, size, members) {
+                // Su schermi stretti (mobile a 100%) un decennio misura ~19px:
+                // lì lo spazio tra barrette scende da 2px a 1px per lato.
+                const gap = (toX(start + size) - toX(start)) < 30 ? 1 : BAR_GAP_PX;
+                const x0 = toX(start) + gap;
+                const x1 = toX(start + size) - gap;
+                if (x1 - x0 < BAR_MIN_WIDTH_PX) return false;
+                bars.push({ members: members.map(m => m.ev), x0, x1 });
+                return true;
+            }
 
-                // Pallini singoli: ognuno sul proprio anno; se nello stesso
-                // anno ce n'è più di uno, distribuiti equamente dentro l'anno.
+            // Pallini singoli: ognuno sul proprio anno; se nello stesso
+            // anno ce n'è più di uno, distribuiti equamente dentro l'anno.
+            function pushDots(members) {
                 const byYear = new Map();
                 members.forEach(item => {
                     if (!byYear.has(item.y)) byYear.set(item.y, []);
@@ -3635,12 +3927,40 @@ function showDataLoadingError() {
                         dots.push({ ev: item.ev, x: toX(y + k / list.length) });
                     });
                 });
+            }
+
+            // Pezzo di un'unità già "esplosa": se contiene un evento
+            // evidenziato si scompone ancora (fino all'anno), altrimenti
+            // resta una barretta più corta (se ha almeno 2 eventi e ci sta).
+            function layoutPiece(start, size, members) {
+                if (members.length === 0) return;
+                if (members.some(isHl)) {
+                    const sub = SUB_UNIT[size];
+                    if (!sub) { pushDots(members); return; }
+                    for (let s = start; s < start + size; s += sub) {
+                        layoutPiece(s, sub, members.filter(m => m.y >= s && m.y < s + sub));
+                    }
+                    return;
+                }
+                if (members.length >= 2 && pushBar(start, size, members)) return;
+                pushDots(members);
+            }
+
+            units.forEach((members, start) => {
+                if (members.length >= mode.minEvents) {
+                    if (members.some(isHl)) {
+                        layoutPiece(start, mode.unit, members);
+                        return;
+                    }
+                    if (pushBar(start, mode.unit, members)) return;
+                }
+                pushDots(members);
             });
 
             return { bars, dots };
         }
 
-        function createTimelineEvents(category, containerId, oldLayouts, pendingAnimations) {
+        function createTimelineEvents(category, containerId, oldLayouts, pendingAnimations, highlighted) {
 
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -3653,7 +3973,7 @@ function showDataLoadingError() {
             // a qualunque livello di zoom.
             const totalWidth = container.clientWidth;
 
-            const layout = layoutCategory(events, totalWidth);
+            const layout = layoutCategory(events, totalWidth, highlighted);
             // Prima le barrette, poi i pallini: a parità di livello i pallini
             // restano sopra (ordine di disegno).
             const created = [];
@@ -3783,6 +4103,15 @@ if (event.systemdynamic) {
                 eventElement.addEventListener('click', function () {
                     const color = getComputedStyle(eventElement.closest('.timeline')).getPropertyValue('--timeline-color').trim();
                     openEventDetail(event, color);
+                    // statistiche: quale evento e quale categoria attirano di più
+                    if (window.sychroTrack) {
+                        const catName = String(category).replace(/^\s*\d+\.\s*/, '');
+                        window.sychroTrack('timeline_event_open', {
+                            category: catName,
+                            event_year: Math.floor(event.year),
+                            event_title: String(event.title).slice(0, 100)
+                        }, catName + '/' + Math.floor(event.year) + ' ' + String(event.title).slice(0, 80));
+                    }
                     if (isMobileViewport()) {
                         highlightClusterTemporary(event);
                     } else {
@@ -4283,10 +4612,12 @@ window.addEventListener('wheel', function(e) {
                 <div class="it-lang" style="color: var(--text); line-height: 1.5; text-align: left;">
                     <p class="tutorial-indent" style="margin-bottom: 15px;">Vuoi contribuire al database sistemico? Clicca sul pulsante in basso a sinistra (↙) per proporre un contenuto o per scrivere un feedback.</p>
                     <p style="text-align: center; font-weight: bold; color: var(--gold-title); margin-top: 6rem; font-size: 1.3em;">Grazie e buona esplorazione!</p>
+                    <p class="rights-note">Testi, struttura e database di SyChro © 2025 Serena Treppiedi — Tutti i diritti riservati. Non è consentito copiare o riutilizzare i contenuti senza autorizzazione.</p>
                 </div>
                 <div class="en-lang" style="display:none; color: var(--text); line-height: 1.5; text-align: left;">
                     <p class="tutorial-indent" style="margin-bottom: 15px;">Want to contribute to the systemic database? Click the button at the bottom left (↙) to submit content or leave feedback.</p>
                     <p style="text-align: center; font-weight: bold; color: var(--gold-title); margin-top: 6rem; font-size: 1.3em;">Thank you and enjoy your exploration!</p>
+                    <p class="rights-note">SyChro texts, structure and database © 2025 Serena Treppiedi — All rights reserved. Copying or reusing the content without permission is not allowed.</p>
                 </div>
             </div>
 
@@ -4365,7 +4696,7 @@ window.addEventListener('wheel', function(e) {
 <footer class="app-footer">
     <div class="new-event-prompt">
         <span>Hai qualcosa da aggiungere?</span>
-        <a href="https://forms.gle/MdyjtAE9DozBvcBf6" target="_blank" class="add-to-timeline-btn">Contribuisci</a>
+        <a href="https://forms.gle/MdyjtAE9DozBvcBf6" target="_blank" rel="noopener" class="add-to-timeline-btn" id="contributeBtn">Contribuisci</a>
     </div>
 
     <div class="legend-container">
@@ -4411,9 +4742,20 @@ window.addEventListener('wheel', function(e) {
        <button id="resetBtn" class="zoom-btn" onclick="resetZoom()" title="Reset Zoom">↺</button>
     </div>
 
-  <div class="footer-copyright" style="position: absolute; bottom: 0.2rem; left: 50%; transform: translateX(-50%); font-size: 0.55rem; opacity: 0.5; color: var(--text); white-space: nowrap;">© 2025 Serena Treppiedi<span class="copy-sep"> — </span><br class="copy-br">All rights reserved</div>
+  <div class="footer-copyright" style="position: absolute; bottom: 0.2rem; left: 50%; transform: translateX(-50%); font-size: 0.55rem; opacity: 0.5; color: var(--text); white-space: nowrap;">© 2025 Serena Treppiedi<span class="copy-sep"> — </span><br class="copy-br">All rights reserved<span class="cookie-sep"> · </span><button type="button" class="cookie-link" id="cookieSettingsLink">Cookie</button></div>
 </div>
 </footer>
+
+<!-- Banner cookie: compare dopo la scelta della lingua, finché il
+     visitatore non sceglie. "Rifiuta" e "Accetta" hanno lo stesso peso
+     (richiesto dal GDPR). I testi li scrive JS nella lingua attiva. -->
+<div class="cookie-banner" id="cookieBanner" role="dialog" aria-live="polite" aria-labelledby="cookieBannerText" hidden>
+    <p class="cookie-text" id="cookieBannerText"></p>
+    <div class="cookie-actions">
+        <button type="button" class="cookie-btn" id="cookieReject"></button>
+        <button type="button" class="cookie-btn" id="cookieAccept"></button>
+    </div>
+</div>
 
 <!-- Popup condiviso per mobile: usato al posto dei popup evento/legenda
      in-place, che su schermi piccoli restano legati alla posizione del
@@ -4599,6 +4941,212 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(updateSide
 
 })();
 
+// ---- Banner cookie ----
+// Compare dopo la scelta della lingua (la schermata iniziale viene rimossa),
+// solo se il visitatore non ha ancora scelto. Il link "Cookie" nel footer
+// lo riapre. Rifiutare dopo aver accettato cancella i cookie di analisi e
+// ricarica la pagina, così gli script non restano attivi.
+(function () {
+    const banner = document.getElementById('cookieBanner');
+    if (!banner) return;
+    const text = document.getElementById('cookieBannerText');
+    const accept = document.getElementById('cookieAccept');
+    const reject = document.getElementById('cookieReject');
+
+    function show() {
+        const it = (typeof langMode === 'undefined') || langMode === 'it';
+        text.textContent = it
+            ? 'Usiamo cookie di analisi (Google Analytics e Microsoft Clarity) solo se accetti, per capire in forma aggregata come viene esplorata la timeline.'
+            : 'We use analytics cookies (Google Analytics and Microsoft Clarity) only if you accept, to understand in aggregate how the timeline is explored.';
+        accept.textContent = it ? 'Accetta' : 'Accept';
+        reject.textContent = it ? 'Rifiuta' : 'Decline';
+        banner.hidden = false;
+    }
+
+    function clearAnalyticsCookies() {
+        document.cookie.split(';').forEach(c => {
+            const name = c.split('=')[0].trim();
+            if (/^(_ga|_gid|_gat|_clck|_clsk|CLID|MUID|ANONCHK|SM)/.test(name)) {
+                const host = location.hostname;
+                [host, '.' + host, ''].forEach(d => {
+                    document.cookie = name + '=; Max-Age=0; path=/' + (d ? '; domain=' + d : '');
+                });
+            }
+        });
+    }
+
+    accept.addEventListener('click', () => {
+        window.sychroSetConsent('granted');
+        banner.hidden = true;
+        window.sychroLoadAnalytics();
+    });
+
+    reject.addEventListener('click', () => {
+        const wasGranted = window.__sychroAnalyticsLoaded;
+        window.sychroSetConsent('denied');
+        banner.hidden = true;
+        if (wasGranted) {
+            try { window.clarity && window.clarity('consent', false); } catch (e) {}
+            clearAnalyticsCookies();
+            location.reload();
+        }
+    });
+
+    const link = document.getElementById('cookieSettingsLink');
+    if (link) link.addEventListener('click', show);
+
+    // la schermata iniziale viene rimossa dopo la scelta della lingua
+    function showWhenIntroGone() {
+        if (window.sychroGetConsent()) return;
+        if (!document.getElementById('intro-overlay')) { show(); return; }
+        const obs = new MutationObserver(() => {
+            if (!document.getElementById('intro-overlay')) { obs.disconnect(); show(); }
+        });
+        obs.observe(document.body, { childList: true });
+    }
+    showWhenIntroGone();
+})();
+
+// Avviso per chi apre gli strumenti per sviluppatori del browser
+try {
+    console.info('%cSyChro – Collective Systemic Chronography', 'color:#BF953F;font-weight:bold;font-size:14px');
+    console.info('© 2025 Serena Treppiedi. Testi, struttura e database: tutti i diritti riservati. / Texts, structure and database: all rights reserved.');
+} catch (e) {}
+
+// ---------------------------------------------------------------
+// STATISTICHE DI TUTTE LE AZIONI
+// Un unico "ascoltatore" riconosce l'elemento cliccato e registra l'azione
+// (vedi window.sychroTrack nell'<head>). Non interferisce con il
+// funzionamento dei bottoni: legge soltanto cosa è stato toccato.
+// Le azioni già registrate altrove: apertura di un evento
+// (timeline_event_open), scelta di un filtro (filter_select), ricerca
+// confermata con Invio (search_keyword).
+// ---------------------------------------------------------------
+(function () {
+    const track = (name, params, label) => { if (window.sychroTrack) window.sychroTrack(name, params || {}, label); };
+    const cleanCat = c => String(c || '').replace(/^\s*\d+\.\s*/, '');
+
+    // categoria (nome nel database, senza numero) di un elemento della timeline
+    function categoryOfElement(el) {
+        const wrapper = el && el.closest ? el.closest('[id^="timeline-"][id$="-wrapper"]') : null;
+        if (!wrapper) return '';
+        const n = parseInt(wrapper.id.replace('timeline-', ''), 10);
+        return cleanCat(Object.keys(timelineData)[n - 1]);
+    }
+    function categoryOfEvent(ev) {
+        let found = '';
+        Object.keys(timelineData).forEach(cat => {
+            if ((timelineData[cat] || []).some(e => e.fullKey === ev.fullKey)) found = cleanCat(cat);
+        });
+        return found;
+    }
+    const zoomPct = () => Math.round(currentZoom * 100);
+    const after = fn => setTimeout(fn, 0);   // legge lo stato DOPO che il bottone ha agito
+
+    document.addEventListener('click', function (e) {
+        const t = e.target;
+        if (!t || !t.closest) return;
+        let el;
+
+        // --- schermata iniziale ---
+        if ((el = t.closest('#introLangIt, #introLangEn'))) {
+            const lang = el.id === 'introLangIt' ? 'it' : 'en';
+            return track('language_choice', { language: lang }, lang);
+        }
+
+        // --- header ---
+        if (t.closest('#menuIcon')) return after(() => track('language_switch', { language: langMode }, langMode));
+        if (t.closest('#themeToggle')) return after(() => {
+            const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            track('theme_toggle', { theme }, theme);
+        });
+        if (t.closest('#infoIcon')) return track('tutorial_open', {});
+        if (t.closest('#fullscreenToggle')) return after(() => {
+            const state = (document.fullscreenElement || document.webkitFullscreenElement) ? 'on' : 'off';
+            track('fullscreen_toggle', { state }, state);
+        });
+        if (t.closest('.header-icons a')) return track('hub_link_click', { transport_type: 'beacon' });
+        if (t.closest('#filterIconBtn')) return after(() => {
+            const open = document.getElementById('filterPanel').classList.contains('active');
+            if (open) track('filter_panel_open', {});
+        });
+        if (t.closest('#clearSearchBtn')) return track('search_clear', {});
+
+        // --- tutorial ---
+        if (t.closest('.tutorial-next-btn')) return track('tutorial_next', { from_step: tutorialStep }, 'da-step-' + tutorialStep);
+        if (t.closest('.tutorial-skip-btn')) return track('tutorial_skip', { at_step: tutorialStep }, 'allo-step-' + tutorialStep);
+        if ((el = t.closest('.tutorial-dot'))) return track('tutorial_dot', { to_step: el.dataset.step }, 'step-' + el.dataset.step);
+        if (t.closest('#closeInfoPopup')) return track('tutorial_close', { at_step: tutorialStep }, 'allo-step-' + tutorialStep);
+
+        // --- pannello filtri ---
+        if (t.closest('#filterResetBtn, #filterResetBtnEn')) return track('filters_clear', {});
+        if (t.closest('#filterDoneBtn')) return track('filter_panel_done', {});
+        if (t.closest('.keyword-chip-remove')) return track('keyword_remove', {});
+
+        // --- timeline ---
+        if ((el = t.closest('.event.event-group'))) {
+            const cat = categoryOfElement(el);
+            const n = (el._members || []).length;
+            return track('bar_zoom', { category: cat, events_in_bar: n, zoom: zoomPct() }, cat);
+        }
+
+        // --- scheda evento ---
+        if ((el = t.closest('.related-item'))) {
+            const r = currentRelatedList[parseInt(el.dataset.relatedIndex, 10)];
+            if (!r) return;
+            const group = el.closest('.related-group');
+            const cluster = group ? (group.querySelector('.related-cluster') || {}).textContent || '' : '';
+            const cat = categoryOfEvent(r.ev);
+            return track('related_open', {
+                cluster,
+                category: cat,
+                event_title: String(r.ev.title).slice(0, 100)
+            }, cluster + '/' + cat);
+        }
+        if (t.closest('.detail-link')) {
+            const ev = currentDetailEvent;
+            const cat = ev ? categoryOfEvent(ev) : '';
+            return track('detail_link_click', {
+                category: cat,
+                event_title: ev ? String(ev.title).slice(0, 100) : '',
+                transport_type: 'beacon'
+            }, cat);
+        }
+        if (t.closest('#detailPanelClose, #mobilePopupClose')) return track('detail_close', {});
+
+        // --- footer ---
+        if (t.closest('#contributeBtn')) return track('contribute_click', { transport_type: 'beacon' });
+        if (t.closest('#zoomInBtn')) return after(() => track('zoom_in', { zoom: zoomPct() }, zoomPct() + '%'));
+        if (t.closest('#zoomOutBtn')) return after(() => track('zoom_out', { zoom: zoomPct() }, zoomPct() + '%'));
+        if (t.closest('#resetBtn')) return track('zoom_reset', {});
+        if ((el = t.closest('.legend-item'))) {
+            const label = el.querySelector('.legend-label');
+            const name = label ? label.textContent.trim() : '';
+            return track('legend_view', { tag: name }, name);
+        }
+
+        // --- banner cookie (GoatCounter conta solo la scelta, senza cookie) ---
+        if (t.closest('#cookieAccept')) return after(() => track('cookie_choice', { choice: 'accept' }, 'accetta'));
+        if (t.closest('#cookieReject')) return track('cookie_choice', { choice: 'decline' }, 'rifiuta');
+        if (t.closest('#cookieSettingsLink')) return track('cookie_settings_open', {});
+    }, true);
+})();
+
+// ---- Altezza reale dell'header (su mobile il titolo può andare a capo) ----
+(function () {
+    const header = document.querySelector('.header');
+    if (!header) return;
+    const update = () => {
+        const h = header.offsetHeight;
+        const prev = document.documentElement.style.getPropertyValue('--header-h');
+        document.documentElement.style.setProperty('--header-h', h + 'px');
+        if (prev && prev !== h + 'px' && typeof fixLabels === 'function') fixLabels();
+    };
+    update();
+    if (window.ResizeObserver) new ResizeObserver(update).observe(header);
+    window.addEventListener('resize', update);
+})();
+
 // ---- Altezza reale del footer (serve al pannello filtri su mobile, che
 // si ferma appena sopra il footer per lasciare usabile lo zoom) ----
 (function () {
@@ -4692,6 +5240,7 @@ function handleViewportChange() {
         clearTimeout(mobileHighlightTimer);
         clearTimeout(mobileTappableTimer);
         mobileHighlightEvent = null;
+        clusterFocusEvent = null;
         clearClusterHighlight();
 
         if (wasOpen) {
@@ -4908,7 +5457,20 @@ function findElementForEvent(ev) {
     return found;
 }
 
+// Accende (o spegne, con null) l'evento attorno a cui si illumina il
+// cluster. Se questo cambia quali eventi sono evidenziati, le timeline
+// vengono ridisegnate SUBITO, così le barrette che contengono un evento
+// collegato "esplodono" prima che si applichi l'illuminazione.
+function setClusterFocus(ev) {
+    clusterFocusEvent = ev || null;
+    if (getHighlightSignature() !== renderedHighlightSig) {
+        clearTimeout(highlightSyncTimer);
+        renderTimelines();
+    }
+}
+
 function highlightCluster(clickedEvent) {
+    setClusterFocus(clickedEvent);
     verticalLineLocked = true;
     document.querySelectorAll('.event').forEach(el => el.classList.remove('cluster-glow', 'cluster-dim', 'cluster-selected'));
 
@@ -4955,6 +5517,11 @@ function clearClusterHighlight() {
     document.querySelectorAll('.event').forEach(el => el.classList.remove('cluster-glow', 'cluster-dim', 'cluster-selected'));
     const verticalLine = document.getElementById('verticalLine');
     if (verticalLine) verticalLine.classList.remove('active');
+    // le barrette "esplose" per i collegati tornano intere
+    if (clusterFocusEvent) {
+        clusterFocusEvent = null;
+        syncGroupingWithHighlight();
+    }
 }
 
 // Versione mobile: l'illuminazione non può restare "agganciata" a un
@@ -4979,6 +5546,7 @@ function highlightClusterTemporary(clickedEvent) {
     clearTimeout(mobileHighlightTimer);
     clearTimeout(mobileTappableTimer);
     document.querySelectorAll('.event.cluster-tappable').forEach(el => el.classList.remove('cluster-tappable'));
+    setClusterFocus(clickedEvent);
     verticalLineLocked = true;
     mobileHighlightEvent = clickedEvent;
 
@@ -5057,6 +5625,11 @@ function startMobileHighlightFade() {
         // Al termine della dissolvenza i pallini "sbiaditi" tornano non toccabili
         mobileTappableTimer = setTimeout(() => {
             document.querySelectorAll('.event.cluster-tappable').forEach(el => el.classList.remove('cluster-tappable'));
+            // finita la dissolvenza, le barrette "esplose" tornano intere
+            if (!mobileHighlightEvent && clusterFocusEvent) {
+                clusterFocusEvent = null;
+                syncGroupingWithHighlight();
+            }
         }, 12000);
         verticalLine.style.transition = 'opacity 12000ms ease-out';
         verticalLine.classList.remove('active');
@@ -5266,7 +5839,7 @@ document.addEventListener('click', function (e) {
     const panel = document.getElementById('detailPanel');
     if (!panel || !panel.classList.contains('active')) return;
     const t = e.target;
-    if (!t.closest || t.closest('.detail-panel, .header, .app-footer, .filter-panel, .info-popup-overlay, .mobile-popup-overlay, #intro-overlay')) return;
+    if (!t.closest || t.closest('.detail-panel, .header, .app-footer, .filter-panel, .info-popup-overlay, .mobile-popup-overlay, #intro-overlay, .cookie-banner')) return;
     const eventEl = t.closest('.event');
     if (eventEl && !eventEl.classList.contains('event-group')) return;
     closeDetailPanel(!!eventEl);

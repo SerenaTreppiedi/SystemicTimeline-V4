@@ -1804,7 +1804,7 @@ body.detail-open {
         }
 
         .period-input {
-            width: 4.6rem;
+            width: 4.9rem;
             padding: 0.28rem 0.5rem;
             border-radius: 14px;
             border: 1px solid var(--tint-border);
@@ -1815,14 +1815,21 @@ body.detail-open {
             font-variant-numeric: tabular-nums;
             text-align: center;
             outline: none;
-            -moz-appearance: textfield;
-            appearance: textfield;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            /* freccina della tendina, disegnata (oro) */
+            padding-right: 1.3rem;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23BF953F' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 9px 6px;
         }
 
-        .period-input::-webkit-outer-spin-button,
-        .period-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
+        .period-input option {
+            background: var(--panel-bg);
+            color: var(--text);
         }
 
         .period-input:focus {
@@ -1832,7 +1839,7 @@ body.detail-open {
         /* periodo attivo: i campi si accendono come un chip selezionato */
         .period-active .period-input {
             border-color: #BF953F;
-            background: rgba(191, 149, 63, 0.25);
+            background-color: rgba(191, 149, 63, 0.25);
         }
 
         .period-dash {
@@ -2560,8 +2567,8 @@ body.detail-open {
 
             .period-input {
                 font-size: 16px;
-                width: 4.8rem;
-                padding: 0.2rem 0.4rem;
+                width: 5.4rem;
+                padding: 0.2rem 1.4rem 0.2rem 0.6rem;
             }
 
             .filter-icon-btn {
@@ -3254,9 +3261,6 @@ if (pulsanteReset) {
                         }
                         setPeriod(from, to);
                     });
-                    input.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-                    });
                 });
                 const periodResetBtn = document.getElementById('periodReset');
                 if (periodResetBtn) periodResetBtn.addEventListener('click', () => setPeriod(FULL_MIN_YEAR, FULL_MAX_YEAR));
@@ -3727,11 +3731,32 @@ function showDataLoadingError() {
         // la larghezza dello schermo (come una vista già ingrandita). Lo zoom
         // riparte dal 100% del periodo scelto.
         // ---------------------------------------------------------------
-        function syncPeriodInputs() {
+        const PERIOD_STEP = 5;   // le tendine vanno di cinque in cinque anni
+
+        // riempie le due tendine (una volta sola)
+        function buildPeriodOptions() {
             const from = document.getElementById('periodFrom');
             const to = document.getElementById('periodTo');
-            if (from) from.value = minYear;
-            if (to) to.value = maxYear;
+            if (!from || !to || from.options.length) return;
+            for (let y = FULL_MIN_YEAR; y <= FULL_MAX_YEAR; y += PERIOD_STEP) {
+                if (y < FULL_MAX_YEAR) from.add(new Option(y, y));
+                if (y > FULL_MIN_YEAR) to.add(new Option(y, y));
+            }
+        }
+
+        function syncPeriodInputs() {
+            buildPeriodOptions();
+            const from = document.getElementById('periodFrom');
+            const to = document.getElementById('periodTo');
+            if (from) {
+                from.value = minYear;
+                // in "dal" non si possono scegliere anni uguali o successivi ad "al"
+                [...from.options].forEach(o => { o.disabled = Number(o.value) >= maxYear; });
+            }
+            if (to) {
+                to.value = maxYear;
+                [...to.options].forEach(o => { o.disabled = Number(o.value) <= minYear; });
+            }
             const section = document.getElementById('filterPeriodSection');
             if (section) section.classList.toggle('period-active', isPeriodActive());
         }
@@ -4761,9 +4786,9 @@ window.addEventListener('wheel', function(e) {
             <p class="filter-panel-label it-lang">Periodo</p>
             <p class="filter-panel-label en-lang" style="display:none">Period</p>
             <div class="period-row">
-                <input type="number" id="periodFrom" class="period-input" inputmode="numeric" min="1850" max="2030" step="1" value="1850" aria-label="Dal / From">
+                <select id="periodFrom" class="period-input" aria-label="Dal / From"></select>
                 <span class="period-dash" aria-hidden="true">–</span>
-                <input type="number" id="periodTo" class="period-input" inputmode="numeric" min="1850" max="2030" step="1" value="2030" aria-label="Al / To">
+                <select id="periodTo" class="period-input" aria-label="Al / To"></select>
                 <button type="button" class="period-reset" id="periodReset" title="Tutto il periodo / Full period" aria-label="Tutto il periodo / Full period">×</button>
             </div>
         </div>

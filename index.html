@@ -15,7 +15,6 @@
     try { localStorage.removeItem('sychro-theme'); } catch (e) {}
 })();
 </script>
-<meta name="theme-color" content="#1A1A1A">
 <!-- Microsoft Clarity: tracciamento comportamento utenti -->
     <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
@@ -38,6 +37,10 @@
   
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="theme-color" content="#1A1A1A">
     <title>Gli step verso un nuovo approccio di pensiero</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -635,8 +638,11 @@
 
         /* Effetto "illuminato": al click su un evento, quelli con almeno un
            cluster in comune si evidenziano, gli altri si attenuano */
+        /* pallini "spenti" mentre una scheda è aperta: stesso valore dei
+           pallini esclusi dai filtri (--dim-opacity), senza alone */
         .event.cluster-dim .event-dot {
-            opacity: 0.25;
+            opacity: var(--dim-opacity);
+            box-shadow: none;
         }
 
         .event.cluster-glow .event-dot {
@@ -722,6 +728,33 @@
         .event.no-match.cluster-tappable {
             pointer-events: auto;
             z-index: 1;
+        }
+
+        /* Nelle zone affollate gli eventi evidenziati (collegati per cluster,
+           o che corrispondono ai filtri attivi) devono "vincere" sui vicini:
+           passano davanti e hanno un'area cliccabile invisibile più ampia del
+           pallino, così un tocco impreciso li prende comunque. */
+        .event.cluster-glow,
+        .event.cluster-tappable,
+        .event.cluster-selected {
+            z-index: 4;
+        }
+
+        body.filters-active .event:not(.no-match) {
+            z-index: 2;
+        }
+
+        .event.cluster-glow:not(.event-group)::before,
+        .event.cluster-tappable:not(.event-group)::before,
+        body.filters-active .event:not(.no-match):not(.event-group)::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 26px;
+            height: 26px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
         }
 
         .event:hover {
@@ -1146,10 +1179,22 @@
     border-radius: 10px;
     box-shadow: -8px 0 25px var(--shade-50);
     z-index: 310000;
-    padding: 1.3rem 1.1rem;
-    overflow-y: auto;
+    /* fascia in alto con la X (sempre visibile), sotto il contenuto che
+       scorre da solo: la X resta davanti e non copre il testo */
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
     transform: translateX(calc(100% + 24px));
     transition: transform 0.3s ease;
+}
+
+#detailPanelBody {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 1.1rem 1.3rem;
 }
 
 .detail-panel.active {
@@ -1179,16 +1224,26 @@ body.detail-open {
 }
 
 .detail-panel-close {
-    position: absolute;
-    top: 0.6rem;
-    right: 0.8rem;
+    flex: 0 0 auto;
+    align-self: flex-end;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin: 0.35rem 0.4rem 0 0;
     background: none;
     border: none;
+    border-radius: 50%;
     color: var(--gold-text);
     font-size: 1.5rem;
     line-height: 1;
     cursor: pointer;
-    padding: 0.3rem;
+    padding: 0;
+}
+
+.detail-panel-close:hover {
+    background: rgba(191, 149, 63, 0.18);
 }
 
 @media (max-width: 768px) {
@@ -1523,16 +1578,25 @@ body.detail-open {
             line-height: 1.2;
         }
 
-        .related-via {
-            font-size: 0.7rem;
-            color: var(--text-60);
-            margin: 0.1rem 0 0.5rem;
-            line-height: 1.4;
+        /* un gruppo per cluster: nome del cluster + quanti eventi */
+        .related-group + .related-group {
+            margin-top: 0.75rem;
         }
 
-        .related-via em {
-            font-style: normal;
+        .related-group-head {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin: 0.35rem 0 0.35rem;
+        }
+
+        .related-cluster {
+            font-size: 0.74rem;
             color: var(--text-80);
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* Riquadro che scorre: mostra 3 righe per volta. Bordo, fondo
@@ -1707,6 +1771,19 @@ body.detail-open {
 
             .header-icons a {
                 margin-right: 0.2rem !important;
+            }
+
+            /* bottone schermo intero: a destra del titolo (seconda riga),
+               dove c'è spazio libero */
+            html.fs-available #fullscreenToggle {
+                display: flex;
+                position: absolute;
+                right: 0.6rem;
+                bottom: 0.32rem;
+            }
+
+            html.fs-available .header h1 {
+                padding: 0 2.3rem;
             }
 
             /* logo un filo più piccolo: lascia spazio alla ricerca */
@@ -2027,7 +2104,8 @@ body.detail-open {
                 border-radius: 14px;
                 padding: 0.8rem 0.9rem 0;
                 background: var(--popup-bg);
-                box-shadow: 0 12px 34px var(--shade-80), 0 2px 8px var(--shade-40);
+                /* ombra corta e leggera: stacca la scheda senza scurire il footer */
+                box-shadow: 0 3px 10px var(--shade-40);
             }
 
             .filter-panel.active {
@@ -2204,11 +2282,18 @@ body.detail-open {
         @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
 
             :root {
-                --land-header: 40px;
+                --land-header: 48px;   /* +20% rispetto a prima: l'header respira */
                 --land-footer: 44px;
                 /* spazio da lasciare libero a destra quando la scheda
                    evento è aperta (vedi body.detail-open) */
                 --detail-reserve: min(324px, calc(46vw + 24px));
+                --band: clamp(22px, calc((100vh - var(--land-header) - var(--land-footer) - 42px) / 5 - 4px), 46px);
+            }
+
+            @supports (height: 100dvh) {
+                :root {
+                    --band: clamp(22px, calc((100dvh - var(--land-header) - var(--land-footer) - 42px) / 5 - 4px), 46px);
+                }
             }
 
             body {
@@ -2220,7 +2305,8 @@ body.detail-open {
                ricerca a destra --- */
             .header {
                 display: block;
-                padding: 0.25rem 0.6rem;
+                height: var(--land-header);
+                padding: 0 0.6rem;
             }
 
             .header-icons {
@@ -2237,25 +2323,27 @@ body.detail-open {
             }
 
             .header-icons a img {
-                height: 22px !important;
+                height: 26px !important;
             }
 
             .header-icon {
-                width: 27px;
-                height: 27px;
-                font-size: 0.89rem;
+                width: 30px;
+                height: 30px;
+                font-size: 0.92rem;
             }
 
             /* bottone schermo intero: solo dove il browser lo permette */
             html.fs-available #fullscreenToggle {
                 display: flex;
+                position: static;
             }
 
+            html.fs-available .header h1,
             .header h1 {
-                font-size: 1.1rem;
-                line-height: 1.2;
+                font-size: 1.2rem;
+                line-height: calc(var(--land-header) - 2px);
                 margin: 0;
-                padding: 0.3rem 240px;
+                padding: 0 250px;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -2270,12 +2358,17 @@ body.detail-open {
                 top: 50%;
                 right: 0.6rem;
                 transform: translateY(-50%);
-                width: 200px;
+                width: 210px;
                 margin-top: 0;
             }
 
+            .filter-icon-btn {
+                width: 30px;
+                height: 30px;
+            }
+
             .search-input {
-                padding: 0.18rem 0.6rem;
+                padding: 0.3rem 0.7rem;
                 padding-right: 28px;
                 font-size: 16px; /* iOS Safari fa zoom automatico sotto i 16px */
             }
@@ -2297,10 +2390,14 @@ body.detail-open {
                 margin: 0.1rem 0 0.25rem;
             }
 
+            /* Fasce più sottili del 20%: lo spazio liberato va tra una
+               fascia e l'altra (l'ingombro totale resta lo stesso). La
+               "fascia piena" è lo spazio tra header e footer, meno il
+               righello degli anni, diviso per cinque. */
             .timeline {
                 display: flex;
                 align-items: stretch;
-                margin-bottom: 4px;
+                margin-bottom: calc(var(--band) * 0.2 + 4px);
             }
 
             /* la riga del titolo sparisce: il nome va dentro la riga */
@@ -2315,8 +2412,7 @@ body.detail-open {
             /* altezza delle righe: lo spazio tra header e footer, meno il
                righello degli anni, diviso per cinque */
             .timeline-track {
-                height: clamp(22px, calc((100vh - var(--land-header) - var(--land-footer) - 42px) / 5 - 4px), 46px);
-                height: clamp(22px, calc((100dvh - var(--land-header) - var(--land-footer) - 42px) / 5 - 4px), 46px);
+                height: calc(var(--band) * 0.8);
             }
 
             .timeline-track {
@@ -2332,7 +2428,9 @@ body.detail-open {
                 align-items: center;
                 position: sticky;
                 left: 6px;
-                z-index: 3;
+                /* sopra la linea verticale del tempo (z-index 99), che così
+                   non attraversa i nomi delle categorie */
+                z-index: 100;
                 flex: 0 0 var(--side-gutter, 120px);
                 width: var(--side-gutter, 120px);
                 margin-left: calc(-1 * var(--side-gutter, 120px) - 8px);
@@ -2452,12 +2550,12 @@ body.detail-open {
 
             /* --- SCHEDA EVENTO: pannello laterale come su desktop --- */
             .detail-panel {
-                display: block;
+                display: flex;
                 top: calc(var(--land-header) + 6px);
                 bottom: calc(var(--land-footer) + 6px);
                 width: 300px;
                 max-width: 46vw;
-                padding: 1rem 0.9rem;
+                padding: 0;
                 /* da chiusa NON resta parcheggiata fuori dallo schermo (sui
                    telefoni quello spazio si poteva raggiungere scorrendo, e
                    si finiva sul grigio): sparisce con una dissolvenza */
@@ -2472,6 +2570,10 @@ body.detail-open {
                 opacity: 1;
                 visibility: visible;
                 transition: transform 0.3s ease, opacity 0.25s ease;
+            }
+
+            #detailPanelBody {
+                padding: 0 0.9rem 1rem;
             }
 
             .detail-image {
@@ -4435,13 +4537,13 @@ function updateSideGutter() {
 }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(updateSideGutter);
 
-// ---- Schermo intero col telefono in orizzontale ----
-// In orizzontale le barre del browser occupano molto dell'altezza: il sito
-// passa a schermo intero al PRIMO tocco dopo aver girato il telefono (i
-// browser lo permettono solo in risposta a un gesto dell'utente, non da
-// soli). Si esce col bottone nell'header (icona "riduci"), col gesto
-// "indietro" del telefono, oppure tornando in verticale. Se l'utente esce
-// di sua scelta, il sito non ci rientra da solo finché non si ruota di nuovo.
+// ---- Schermo intero sul telefono (verticale e orizzontale) ----
+// Sul telefono il sito si comporta come un'app: passa a schermo intero al
+// PRIMO tocco (di solito la scelta della lingua). I browser lo permettono
+// solo in risposta a un gesto dell'utente, non da soli. Si esce col bottone
+// nell'header (icona "riduci") o col gesto "indietro" del telefono; se
+// l'utente esce di sua scelta, il sito non ci rientra più da solo (resta il
+// bottone per tornarci). Ruotare il telefono non fa uscire.
 // Su iPhone Safari lo schermo intero non è disponibile per le pagine web:
 // lì il bottone non compare e non succede nulla.
 (function () {
@@ -4466,8 +4568,9 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(updateSide
         } catch (e) {}
     };
 
-    const landscapeQuery = window.matchMedia('(orientation: landscape) and (max-height: 500px) and (pointer: coarse)');
-    let autoArmed = landscapeQuery.matches;
+    // telefono: schermo touch stretto in verticale, o basso in orizzontale
+    const phoneQuery = window.matchMedia('(pointer: coarse) and (max-width: 768px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)');
+    let autoArmed = phoneQuery.matches;
 
     const btn = document.getElementById('fullscreenToggle');
     if (btn) {
@@ -4482,9 +4585,9 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(updateSide
         });
     }
 
-    // primo tocco in orizzontale -> schermo intero
+    // primo tocco sul telefono -> schermo intero
     window.addEventListener('pointerup', (e) => {
-        if (!autoArmed || !landscapeQuery.matches || isFs()) return;
+        if (!autoArmed || !phoneQuery.matches || isFs()) return;
         if (e.target && e.target.closest && e.target.closest('#fullscreenToggle')) return;
         autoArmed = false;
         enter();
@@ -4494,16 +4597,6 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(updateSide
     document.addEventListener('fullscreenchange', sync);
     document.addEventListener('webkitfullscreenchange', sync);
 
-    const onOrientation = () => {
-        if (landscapeQuery.matches) {
-            autoArmed = !isFs();
-        } else {
-            autoArmed = false;
-            exit();
-        }
-    };
-    if (landscapeQuery.addEventListener) landscapeQuery.addEventListener('change', onOrientation);
-    else if (landscapeQuery.addListener) landscapeQuery.addListener(onOrientation);
 })();
 
 // ---- Altezza reale del footer (serve al pannello filtri su mobile, che
@@ -4645,11 +4738,13 @@ window.addEventListener('resize', fixLabels);
 window.addEventListener('resize', function () {
     // "auto" a volte non si accorge subito che serve lo scroll dopo un
     // ridimensionamento: forziamo un ricalcolo immediato del pannello.
+    // (ora a scorrere è il contenuto della scheda, non la scheda intera)
     const panel = document.getElementById('detailPanel');
-    if (panel && panel.classList.contains('active')) {
-        panel.style.overflowY = 'hidden';
-        void panel.offsetHeight;
-        panel.style.overflowY = 'auto';
+    const panelBody = document.getElementById('detailPanelBody');
+    if (panel && panelBody && panel.classList.contains('active')) {
+        panelBody.style.overflowY = 'hidden';
+        void panelBody.offsetHeight;
+        panelBody.style.overflowY = '';
     }
 });
 
@@ -4940,7 +5035,7 @@ function highlightClusterTemporary(clickedEvent) {
             if (!document.body.classList.contains('filters-active')) {
                 document.querySelectorAll('.event').forEach(el => {
                     if (el !== clickedEl && !related.includes(el)) {
-                        setDotStyle(el.querySelector('.event-dot'), { opacity: '0.25' }, 150);
+                        setDotStyle(el.querySelector('.event-dot'), { opacity: 'var(--dim-opacity)', boxShadow: 'none' }, 150);
                     }
                 });
             }
@@ -4994,7 +5089,7 @@ function openEventDetail(event, color) {
         body.innerHTML = html + buildRelatedHtml(event);
         panel.style.borderColor = color;
         panel.classList.add('active');
-        panel.scrollTop = 0;
+        body.scrollTop = 0;
         setDetailReserve(true, event);
     }
 }
@@ -5020,56 +5115,69 @@ function escapeHtml(text) {
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-function getRelatedEvents(event) {
-    if (!event.clusters || event.clusters.length === 0) return [];
-    const related = [];
+// Eventi che appartengono a un cluster (escluso quello aperto), in ordine
+// cronologico, ciascuno col colore della propria categoria
+function getClusterMembers(cluster, event) {
+    const members = [];
     Object.keys(timelineData).forEach((category, index) => {
         const wrapper = document.getElementById(`timeline-${index + 1}-wrapper`);
         const color = wrapper ? getComputedStyle(wrapper).getPropertyValue('--timeline-color').trim() : '#BF953F';
         (timelineData[category] || []).forEach(ev => {
             if (ev.fullKey === event.fullKey) return;
-            if ((ev.clusters || []).some(c => event.clusters.includes(c))) {
-                related.push({ ev, color });
-            }
+            if ((ev.clusters || []).includes(cluster)) members.push({ ev, color });
         });
     });
-    related.sort((a, b) => a.ev.year - b.ev.year);
-    return related;
+    members.sort((a, b) => a.ev.year - b.ev.year);
+    return members;
 }
 
+// Un elenco per ogni cluster dell'evento: se ne ha due (es. "Dust Bowl"),
+// compaiono due riquadri, ognuno col nome del proprio cluster.
 function buildRelatedHtml(event) {
-    currentRelatedList = getRelatedEvents(event);
-    if (currentRelatedList.length === 0) return '';
+    currentRelatedList = [];
+    if (!event.clusters || event.clusters.length === 0) return '';
 
     const it = langMode === 'it';
-    const items = currentRelatedList.map((r, i) => {
-        const title = it ? r.ev.title : (r.ev.titleEN || r.ev.title);
-        return `<li><button type="button" class="related-item" data-related-index="${i}">
-                <span class="related-dot" style="background:${r.color}"></span>
-                <span class="related-year">${Math.floor(r.ev.year)}</span>
-                <span class="related-name">${escapeHtml(title)}</span>
-                <span class="related-arrow" aria-hidden="true">↗</span>
-            </button></li>`;
-    }).join('');
+    const groups = event.clusters
+        .map(cluster => ({ cluster, members: getClusterMembers(cluster, event) }))
+        .filter(g => g.members.length > 0);
+    if (groups.length === 0) return '';
 
-    const clusterNames = event.clusters.map(c => `<em>${escapeHtml(c)}</em>`).join(' · ');
+    const groupsHtml = groups.map(group => {
+        const items = group.members.map(r => {
+            const i = currentRelatedList.push(r) - 1;
+            const title = it ? r.ev.title : (r.ev.titleEN || r.ev.title);
+            return `<li><button type="button" class="related-item" data-related-index="${i}">
+                    <span class="related-dot" style="background:${r.color}"></span>
+                    <span class="related-year">${Math.floor(r.ev.year)}</span>
+                    <span class="related-name">${escapeHtml(title)}</span>
+                    <span class="related-arrow" aria-hidden="true">↗</span>
+                </button></li>`;
+        }).join('');
+        const endClass = group.members.length <= 3 ? ' at-end' : '';
+        return `
+            <div class="related-group">
+                <div class="related-group-head">
+                    <span class="related-cluster">${escapeHtml(group.cluster)}</span>
+                    <span class="related-count">${group.members.length}</span>
+                </div>
+                <div class="related-box${endClass}">
+                    <ul class="related-list">${items}</ul>
+                </div>
+            </div>`;
+    }).join('');
 
     const hint = isMobileViewport()
         ? (it ? 'Tocca per vederlo sulla timeline' : 'Tap to see it on the timeline')
         : (it ? 'Clicca per vederlo sulla timeline' : 'Click to see it on the timeline');
-    const endClass = currentRelatedList.length <= 3 ? ' at-end' : '';
 
     return `
         <div class="related-section">
             <div class="related-head">
                 <span class="related-title">${it ? 'Collegati' : 'Connected'}</span>
-                <span class="related-count">${currentRelatedList.length}</span>
                 <span class="related-hint">${hint}</span>
             </div>
-            <p class="related-via">Cluster: ${clusterNames}</p>
-            <div class="related-box${endClass}">
-                <ul class="related-list">${items}</ul>
-            </div>
+            ${groupsHtml}
         </div>`;
 }
 

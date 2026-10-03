@@ -1682,6 +1682,7 @@ body.detail-open {
             flex: 1 1 auto;
             margin: 0;
             font-size: 0.78rem;
+            font-style: italic;
             line-height: 1.45;
             color: var(--text-85);
         }
@@ -1707,6 +1708,21 @@ body.detail-open {
 
         .cookie-btn:hover {
             background: rgba(191, 149, 63, 0.2);
+        }
+
+        /* "Accetta" è il bottone primario (pieno, oro); "Rifiuta" resta ben
+           visibile e della stessa dimensione, solo con il contorno */
+        #cookieReject {
+            background: transparent;
+        }
+
+        #cookieAccept {
+            background: #BF953F;
+            color: #1A1A1A;
+        }
+
+        #cookieAccept:hover {
+            background: #D4A75E;
         }
 
         @media (max-width: 520px) {
@@ -4976,8 +4992,8 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(updateSide
     function show() {
         const it = (typeof langMode === 'undefined') || langMode === 'it';
         text.textContent = it
-            ? 'Usiamo cookie di analisi (Google Analytics e Microsoft Clarity) solo se accetti, per capire in forma aggregata come viene esplorata la timeline.'
-            : 'We use analytics cookies (Google Analytics and Microsoft Clarity) only if you accept, to understand in aggregate how the timeline is explored.';
+            ? 'Aiutaci a migliorare SyChro! Ci piacerebbe capire come viene esplorata la timeline con Google Analytics e Microsoft Clarity (cookie di analisi). Sei d’accordo? Puoi navigare liberamente qualunque sia la tua scelta.'
+            : 'Help us improve SyChro! We’d love to learn how the timeline is explored, using Google Analytics and Microsoft Clarity (analytics cookies). Do you agree? You’re free to browse whatever you choose.';
         accept.textContent = it ? 'Accetta' : 'Accept';
         reject.textContent = it ? 'Rifiuta' : 'Decline';
         banner.hidden = false;

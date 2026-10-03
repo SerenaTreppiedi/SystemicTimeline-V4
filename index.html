@@ -1796,6 +1796,65 @@ body.detail-open {
             cursor: pointer;
         }
 
+        /* ---- Filtro "Periodo" ---- */
+        .period-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .period-input {
+            width: 4.6rem;
+            padding: 0.28rem 0.5rem;
+            border-radius: 14px;
+            border: 1px solid var(--tint-border);
+            background: var(--tint);
+            color: var(--text);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.8rem;
+            font-variant-numeric: tabular-nums;
+            text-align: center;
+            outline: none;
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        .period-input::-webkit-outer-spin-button,
+        .period-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .period-input:focus {
+            border-color: #BF953F;
+        }
+
+        /* periodo attivo: i campi si accendono come un chip selezionato */
+        .period-active .period-input {
+            border-color: #BF953F;
+            background: rgba(191, 149, 63, 0.25);
+        }
+
+        .period-dash {
+            color: var(--text-60);
+        }
+
+        /* × per tornare a tutto il periodo: compare solo se è ristretto */
+        .period-reset {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-60);
+            font-size: 1rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .period-active .period-reset {
+            display: inline-block;
+        }
+
         /* il numero degli eventi visibili: oro, ma non in grassetto */
         .filter-result-count .count-num {
             color: var(--gold-text);
@@ -1949,6 +2008,11 @@ body.detail-open {
         .related-item:active,
         .related-item:hover {
             background: var(--tint-strong);
+        }
+
+        /* collegato che cade fuori dal periodo scelto nei filtri */
+        .related-item.is-outside {
+            opacity: 0.5;
         }
 
         .related-dot {
@@ -2494,6 +2558,12 @@ body.detail-open {
                 font-size: 1rem;
             }
 
+            .period-input {
+                font-size: 16px;
+                width: 4.8rem;
+                padding: 0.2rem 0.4rem;
+            }
+
             .filter-icon-btn {
                 width: 27px;   /* +5% */
                 height: 27px;
@@ -3012,8 +3082,16 @@ body.detail-open {
         }
         let timelineContainer;
         let timelineData = {};
-        let minYear = 1850;
-        let maxYear = 2030;
+        // Estremi COMPLETI della timeline. minYear/maxYear sono quelli
+        // visualizzati in questo momento: coincidono con questi, oppure con il
+        // periodo scelto nel filtro "Periodo" (vedi setPeriod).
+        const FULL_MIN_YEAR = 1850;
+        const FULL_MAX_YEAR = 2030;
+        const MIN_PERIOD_YEARS = 5;   // periodo più corto consentito
+        let minYear = FULL_MIN_YEAR;
+        let maxYear = FULL_MAX_YEAR;
+        const isPeriodActive = () => minYear !== FULL_MIN_YEAR || maxYear !== FULL_MAX_YEAR;
+        const inPeriod = (ev) => ev.year >= minYear && ev.year < maxYear + 1;
         let baseWidthPx;
 
 
@@ -3159,6 +3237,30 @@ if (pulsanteReset) {
                         if (typeof fixLabels === 'function') fixLabels();
                     }).observe(filterPanel, { attributes: true, attributeFilter: ['class'] });
                 }
+
+                // Campi del filtro "Periodo": si applica quando si conferma
+                // (Invio, uscita dal campo, frecce del campo numerico)
+                ['periodFrom', 'periodTo'].forEach(id => {
+                    const input = document.getElementById(id);
+                    if (!input) return;
+                    input.addEventListener('change', () => {
+                        let from = Number(document.getElementById('periodFrom').value);
+                        let to = Number(document.getElementById('periodTo').value);
+                        // se un estremo "scavalca" l'altro, si allarga l'altro
+                        // (invece di scambiarli: si perderebbe l'anno appena scritto)
+                        if (from > to) {
+                            if (id === 'periodFrom') to = FULL_MAX_YEAR;
+                            else from = FULL_MIN_YEAR;
+                        }
+                        setPeriod(from, to);
+                    });
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                    });
+                });
+                const periodResetBtn = document.getElementById('periodReset');
+                if (periodResetBtn) periodResetBtn.addEventListener('click', () => setPeriod(FULL_MIN_YEAR, FULL_MAX_YEAR));
+                syncPeriodInputs();
 
                 // "Fatto" in fondo al pannello filtri (solo mobile): lo chiude
                 const filterDoneBtn = document.getElementById('filterDoneBtn');
@@ -3494,7 +3596,7 @@ function showDataLoadingError() {
             document.body.classList.toggle('filters-active', anyFilter);
 
             const btn = document.getElementById('filterIconBtn');
-            if (btn) btn.classList.toggle('active', activeFilterSet.size > 0 || activeKeywords.length > 0);
+            if (btn) btn.classList.toggle('active', activeFilterSet.size > 0 || activeKeywords.length > 0 || isPeriodActive());
 
             updateFilterResultCount(terms, anyFilter);
         }
@@ -3510,12 +3612,16 @@ function showDataLoadingError() {
 
             let total = 0;
             let matching = 0;
+            const period = isPeriodActive();
             Object.keys(timelineData).forEach(category => {
                 (timelineData[category] || []).forEach(ev => {
                     total++;
+                    if (period && !inPeriod(ev)) return;
                     if (!anyFilter || eventPassesFilters(getEventFilterData(ev, category), terms)) matching++;
                 });
             });
+            // con il solo periodo attivo, il conteggio mostra "N su totale"
+            anyFilter = anyFilter || period;
 
             const it = langMode === 'it';
             if (total === 0) {
@@ -3616,6 +3722,50 @@ function showDataLoadingError() {
         }
 
 
+        // ---------------------------------------------------------------
+        // FILTRO "PERIODO": la timeline mostra solo gli anni scelti, su tutta
+        // la larghezza dello schermo (come una vista già ingrandita). Lo zoom
+        // riparte dal 100% del periodo scelto.
+        // ---------------------------------------------------------------
+        function syncPeriodInputs() {
+            const from = document.getElementById('periodFrom');
+            const to = document.getElementById('periodTo');
+            if (from) from.value = minYear;
+            if (to) to.value = maxYear;
+            const section = document.getElementById('filterPeriodSection');
+            if (section) section.classList.toggle('period-active', isPeriodActive());
+        }
+
+        function setPeriod(from, to) {
+            from = Math.round(Number(from));
+            to = Math.round(Number(to));
+            if (!isFinite(from)) from = FULL_MIN_YEAR;
+            if (!isFinite(to)) to = FULL_MAX_YEAR;
+            if (from > to) { const t = from; from = to; to = t; }
+            from = Math.max(FULL_MIN_YEAR, Math.min(from, FULL_MAX_YEAR));
+            to = Math.max(FULL_MIN_YEAR, Math.min(to, FULL_MAX_YEAR));
+            // periodo minimo: allarga verso il futuro o, se non si può, verso il passato
+            if (to - from < MIN_PERIOD_YEARS) {
+                to = Math.min(FULL_MAX_YEAR, from + MIN_PERIOD_YEARS);
+                from = Math.max(FULL_MIN_YEAR, to - MIN_PERIOD_YEARS);
+            }
+            const changed = from !== minYear || to !== maxYear;
+            minYear = from;
+            maxYear = to;
+            syncPeriodInputs();
+            if (!changed) return;
+
+            currentZoom = 1.0;
+            applyZoom();
+            renderTimelines();
+            reapplyStateAfterRerender();
+            document.body.scrollLeft = 0;
+            if (typeof fixLabels === 'function') fixLabels();
+            if (window.sychroTrack && isPeriodActive()) {
+                window.sychroTrack('period_set', { from: minYear, to: maxYear }, minYear + '-' + maxYear);
+            }
+        }
+
         function toggleFilterChip(chip) {
             const key = chip.dataset.filterKey;
             if (activeFilterSet.has(key)) {
@@ -3639,6 +3789,7 @@ function showDataLoadingError() {
         }
 
         function resetFilters() {
+            if (isPeriodActive()) setPeriod(FULL_MIN_YEAR, FULL_MAX_YEAR);
             activeFilterSet.clear();
             activeKeywords = [];
             document.querySelectorAll('#filterTagChips .filter-chip, #filterClusterChips .filter-chip').forEach(c => c.classList.remove('active'));
@@ -3842,7 +3993,9 @@ function showDataLoadingError() {
                 yearMarkersContainer.appendChild(tick);
             }
 
-            for (let year = minYear; year <= maxYear; year += step) {
+            // la prima etichetta cade su un anno "tondo" del passo scelto
+            // (con un periodo che inizia nel 1963 e passo 5: 1965, 1970...)
+            for (let year = Math.ceil(minYear / step) * step; year <= maxYear; year += step) {
                 const marker = document.createElement('div');
                 marker.className = 'year-marker';
                 marker.textContent = year;
@@ -3932,8 +4085,24 @@ function showDataLoadingError() {
         // unit: ampiezza in anni dell'unità di raggruppamento
         // minEvents: da quanti eventi nell'unità compare la barretta
         //            (Infinity = mai, tutti pallini singoli)
+        // Livello di zoom "equivalente": con un periodo ristretto ogni anno ha
+        // più spazio anche al 100%, e il raggruppamento deve comportarsi come
+        // se si fosse ingrandito l'intera timeline di altrettanto.
+        function getGroupingLevel() {
+            const fullRange = FULL_MAX_YEAR - FULL_MIN_YEAR;
+            const eff = getEffectiveZoom() * fullRange / (maxYear - minYear);
+            const saved = currentZoom;
+            let level = 1;
+            for (let L = 1; L <= 10; L++) {
+                currentZoom = L;
+                if (getEffectiveZoom() <= eff * 1.0001) level = L;
+            }
+            currentZoom = saved;
+            return level;
+        }
+
         function getGroupingMode() {
-            const level = Math.round(currentZoom);
+            const level = getGroupingLevel();
             if (level <= 3) return { unit: 10, minEvents: 16 };  // più di 15 nel decennio
             if (level <= 6) return { unit: 5, minEvents: 11 };   // più di 10 nel quinquennio
             if (level <= 9) return { unit: 1, minEvents: 6 };    // più di 5 nell'anno
@@ -4037,7 +4206,8 @@ function showDataLoadingError() {
             if (!container) return;
 
             container.innerHTML = '';
-            const events = timelineData[category] || [];
+            // solo gli eventi del periodo visualizzato (filtro "Periodo")
+            const events = (timelineData[category] || []).filter(inPeriod);
             // Larghezza REALE e attuale del contenitore in cui i pallini
             // vengono disegnati (non ricalcolata a mano): così coincide
             // sempre esattamente col "binario" visibile, padding compreso,
@@ -4586,6 +4756,16 @@ window.addEventListener('wheel', function(e) {
             <p class="filter-panel-label it-lang">Cluster</p>
             <p class="filter-panel-label en-lang" style="display:none">Clusters</p>
             <div class="filter-chip-row" id="filterClusterChips"></div>
+        </div>
+        <div class="filter-panel-section" id="filterPeriodSection">
+            <p class="filter-panel-label it-lang">Periodo</p>
+            <p class="filter-panel-label en-lang" style="display:none">Period</p>
+            <div class="period-row">
+                <input type="number" id="periodFrom" class="period-input" inputmode="numeric" min="1850" max="2030" step="1" value="1850" aria-label="Dal / From">
+                <span class="period-dash" aria-hidden="true">–</span>
+                <input type="number" id="periodTo" class="period-input" inputmode="numeric" min="1850" max="2030" step="1" value="2030" aria-label="Al / To">
+                <button type="button" class="period-reset" id="periodReset" title="Tutto il periodo / Full period" aria-label="Tutto il periodo / Full period">×</button>
+            </div>
         </div>
         <!-- Riga finale: "Azzera filtri" a sinistra, quanti eventi
              corrispondono a destra (discreto) e, solo su mobile, "Fatto".
@@ -5817,7 +5997,8 @@ function buildRelatedHtml(event) {
         const items = group.members.map(r => {
             const i = currentRelatedList.push(r) - 1;
             const title = it ? r.ev.title : (r.ev.titleEN || r.ev.title);
-            return `<li><button type="button" class="related-item" data-related-index="${i}">
+            const outside = inPeriod(r.ev) ? '' : ' is-outside';
+            return `<li><button type="button" class="related-item${outside}" data-related-index="${i}">
                     <span class="related-dot" style="background:${r.color}"></span>
                     <span class="related-year">${Math.floor(r.ev.year)}</span>
                     <span class="related-name">${escapeHtml(title)}</span>
@@ -5853,6 +6034,8 @@ function buildRelatedHtml(event) {
 
 // Porta in vista un evento sulla timeline e lo fa pulsare
 function focusEventOnTimeline(ev) {
+    // fuori dal periodo scelto: si torna a tutto il periodo per mostrarlo
+    if (!inPeriod(ev)) setPeriod(FULL_MIN_YEAR, FULL_MAX_YEAR);
     const el = findElementForEvent(ev);
     if (!el) return;
     const rect = el.getBoundingClientRect();

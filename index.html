@@ -1751,12 +1751,32 @@ body.detail-open {
             scrollbar-color: rgba(191, 149, 63, 0.5) transparent;
         }
 
+        /* ogni schermata: titolo in alto (sempre nella stessa posizione),
+           sotto figura a sinistra e testo a destra */
         .tut .tutorial-step.tut-split.active {
             display: grid;
             grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-            gap: 3rem;
+            grid-template-rows: auto 1fr;
+            grid-template-areas: "title title" "fig text";
+            column-gap: 3rem;
             align-items: center;
             min-height: 100%;
+        }
+
+        .tut-split > .tut-title { grid-area: title; align-self: start; }
+        .tut-split > .tut-figure { grid-area: fig; }
+        .tut-split > .tut-text { grid-area: text; }
+
+        .tut-title {
+            margin-bottom: 0.4rem;
+        }
+
+        .info-popup.tut .tut-title h3 {
+            margin-bottom: 0 !important;
+        }
+
+        .tut-fig-slot:empty {
+            display: none;
         }
 
         .tut-figure {
@@ -1978,15 +1998,15 @@ body.detail-open {
         .tut .tutorial-step.tut-rows-step.active {
             display: flex;
             flex-direction: column;
-            justify-content: center;
             min-height: 100%;
         }
 
         .tut-rows {
             display: grid;
-            gap: 1.8rem;
-            max-width: 760px;
-            margin: 0 auto;
+            gap: 2.8rem;
+            max-width: 780px;
+            margin: auto;
+            width: 100%;
         }
 
         .tut-row {
@@ -2745,6 +2765,14 @@ body.detail-open {
             to { opacity: 1; }
         }
 
+        .fg-arrow {
+            fill: none;
+            stroke: var(--gold-text);
+            stroke-width: 1.6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0.6;
+        }
         .fg-axis-neutral {
             stroke: var(--gold-text);
             stroke-width: 1.6;
@@ -2880,6 +2908,26 @@ body.detail-open {
                 flex-direction: column;
                 gap: 0.6rem;
                 min-height: 0;
+            }
+
+            .tut-title {
+                margin-bottom: 0.2rem;
+            }
+
+            .tut-rows {
+                margin: 0.6rem 0 0;
+            }
+
+            .tut-fig-slot {
+                display: flex;
+                justify-content: center;
+                margin: 0.2rem 0 0.9rem;
+            }
+
+            .tut-fig-slot svg {
+                width: 100%;
+                max-width: 300px;
+                max-height: 170px;
             }
 
             .tut-figure svg {
@@ -4645,33 +4693,45 @@ body.detail-open {
             if (!svg) return;
             svg.innerHTML = '';
             cancelAnimationFrame(timeRaf);
-            const Y0 = 1850, Y1 = 2026, X0 = 16, X1 = 304, LINE = 104;
+            const Y0 = 1850, Y1 = 2026, X0 = 16, X1 = 292, LINE = 100;
             const FIB = [1, 1, 2, 3, 5, 8, 13, 21, 34];
             const SEG = (X1 - X0) / FIB.length;
-            const GAP = 6.4;                       // distanza tra i nodi
-            const ORDER = [0, -1, 1, -2, 2, -3, 3]; // riempimento verticale simmetrico
-            svgEl('line', { class: 'fg-axis-neutral', x1: X0, y1: LINE, x2: X1, y2: LINE }, svg);
+            const SPREAD = 62;                     // apertura verticale massima a destra
+            const MIN_D = 6.2;                     // distanza minima tra i nodi
+            // linea del tempo con freccia
+            svgEl('line', { class: 'fg-axis-neutral', x1: X0, y1: LINE, x2: 306, y2: LINE }, svg);
+            svgEl('path', { class: 'fg-arrow', d: `M300,${LINE - 4.5} L308,${LINE} L300,${LINE + 4.5}` }, svg);
 
+            // a sinistra pochi nodi sulla linea; verso destra si infittiscono
+            // e si aprono a ventaglio sopra e sotto la linea
+            const rnd = seeded(1850);
+            const placed = [];
             const items = [];
             FIB.forEach((count, s) => {
-                const cols = Math.ceil(count / ORDER.length);
-                const width = (cols - 1) * GAP;
-                const cx0 = X0 + SEG * s + SEG / 2 - width / 2;
                 for (let k = 0; k < count; k++) {
-                    const col = Math.floor(k / ORDER.length);
-                    const row = ORDER[k % ORDER.length];
-                    // anno "di nascita": distribuito dentro l'intervallo
-                    const yr = Y0 + (Y1 - Y0) * (s + (k + 0.5) / count) / FIB.length;
-                    items.push({ yr, x: cx0 + col * GAP, y: LINE + row * GAP });
+                    let best = null;
+                    for (let tries = 0; tries < 60; tries++) {
+                        const x = X0 + SEG * s + SEG * (0.12 + 0.76 * rnd());
+                        const u = (x - X0) / (X1 - X0);
+                        const amp = 2 + SPREAD * Math.pow(u, 2.6);
+                        const r = (rnd() + rnd() + rnd()) / 1.5 - 1;   // più denso vicino alla linea
+                        const y = LINE + amp * r;
+                        const ok = placed.every(p => Math.hypot(p.x - x, p.y - y) >= MIN_D);
+                        if (ok) { best = { x, y }; break; }
+                    }
+                    if (!best) continue;
+                    placed.push(best);
+                    const yr = Y0 + (Y1 - Y0) * (best.x - X0) / (X1 - X0);
+                    items.push({ yr, x: best.x, y: best.y });
                 }
             });
             items.sort((p, q) => p.yr - q.yr);
 
             const dotsLayer = svgEl('g', {}, svg);
-            const cursor = svgEl('line', { class: 'fg-vline', x1: X0, y1: 52, x2: X0, y2: 156 }, svg);
-            const yearLabel = svgEl('text', { class: 'fg-year', x: X0, y: 44, 'text-anchor': 'middle' }, svg);
-            timeCountLabel = svgEl('text', { class: 'fg-label', x: X1, y: 180, 'text-anchor': 'end' }, svg);
-            const l1 = svgEl('text', { class: 'fg-label', x: X0, y: 180 }, svg); l1.textContent = '1850';
+            const cursor = svgEl('line', { class: 'fg-vline', x1: X0, y1: 30, x2: X0, y2: 170 }, svg);
+            const yearLabel = svgEl('text', { class: 'fg-year', x: X0, y: 22, 'text-anchor': 'middle' }, svg);
+            timeCountLabel = svgEl('text', { class: 'fg-label', x: 308, y: 190, 'text-anchor': 'end' }, svg);
+            const l1 = svgEl('text', { class: 'fg-label', x: X0, y: 190 }, svg); l1.textContent = '1850';
 
             const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const DURATION = 5200;
@@ -4690,7 +4750,7 @@ body.detail-open {
                 const x = X0 + (X1 - X0) * t;
                 cursor.setAttribute('x1', x.toFixed(1));
                 cursor.setAttribute('x2', x.toFixed(1));
-                yearLabel.setAttribute('x', Math.min(Math.max(x, 20), 300).toFixed(1));
+                yearLabel.setAttribute('x', Math.min(Math.max(x, 20), 292).toFixed(1));
                 yearLabel.textContent = Math.floor(year);
                 timeProgress = items.length ? shown / items.length : 1;
                 updateTimeCount();
@@ -4916,13 +4976,25 @@ body.detail-open {
             const body = popup ? popup.querySelector('.tutorial-body') : null;
             if (body) body.scrollTop = 0;
             // le figure si ridisegnano a ogni ingresso: così l'animazione riparte
-            if (n === 1) drawTimeFigure();
+            if (n === 1) { placeTimeFigure(); drawTimeFigure(); }
             if (n === 2) drawLayersFigure();
             if (n === 4) drawFilterFigure();
             if (n === 5) { drawGrowFigure(); updateTutorialCount(); }
             const hide = document.getElementById('tutHide');
             if (hide) hide.checked = tutorialHidden();
         }
+
+        // slide 1: su mobile verticale l'animazione sta tra i due paragrafi,
+        // su desktop resta nella colonna di sinistra
+        function placeTimeFigure() {
+            const svg = document.getElementById('figTime');
+            const home = document.getElementById('figTimeHome');
+            const slot = document.getElementById('figTimeSlot');
+            if (!svg || !home || !slot) return;
+            const target = window.matchMedia('(max-width: 768px)').matches ? slot : home;
+            if (svg.parentNode !== target) target.appendChild(svg);
+        }
+        window.matchMedia('(max-width: 768px)').addEventListener('change', placeTimeFigure);
 
         function openTutorial(step) {
             document.getElementById('infoPopupOverlay').classList.add('active');
@@ -5132,6 +5204,8 @@ document.getElementById('menuIcon').addEventListener('click', () => {
         langMode = langMode == 'it' ? 'en' : 'it';
         document.documentElement.lang = langMode;
         document.getElementById('menuIcon').innerHTML = langMode == 'it' ? 'EN' : 'IT';
+        // se la lingua è ricordata, il cambio dall'header aggiorna la scelta
+        try { if (localStorage.getItem('sychro-lang')) localStorage.setItem('sychro-lang', langMode); } catch (e) {}
 
         const updateModal = (infos, mode) => {
             infos.forEach(infoData => { infoData.style.display = mode; });
@@ -6444,6 +6518,27 @@ window.addEventListener('wheel', function(e) {
     letter-spacing: 0.02em;
     margin-bottom: 1.1rem;
   }
+  #intro-remember {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1.3rem;
+    color: rgba(255, 255, 255, 0.42);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    user-select: none;
+  }
+  #intro-remember:hover { color: rgba(255, 255, 255, 0.7); }
+  #intro-remember input {
+    width: 11px;
+    height: 11px;
+    margin: 0;
+    accent-color: #BF953F;
+    cursor: pointer;
+    opacity: 0.8;
+  }
   #intro-lang-buttons {
     display: flex;
     gap: 1rem;
@@ -6502,6 +6597,7 @@ window.addEventListener('wheel', function(e) {
             <button class="intro-lang-btn intro-lang-primary" id="introLangEn">English</button>
             <button class="intro-lang-btn intro-lang-secondary" id="introLangIt">Italiano</button>
         </div>
+        <label id="intro-remember"><input type="checkbox" id="introRemember"> Remember my choice · Ricorda la scelta</label>
     </div>
 </div>
 </div>
@@ -6518,12 +6614,9 @@ window.addEventListener('wheel', function(e) {
       content.style.opacity = '1';
     });
 
-    // Dopo qualche secondo (tempo per il logo di comparire) compare la
-    // scelta della lingua. Nessun fade-out automatico: si chiude solo
-    // quando l'utente sceglie.
-    setTimeout(() => {
-      langSelect.classList.add('visible');
-    }, 2500);
+    const remember = document.getElementById('introRemember');
+    let saved = null;
+    try { saved = localStorage.getItem('sychro-lang'); } catch (e) {}
 
     function closeIntro() {
       // Il tema del dispositivo si applica ORA, mentre la schermata iniziale
@@ -6534,19 +6627,37 @@ window.addEventListener('wheel', function(e) {
       setTimeout(() => overlay.remove(), 800);
     }
 
-    btnIt.addEventListener('click', () => {
-      closeIntro();
-    });
-
-    btnEn.addEventListener('click', () => {
+    function useLang(lang) {
       // Riusa il toggle di lingua già esistente (bottone "EN/IT" in header),
       // così tutto il resto della logica di traduzione resta invariato.
       const menuIcon = document.getElementById('menuIcon');
-      if (menuIcon && typeof langMode !== 'undefined' && langMode === 'it') {
+      if (lang === 'en' && menuIcon && typeof langMode !== 'undefined' && langMode === 'it') {
         menuIcon.click();
       }
+    }
+
+    function choose(lang) {
+      try {
+        if (remember && remember.checked) localStorage.setItem('sychro-lang', lang);
+        else localStorage.removeItem('sychro-lang');
+      } catch (e) {}
+      useLang(lang);
       closeIntro();
-    });
+    }
+
+    if (saved === 'it' || saved === 'en') {
+      // Lingua ricordata: solo il logo, poi si entra direttamente nel sito
+      setTimeout(() => { useLang(saved); closeIntro(); }, 2300);
+    } else {
+      // Dopo qualche secondo (tempo per il logo di comparire) compare la
+      // scelta della lingua. Si chiude solo quando l'utente sceglie.
+      setTimeout(() => {
+        langSelect.classList.add('visible');
+      }, 2500);
+    }
+
+    btnIt.addEventListener('click', () => choose('it'));
+    btnEn.addEventListener('click', () => choose('en'));
   })();
 </script>
   
@@ -6645,19 +6756,27 @@ window.addEventListener('wheel', function(e) {
 
             <!-- 1 · COS'È SYCHRO E PERCHÉ -->
             <section class="tutorial-step tut-split active" data-step="1">
-                <div class="tut-figure" aria-hidden="true">
+                <div class="tut-title">
+                    <h3 class="it-lang" id="tutTitle1">Un hub per le discipline sistemiche</h3>
+                    <h3 class="en-lang" style="display:none">A hub for the systemic disciplines</h3>
+                </div>
+                <div class="tut-figure" id="figTimeHome" aria-hidden="true">
                     <svg class="fig-time" viewBox="0 0 320 200" id="figTime"></svg>
                 </div>
                 <div class="tut-text">
                     <img class="tut-logo" src="LOGO SyChro 1.svg" alt="SyChro – Collective Systemic Chronography">
                     <div class="it-lang">
-                        <h3 id="tutTitle1">Un hub per le discipline sistemiche</h3>
                         <p>La conoscenza sistemica è vasta, frammentata e suddivisa tra discipline e istituzioni. Manca ancora un <strong>punto di riferimento centralizzato</strong>, essenziale per sintetizzare le informazioni e favorire lo scambio di conoscenza.</p>
+                    </div>
+                    <div class="en-lang" style="display:none">
+                        <p>Systemic knowledge is vast, fragmented and siloed across disciplines and institutions. A <strong>centralised reference point</strong>, essential to synthesise information and exchange knowledge, is still missing.</p>
+                    </div>
+                    <!-- su mobile l'animazione viene spostata qui, tra i due paragrafi -->
+                    <div class="tut-fig-slot" id="figTimeSlot" aria-hidden="true"></div>
+                    <div class="it-lang">
                         <p><strong>SyChro</strong> raccoglie i dati storici dispersi in un <strong>database strutturato</strong> e li traduce in una <strong>timeline interattiva multilivello</strong>: un'unica piattaforma per esplorare, collegare e mettere in relazione le nozioni e le figure rilevanti del campo sistemico, a partire da quattro discipline cardine: Systems Thinking, System Dynamics, Systemic Design e Sostenibilità.</p>
                     </div>
                     <div class="en-lang" style="display:none">
-                        <h3>A hub for the systemic disciplines</h3>
-                        <p>Systemic knowledge is vast, fragmented and siloed across disciplines and institutions. A <strong>centralised reference point</strong>, essential to synthesise information and exchange knowledge, is still missing.</p>
                         <p><strong>SyChro</strong> consolidates scattered historical data into a <strong>structured database</strong> and translates it into an <strong>interactive, multi-layered timeline</strong>: a single platform to explore, connect and correlate the notable notions and figures of the systemic field, starting from four pivotal disciplines: Systems Thinking, System Dynamics, Systemic Design and Sustainability.</p>
                     </div>
                 </div>
@@ -6665,12 +6784,15 @@ window.addEventListener('wheel', function(e) {
 
             <!-- 2 · LA TIMELINE MULTILIVELLO -->
             <section class="tutorial-step tut-split" data-step="2">
+                <div class="tut-title">
+                    <h3 class="it-lang">Una timeline multilivello</h3>
+                    <h3 class="en-lang" style="display:none">A multi-layered timeline</h3>
+                </div>
                 <div class="tut-figure" aria-hidden="true">
                     <svg class="fig-layers" viewBox="0 0 320 210" id="figLayers"></svg>
                 </div>
                 <div class="tut-text">
                     <div class="it-lang">
-                        <h3>Una timeline multilivello</h3>
                         <p>I contenuti sono stratificati su <strong>cinque timeline parallele</strong>: nodi interconnessi in un unico spazio temporale, per cogliere <strong>sviluppi paralleli</strong> e <strong>influenze reciproche</strong>.</p>
                         <div class="tut-cats">
                             <div style="--c:#ca6b58"><span class="tut-cat-label" style="--t:var(--cat-def-text)">Definizioni</span><span>termini, concetti e quadri teorici nuovi</span></div>
@@ -6681,7 +6803,6 @@ window.addEventListener('wheel', function(e) {
                         </div>
                     </div>
                     <div class="en-lang" style="display:none">
-                        <h3>A multi-layered timeline</h3>
                         <p>Contents are stratified across <strong>five parallel timelines</strong>: interconnected nodes in a unified temporal space, to perceive <strong>parallel developments</strong> and <strong>reciprocal influences</strong>.</p>
                         <div class="tut-cats">
                             <div style="--c:#ca6b58"><span class="tut-cat-label" style="--t:var(--cat-def-text)">Definitions</span><span>new terms, concepts and theoretical frameworks</span></div>
@@ -6696,8 +6817,10 @@ window.addEventListener('wheel', function(e) {
 
             <!-- 3 · ESPLORARE: due blocchi, ciascuno con una piccola animazione -->
             <section class="tutorial-step tut-rows-step" data-step="3">
-                <div class="it-lang"><h3 class="tut-center">Esplorare</h3></div>
-                <div class="en-lang" style="display:none"><h3 class="tut-center">Exploring</h3></div>
+                <div class="tut-title">
+                    <h3 class="it-lang">Esplorare</h3>
+                    <h3 class="en-lang" style="display:none">Exploring</h3>
+                </div>
                 <div class="tut-rows">
                     <div class="tut-row">
                         <svg class="tut-row-fig fig-ui fig-node" viewBox="0 0 220 150" aria-hidden="true">
@@ -6758,17 +6881,19 @@ window.addEventListener('wheel', function(e) {
 
             <!-- 4 · VISTE FILTRATE -->
             <section class="tutorial-step tut-split tut-map" data-step="4">
+                <div class="tut-title">
+                    <h3 class="it-lang">Filtrare e collegare</h3>
+                    <h3 class="en-lang" style="display:none">Filtering and connecting</h3>
+                </div>
                 <div class="tut-figure" aria-hidden="true">
                     <svg viewBox="0 0 340 220" class="fig-ui" id="figFilter"></svg>
                 </div>
                 <div class="tut-text tut-text-narrow">
                     <div class="it-lang">
-                        <h3>Filtrare e collegare</h3>
                         <p>Dall'icona dei filtri <span class="tut-inline-filter" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M8 12h8M11 18h2"/></svg></span> puoi restringere la timeline per <strong>parola chiave</strong>, <strong>tag</strong>, <strong>cluster</strong> o <strong>periodo</strong>, e combinarli tra loro: i contenuti corrispondenti restano in primo piano, gli altri sfumano sullo sfondo.</p>
                         <p>Quando apri una scheda, i contenuti dello stesso cluster si illuminano, rendendo visibili le <strong>interconnessioni strutturali</strong> tra eventi diversi: è ciò che restituisce la <strong>natura sistemica</strong> dei contenuti. Dall'elenco <strong>Collegati</strong>, un'<strong>onda</strong> indica dove si trova ciascuno sulla timeline.</p>
                     </div>
                     <div class="en-lang" style="display:none">
-                        <h3>Filtering and connecting</h3>
                         <p>From the filters icon <span class="tut-inline-filter" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M8 12h8M11 18h2"/></svg></span> you can narrow the timeline by <strong>keyword</strong>, <strong>tag</strong>, <strong>cluster</strong> or <strong>period</strong> and combine them: matching entries stay in the foreground, the others fade into the background.</p>
                         <p>When you open a card, entries of the same cluster light up, revealing the <strong>structural interconnections</strong> between different events: this is what conveys the <strong>systemic nature</strong> of the contents. From the <strong>Connected</strong> list, a <strong>wave</strong> shows where each one sits on the timeline.</p>
                     </div>
@@ -6777,26 +6902,28 @@ window.addEventListener('wheel', function(e) {
 
             <!-- 5 · IL DATABASE COLLETTIVO -->
             <section class="tutorial-step tut-split" data-step="5">
+                <div class="tut-title">
+                    <h3 class="it-lang">Un database collettivo</h3>
+                    <h3 class="en-lang" style="display:none">A collective database</h3>
+                </div>
                 <div class="tut-figure" aria-hidden="true">
                     <svg class="fig-grow" viewBox="0 0 320 210" id="figGrow"></svg>
                     <p class="tut-count" id="tutCount"></p>
                 </div>
                 <div class="tut-text tut-text-narrow">
                     <div class="it-lang">
-                        <h3>Un database collettivo</h3>
                         <p>Una visione <strong>aggiornata, esaustiva e globale</strong> del campo sistemico può essere efficace solo se è <strong>collettiva</strong> e inclusiva delle voci e dei contributi di chi opera nel settore.</p>
                         <p>Per questo il database di SyChro è <strong>aperto e crowdsourced</strong>: chiunque può proporre nuovi contenuti o correzioni, valutati secondo i criteri di selezione.</p>
                     </div>
                     <div class="en-lang" style="display:none">
-                        <h3>A collective database</h3>
                         <p>An <strong>updated, exhaustive and global</strong> overview of the systemic field can only be effective if it is <strong>collective</strong> and inclusive of the voices and contributions of those working in the field.</p>
                         <p>For this reason the SyChro database is <strong>open and crowdsourced</strong>: anyone can propose new contents or corrections, evaluated against the selection criteria.</p>
                     </div>
                     <div class="tut-cta">
                         <a class="tut-btn tut-btn-ghost" id="tutContribute" href="https://forms.gle/MdyjtAE9DozBvcBf6" target="_blank" rel="noopener"><span class="it-lang">Proponi un contenuto</span><span class="en-lang" style="display:none">Suggest an entry</span></a>
                     </div>
-                    <div class="tut-closing it-lang"><span class="tut-closing-mark" aria-hidden="true"></span><p>Inizia a esplorare<br>la storia dell'approccio sistemico</p></div>
-                    <div class="tut-closing en-lang" style="display:none"><span class="tut-closing-mark" aria-hidden="true"></span><p>Start exploring<br>the history of the systemic approach</p></div>
+                    <div class="tut-closing it-lang"><span class="tut-closing-mark" aria-hidden="true"></span><p>Inizia a esplorare<br>la storia dell'approccio sistemico!</p></div>
+                    <div class="tut-closing en-lang" style="display:none"><span class="tut-closing-mark" aria-hidden="true"></span><p>Start exploring<br>the history of the systemic approach!</p></div>
                 </div>
             </section>
 

@@ -1498,6 +1498,12 @@ body.detail-open {
 
         .info-popup-overlay.active {
             display: flex;
+            animation: tutFadeIn 0.5s ease both;
+        }
+
+        @keyframes tutFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
 .info-popup {
@@ -1777,6 +1783,7 @@ body.detail-open {
         .tut-split > .tut-text { grid-area: text; padding-top: 0.6rem; }
 
         .tut-title {
+            margin-top: 1.4rem;
             margin-bottom: 0.4rem;
         }
 
@@ -2904,10 +2911,16 @@ body.detail-open {
 
         /* --- telefono in verticale --- */
         @media (max-width: 768px) {
+            /* il popup lascia sempre un margine attorno e, dietro, la
+               timeline resta visibile sotto un velo grigio come su desktop */
+            :root[data-theme="dark"] .info-popup-overlay {
+                background: rgba(58, 58, 58, 0.72);
+            }
+
             .info-popup.tut {
-                width: calc(100% - 20px) !important;
-                height: calc(100vh - 24px) !important;
-                height: calc(100dvh - 24px) !important;
+                width: calc(100% - 32px) !important;
+                height: calc(100vh - 56px) !important;
+                height: calc(100dvh - 56px) !important;
                 padding: 0.9rem 1.05rem 0.75rem !important;
                 font-size: 1rem !important;
                 border-radius: 14px;
@@ -3079,10 +3092,14 @@ body.detail-open {
 
         /* --- telefono in orizzontale: figura e testo affiancati, compatti --- */
         @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+            :root[data-theme="dark"] .info-popup-overlay {
+                background: rgba(58, 58, 58, 0.72);
+            }
+
             .info-popup.tut {
-                width: calc(100% - 28px) !important;
-                height: calc(100vh - 20px) !important;
-                height: calc(100dvh - 20px) !important;
+                width: calc(100% - 48px) !important;
+                height: calc(100vh - 32px) !important;
+                height: calc(100dvh - 32px) !important;
                 padding: 0.7rem 1.4rem 0.6rem !important;
             }
 
@@ -4750,7 +4767,7 @@ body.detail-open {
             const dotsLayer = svgEl('g', {}, svg);
             const cursor = svgEl('line', { class: 'fg-vline', x1: X0, y1: 30, x2: X0, y2: 170 }, svg);
             const yearLabel = svgEl('text', { class: 'fg-year', x: X0, y: 22, 'text-anchor': 'middle' }, svg);
-            timeCountLabel = svgEl('text', { class: 'fg-label', x: 308, y: 190, 'text-anchor': 'end' }, svg);
+            timeCountLabel = null;   // niente conteggio: la crescita è solo illustrativa
             const l1 = svgEl('text', { class: 'fg-label', x: X0, y: 190 }, svg); l1.textContent = '1850';
 
             const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -4976,7 +4993,7 @@ body.detail-open {
             if (!el) return;
             let n = 0;
             Object.values(timelineData || {}).forEach(list => { n += (list || []).length; });
-            el.textContent = n ? (langMode === 'it' ? `${n} contenuti, finora.` : `${n} entries so far.`) : '';
+            el.textContent = n ? (langMode === 'it' ? `${n} contenuti raccolti fino alla versione attuale` : `${n} entries collected up to the current version`) : '';
         }
 
         function showTutorialStep(n) {
@@ -5030,7 +5047,15 @@ body.detail-open {
         document.addEventListener('DOMContentLoaded', function () {
 // Il tutorial si apre da solo all'avvio, a meno che il visitatore abbia
 // spuntato "Non mostrare all'avvio" (resta sempre disponibile dall'icona i)
-if (!tutorialHidden()) openTutorial(1);
+// Se la schermata iniziale è ancora aperta, il tutorial aspetta che abbia
+// finito la dissolvenza e poi compare a sua volta con un fade-in.
+if (!tutorialHidden()) {
+    if (document.getElementById('intro-overlay')) {
+        window.addEventListener('sychro-intro-closed', () => openTutorial(1), { once: true });
+    } else {
+        openTutorial(1);
+    }
+}
             
             const initDomLinks = () => {
 
@@ -6666,7 +6691,10 @@ window.addEventListener('wheel', function(e) {
       // nel tema giusto, senza scatti visibili.
       if (typeof window.applySystemTheme === 'function') window.applySystemTheme();
       overlay.style.opacity = '0';
-      setTimeout(() => overlay.remove(), 800);
+      setTimeout(() => {
+        overlay.remove();
+        window.dispatchEvent(new Event('sychro-intro-closed'));
+      }, 1000);
     }
 
     function useLang(lang) {

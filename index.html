@@ -1683,6 +1683,1381 @@ body.detail-open {
             line-height: 1.5;
         }
 
+        /* ============================================================
+           TUTORIAL INIZIALE (popup a 5 schermate)
+           1 il senso di SyChro · 2 la timeline multilivello ·
+           3 esplorare · 4 collegare e filtrare · 5 il database collettivo
+           Le figure animate sono disegnate con gli stessi elementi della
+           timeline (pallini, linee, barrette, asse verticale).
+           ============================================================ */
+        .info-popup.tut {
+            width: min(1080px, calc(100% - 4rem));
+            height: min(700px, calc(100vh - 150px));
+            height: min(700px, calc(100dvh - 150px));
+            padding: 1.6rem 2.6rem 1.3rem;
+            border-radius: 16px;
+            border: 1.5px solid #BF953F;
+            font-size: 1rem;
+        }
+
+        .tut .info-popup-close {
+            top: 0.8rem;
+            right: 0.9rem;
+            z-index: 2;
+        }
+
+        /* avanzamento: una piccola timeline, un pallino per schermata */
+        .tut-progress {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 190px;
+            margin: 0.2rem auto 0;
+            flex: 0 0 auto;
+        }
+
+        .tut-progress-line {
+            position: absolute;
+            left: 5px;
+            right: 5px;
+            top: 50%;
+            height: 1.5px;
+            background: rgba(191, 149, 63, 0.4);
+            transform: translateY(-50%);
+        }
+
+        .tut-progress .tutorial-dot {
+            position: relative;
+            width: 11px;
+            height: 11px;
+            border: 1.5px solid #BF953F;
+            background: var(--panel-bg);
+            transition: transform 0.25s ease, background 0.25s ease;
+        }
+
+        .tut-progress .tutorial-dot.done {
+            background: rgba(191, 149, 63, 0.55);
+        }
+
+        .tut-progress .tutorial-dot.active {
+            background: #BF953F;
+            transform: scale(1.35);
+        }
+
+        .tut .tutorial-body {
+            padding: 1.4rem 0.2rem 0.4rem;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(191, 149, 63, 0.5) transparent;
+        }
+
+        .tut .tutorial-step.tut-split.active {
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+            gap: 3rem;
+            align-items: center;
+            min-height: 100%;
+        }
+
+        .tut-figure {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tut-figure svg {
+            width: 100%;
+            max-width: 430px;
+            height: auto;
+            overflow: visible;
+        }
+
+        .tut-logo {
+            display: block;
+            height: 44px;
+            width: auto;
+            margin: 0 0 1.1rem;
+        }
+
+        .info-popup.tut h3 {
+            font-family: 'Darker Grotesque', sans-serif;
+            font-weight: 700;
+            font-size: 2.35rem !important;
+            line-height: 1.02;
+            letter-spacing: -0.005em;
+            color: var(--gold-title);
+            margin: 0 0 1rem !important;
+            text-wrap: balance;
+        }
+
+        .info-popup.tut h3.tut-center {
+            text-align: center;
+            margin-bottom: 1.6rem !important;
+        }
+
+        .tut p {
+            font-size: 0.98rem;
+            line-height: 1.65;
+            color: var(--text-85);
+            margin: 0 0 0.85rem;
+            max-width: 62ch;
+        }
+
+        .tut p strong,
+        .tut-cats b {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .tut p.tut-lead {
+            color: var(--text);
+            font-size: 1.04rem;
+        }
+
+        .tut-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem 1.1rem;
+            margin-top: 1.1rem;
+            font-size: 0.8rem;
+            color: var(--text-70);
+        }
+
+        .tut-tags span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .tut-tags i {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .tut-tags b {
+            font-weight: 400;
+        }
+
+        /* le cinque categorie: una fascia per categoria, come le righe della
+           timeline: bordo colorato, nome e descrizione nella stessa fascia */
+        .tut-cats {
+            display: grid;
+            gap: 0.45rem;
+            margin-top: 1.1rem;
+        }
+
+        .tut-cats > div {
+            display: grid;
+            grid-template-columns: 9.2rem minmax(0, 1fr);
+            gap: 0.6rem;
+            align-items: center;
+            background: var(--track-bg);
+            border-left: 5px solid var(--c);
+            border-radius: 6px;
+            box-shadow: 2px 2px 8px var(--shade-30);
+            padding: 0.32rem 0.75rem 0.32rem 0.55rem;
+            font-size: 0.84rem;
+            line-height: 1.35;
+            color: var(--text-80);
+        }
+
+        .tut-cat-label {
+            font-family: 'Darker Grotesque', sans-serif;
+            font-size: 1.15rem;
+            font-weight: var(--label-weight);
+            line-height: 1.2;
+            color: var(--t);
+            white-space: nowrap;
+        }
+
+        /* schermate 3 e 4: illustrazione dell'interfaccia con numeri e
+           testo in sequenza con gli stessi numeri */
+        .tut .tutorial-step.tut-map.active {
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        }
+
+        .tut p.tut-lead-plain {
+            color: var(--text);
+            margin-bottom: 0.9rem;
+        }
+
+        .tut-steps {
+            list-style: none;
+            counter-reset: tutstep;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 0.65rem;
+        }
+
+        .tut-steps li {
+            counter-increment: tutstep;
+            position: relative;
+            padding-left: 2rem;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            color: var(--text-85);
+            max-width: 60ch;
+        }
+
+        .tut-steps li::before {
+            content: counter(tutstep);
+            position: absolute;
+            left: 0;
+            top: 0.12rem;
+            width: 1.3rem;
+            height: 1.3rem;
+            border-radius: 50%;
+            background: #BF953F;
+            color: #1A1A1A;
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tut-steps li strong {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        .tut p.tut-note {
+            margin-top: 0.9rem;
+            font-size: 0.86rem;
+            color: var(--text-60);
+        }
+
+        .tut-text-narrow {
+            max-width: 31rem;
+        }
+
+        /* invito finale: grande, con il segno della timeline (linea + nodo) */
+        .tut-closing {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            margin-top: 1.7rem;
+        }
+
+        .tut .tut-closing p {
+            margin: 0;
+            font-family: 'Darker Grotesque', sans-serif;
+            font-size: 1.95rem;
+            font-weight: 700;
+            line-height: 1.02;
+            color: var(--gold-title);
+            max-width: none;
+        }
+
+        .tut-closing-mark {
+            position: relative;
+            flex: 0 0 auto;
+            width: 46px;
+            height: 2px;
+            background: #BF953F;
+        }
+
+        .tut-closing-mark::after {
+            content: '';
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            width: 11px;
+            height: 11px;
+            margin-top: -5.5px;
+            border-radius: 50%;
+            background: #BF953F;
+            box-shadow: 0 0 0 4px rgba(191, 149, 63, 0.28);
+        }
+
+        /* schermata 3: due blocchi (figura animata + paragrafo) */
+        .tut .tutorial-step.tut-rows-step.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100%;
+        }
+
+        .tut-rows {
+            display: grid;
+            gap: 1.8rem;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .tut-row {
+            display: grid;
+            grid-template-columns: 230px minmax(0, 1fr);
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .tut-row-fig {
+            width: 100%;
+            height: auto;
+            overflow: visible;
+        }
+
+        .tut-row p {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .sk-strong { fill: var(--text-80); }
+        .sk-soft { fill: var(--text-50); }
+        .zm-level { fill: var(--tint-strong); }
+
+        /* nodo che viene selezionato e apre la sua scheda (in ciclo) */
+        .fig-node .nd-tap {
+            fill: none;
+            stroke: #BF953F;
+            stroke-width: 2;
+            transform-box: fill-box;
+            transform-origin: center;
+            opacity: 0;
+            animation: nd-tap 4.5s ease-out infinite;
+        }
+
+        @keyframes nd-tap {
+            0%, 14%  { transform: scale(1); opacity: 0; }
+            16%      { opacity: 0.9; }
+            30%      { transform: scale(2.6); opacity: 0; }
+            100%     { opacity: 0; }
+        }
+
+        .fig-node .nd-dot {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: nd-dot 4.5s ease infinite;
+        }
+
+        @keyframes nd-dot {
+            0%, 14%  { transform: scale(1); stroke: #fff; }
+            20%, 88% { transform: scale(1.3); stroke: var(--select-ring); stroke-opacity: 1; }
+            100%     { transform: scale(1); }
+        }
+
+        .fig-node .nd-card {
+            transform-box: fill-box;
+            transform-origin: left bottom;
+            opacity: 0;
+            animation: nd-card 4.5s ease infinite;
+        }
+
+        @keyframes nd-card {
+            0%, 20%  { opacity: 0; transform: scale(0.85); }
+            30%, 85% { opacity: 1; transform: scale(1); }
+            95%, 100% { opacity: 0; transform: scale(0.95); }
+        }
+
+        /* zoom: il "+" pulsa e i nodi vicini si allargano (in ciclo) */
+        .fig-zoom .zm-plus {
+            animation: zm-plus 4.5s ease infinite;
+        }
+
+        @keyframes zm-plus {
+            0%, 18%, 60%, 100% { stroke: rgba(51, 68, 158, 0); stroke-width: 0; }
+            28% { stroke: rgba(120, 140, 230, 0.7); stroke-width: 8; }
+        }
+
+        .fig-zoom .zm-dots circle {
+            animation: zm-spread 4.5s cubic-bezier(0.6, 0, 0.3, 1) infinite;
+        }
+
+        /* la barretta si apre nei suoi pallini quando si ingrandisce */
+        .fig-zoom .zm-bar {
+            stroke: #fff;
+            stroke-opacity: 0.75;
+            stroke-width: 1.6;
+            animation: zm-bar 4.5s ease infinite;
+        }
+
+        @keyframes zm-bar {
+            0%, 24%  { opacity: 1; }
+            32%, 90% { opacity: 0; }
+            100%     { opacity: 1; }
+        }
+
+        .fig-zoom .zm-dots {
+            animation: zm-dots 4.5s ease infinite;
+        }
+
+        @keyframes zm-dots {
+            0%, 24%  { opacity: 0; }
+            32%, 88% { opacity: 1; }
+            98%, 100% { opacity: 0; }
+        }
+
+        .fig-zoom .zm-dots circle:nth-child(1) { --sx: -46px; }
+        .fig-zoom .zm-dots circle:nth-child(2) { --sx: -16px; }
+        .fig-zoom .zm-dots circle:nth-child(3) { --sx: 16px; }
+        .fig-zoom .zm-dots circle:nth-child(4) { --sx: 46px; }
+
+        @keyframes zm-spread {
+            0%, 26%  { transform: translateX(0); }
+            42%, 82% { transform: translateX(var(--sx)); }
+            96%, 100% { transform: translateX(0); }
+        }
+
+        /* icona dei filtri dentro il testo */
+        .tut-inline-filter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid var(--gold-border);
+            color: var(--gold-text);
+            vertical-align: -4px;
+            margin: 0 1px;
+        }
+
+        .tut-inline-filter svg {
+            width: 11px;
+            height: 11px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.4;
+            stroke-linecap: round;
+        }
+
+        /* onda sui contenuti collegati (come nella timeline) */
+        .fg-wave {
+            fill: none;
+            stroke: #BF953F;
+            stroke-width: 1.6;
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: fg-wave 2.2s ease-out infinite;
+        }
+
+        @keyframes fg-wave {
+            0%   { transform: scale(1); opacity: 0.95; }
+            100% { transform: scale(3.2); opacity: 0; }
+        }
+
+        /* popup schematico che compare sui nodi attraversati (schermata 2) */
+        .fg-pop-card rect.pc-bg {
+            fill: var(--popup-bg);
+            stroke-width: 1;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .fig-node .nd-tap,
+            .fig-node .nd-dot,
+            .fig-zoom .zm-plus,
+            .fig-zoom .zm-dots circle,
+            .fig-zoom .zm-bar,
+            .fig-zoom .zm-dots,
+            .fg-wave {
+                animation: none !important;
+            }
+            .fig-node .nd-card {
+                animation: none !important;
+                opacity: 1;
+            }
+        }
+
+        /* illustrazioni dell'interfaccia */
+        .tut-figure .fig-ui {
+            max-width: 520px;
+        }
+
+        .fig-ui .ui-panel {
+            fill: var(--panel-bg);
+            stroke: var(--tint-border);
+            stroke-width: 1;
+        }
+
+        .fig-ui .ui-line-soft {
+            stroke: var(--hairline);
+            stroke-width: 1;
+        }
+
+        .fig-ui .ui-text {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 8px;
+            fill: var(--text-60);
+        }
+
+        .fig-ui .ui-text-strong {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 8.5px;
+            font-weight: 700;
+            fill: var(--text-85);
+        }
+
+        .fig-ui .ui-chip {
+            fill: var(--tint);
+            stroke: var(--tint-border);
+            stroke-width: 0.8;
+        }
+
+        .fig-ui .ui-chip-on {
+            fill: rgba(191, 149, 63, 0.25);
+            stroke: #BF953F;
+            stroke-width: 0.9;
+        }
+
+        .fig-ui .ui-num circle {
+            fill: #BF953F;
+        }
+
+        .fig-ui .ui-num text {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 9px;
+            font-weight: 700;
+            fill: #1A1A1A;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .fig-ui .ui-glow {
+            animation: tut-glow 2.4s ease-in-out infinite;
+        }
+
+        /* schermate "legenda" (3 e 4): contenuto centrato in verticale */
+        .tut .tutorial-step:not(.tut-split).active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100%;
+        }
+
+        /* "legenda" delle funzioni: replica dell'elemento vero + testo */
+        .tut-keys {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.6rem 2.8rem;
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        .tut-key {
+            display: grid;
+            grid-template-columns: 108px minmax(0, 1fr);
+            gap: 1.1rem;
+            align-items: start;
+        }
+
+        .tut-key-wide {
+            grid-column: 1 / -1;
+        }
+
+        .tut-key h4 {
+            font-family: 'Darker Grotesque', sans-serif;
+            font-weight: 700;
+            font-size: 1.32rem;
+            line-height: 1.1;
+            color: var(--text);
+            margin: 0.1rem 0 0.35rem;
+        }
+
+        .tut-key p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .tut-rep {
+            height: 56px;
+            border-radius: 10px;
+            background: var(--tint);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rep-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 8px;
+            background: linear-gradient(var(--hairline), var(--hairline)) center / 100% 2px no-repeat;
+        }
+
+        .rep-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: var(--c);
+            border: 2px solid #fff;
+            box-shadow: var(--dot-shadow);
+            display: block;
+        }
+
+        .rep-dot.is-sel {
+            transform: scale(1.3);
+            box-shadow: 0 0 0 2px var(--select-ring), 0 0 6px 1px var(--select-glow);
+        }
+
+        .rep-bar {
+            width: 30px;
+            height: 11px;
+            border-radius: 999px;
+            background: var(--c);
+            border: 2px solid #fff;
+            box-shadow: var(--dot-shadow);
+            display: block;
+        }
+
+        .rep-zoom,
+        .rep-filter,
+        .rep-tags {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-style: normal;
+        }
+
+        .rep-zoom i,
+        .rep-filter i {
+            font-style: normal;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rz-btn {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #BF953F;
+            color: #1A1A1A;
+            font-size: 0.8rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .rz-btn.rz-in {
+            background: #33449E;
+            color: #fff;
+        }
+
+        .rz-level {
+            font-size: 0.62rem;
+            padding: 0.2rem 0.35rem;
+            border-radius: 10px;
+            background: var(--tint-strong);
+            color: var(--text);
+        }
+
+        .rep-axis,
+        .rep-cluster {
+            width: 92px;
+            height: 44px;
+        }
+
+        .rep-axis-v {
+            stroke: var(--vline-border);
+            stroke-width: 1.3;
+            stroke-dasharray: 2.5 2;
+        }
+
+        .rep-tags {
+            gap: 7px;
+        }
+
+        .rep-tags i {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            display: block;
+        }
+
+        .rf-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #BF953F;
+            color: #1A1A1A;
+        }
+
+        .rf-btn svg {
+            width: 13px;
+            height: 13px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+        }
+
+        .rf-chip {
+            font-size: 0.62rem;
+            padding: 0.25rem 0.45rem;
+            border-radius: 12px;
+            border: 1px solid #BF953F;
+            background: rgba(191, 149, 63, 0.22);
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        .rc-glow {
+            animation: tut-glow 2.4s ease-in-out infinite;
+        }
+
+        @keyframes tut-glow {
+            0%, 100% { stroke-opacity: 1; }
+            50% { stroke-opacity: 0.35; }
+        }
+
+        /* invito finale */
+        .tut-cta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.6rem 1rem;
+            margin-top: 1.3rem;
+        }
+
+        .tut-cta-note {
+            font-size: 0.8rem;
+            color: var(--text-60);
+        }
+
+        .tut-cta-note b {
+            color: var(--text-80);
+        }
+
+        .tut p.tut-count {
+            margin: 0.9rem 0 0;
+            font-family: 'Darker Grotesque', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gold-text);
+            text-align: center;
+        }
+
+        /* barra inferiore */
+        .tut-nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.7rem 1rem;
+            margin-top: 0.8rem;
+            padding-top: 0.9rem;
+        }
+
+        .tut-hide {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-60);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .tut-hide input {
+            accent-color: #BF953F;
+            width: 15px;
+            height: 15px;
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .tut-nav-btns {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            margin-left: auto;
+        }
+
+        .tut-skip {
+            background: none;
+            border: none;
+            padding: 0.3rem 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.82rem;
+            color: var(--text-60);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            cursor: pointer;
+        }
+
+        .tut-skip:hover {
+            color: var(--text);
+        }
+
+        .tut-arrow {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--tint-border);
+            background: transparent;
+            color: var(--text-70);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .tut-arrow svg {
+            width: 17px;
+            height: 17px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .tut-arrow:hover {
+            border-color: #BF953F;
+            color: var(--text);
+        }
+
+        .tut-arrow-next {
+            background: #BF953F;
+            border-color: #BF953F;
+            color: #1A1A1A;
+        }
+
+        .tut-arrow-next:hover {
+            background: #D4A75E;
+            color: #1A1A1A;
+        }
+
+        .tut-arrow:focus-visible,
+        .tut-skip:focus-visible {
+            outline: 2px solid #BF953F;
+            outline-offset: 2px;
+        }
+
+        /* cosa compare nella barra a seconda della schermata */
+        .tut .tut-hide,
+        .tut .tut-finish,
+        .tut[data-step="5"] .tut-skip,
+        .tut[data-step="5"] .tut-arrow-next {
+            display: none;
+        }
+
+        .tut[data-step="5"] .tut-hide {
+            display: inline-flex;
+        }
+
+        .tut[data-step="5"] .tut-finish {
+            display: inline-flex;
+        }
+
+        .tut-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 18px;
+            padding: 0.5rem 1.25rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 0.88rem;
+            line-height: 1.2;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .tut-btn-primary {
+            background: #BF953F;
+            border: 1.5px solid #BF953F;
+            color: #1A1A1A;
+        }
+
+        .tut-btn-primary:hover {
+            background: #D4A75E;
+            border-color: #D4A75E;
+        }
+
+        .tut-btn-ghost {
+            background: transparent;
+            border: 1px solid var(--tint-border);
+            color: var(--text-70);
+        }
+
+        .tut-btn-ghost:hover {
+            border-color: #BF953F;
+            color: var(--text);
+        }
+
+        .tut-btn:focus-visible,
+        .tutorial-dot:focus-visible,
+        .tut-hide input:focus-visible {
+            outline: 2px solid #BF953F;
+            outline-offset: 2px;
+        }
+
+        /* "Indietro" non serve sulla prima schermata; sull'ultima il
+           bottone principale diventa "Inizia a esplorare" */
+        .tut[data-step="1"] .tutorial-prev-btn {
+            visibility: hidden;
+        }
+
+        /* --- figure animate --- */
+        .fg-dot {
+            stroke: #fff;
+            stroke-opacity: 0.75;
+            stroke-width: 1.6;
+        }
+
+        .fg-halo {
+            fill: rgba(189, 156, 89, 0.28);
+        }
+
+        .fig-gather .fg-dot {
+            transform: translate(var(--dx), var(--dy));
+            animation: tut-gather 1.7s cubic-bezier(0.65, 0, 0.25, 1) 0.6s forwards;
+        }
+
+        @keyframes tut-gather {
+            to { transform: translate(0, 0); }
+        }
+
+        .fig-gather .fg-silo {
+            fill: none;
+            stroke: var(--text-50);
+            stroke-width: 1;
+            stroke-dasharray: 3 4;
+            animation: tut-fadeout 0.9s ease 0.5s forwards;
+        }
+
+        @keyframes tut-fadeout {
+            to { opacity: 0; }
+        }
+
+        .fig-gather .fg-axis {
+            stroke: #BF953F;
+            stroke-width: 2;
+            stroke-dasharray: 290;
+            stroke-dashoffset: 290;
+            animation: tut-draw 1.1s ease 1.6s forwards;
+        }
+
+        @keyframes tut-draw {
+            to { stroke-dashoffset: 0; }
+        }
+
+        .fg-label {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 10px;
+            fill: var(--gold-text);
+        }
+
+        .fig-gather .fg-label {
+            opacity: 0;
+            animation: tut-fadein 0.6s ease 2.3s forwards;
+        }
+
+        @keyframes tut-fadein {
+            to { opacity: 1; }
+        }
+
+        .fg-axis-neutral {
+            stroke: var(--gold-text);
+            stroke-width: 1.6;
+            opacity: 0.6;
+        }
+
+        .fig-time .fg-neutral {
+            fill: var(--text-70);
+        }
+
+        .fig-time .fg-floating {
+            opacity: 0.4;
+            transition: transform 0.9s cubic-bezier(0.6, 0, 0.25, 1), opacity 0.6s ease;
+        }
+
+        .fig-time .fg-floating .fg-halo {
+            opacity: 0;
+            transition: opacity 0.6s ease 0.6s;
+        }
+
+        .fig-time .fg-floating.placed {
+            opacity: 1;
+        }
+
+        .fig-time .fg-floating.placed .fg-halo {
+            opacity: 1;
+        }
+
+        .fg-year {
+            font-family: 'Darker Grotesque', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            fill: var(--gold-text);
+        }
+
+        .fg-pop {
+            animation: tut-pop 0.35s ease-out;
+            transform-box: fill-box;
+            transform-origin: center;
+        }
+
+        @keyframes tut-pop {
+            from { transform: scale(0); }
+            to   { transform: scale(1); }
+        }
+
+        .fg-vline {
+            stroke: var(--vline-border);
+            stroke-width: 1.4;
+            stroke-dasharray: 4 3;
+        }
+
+        .fig-layers .fg-dot,
+        .fig-grow .fg-dot {
+            transition: r 0.25s ease, stroke 0.25s ease;
+        }
+
+        .fig-layers .fg-dot.hit {
+            stroke: var(--select-ring);
+        }
+
+        .fg-cat {
+            font-family: 'Darker Grotesque', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .fig-grow .fg-incoming {
+            opacity: 0;
+            animation: tut-arrive 6s ease-in-out infinite;
+        }
+
+        @keyframes tut-arrive {
+            0%   { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+            15%  { opacity: 1; }
+            55%  { transform: translate(0, 0); opacity: 1; }
+            88%  { transform: translate(0, 0); opacity: 1; }
+            100% { transform: translate(0, 0); opacity: 0; }
+        }
+
+        .fig-grow .fg-future {
+            stroke: #BF953F;
+            stroke-width: 2;
+            stroke-dasharray: 4 5;
+            opacity: 0.7;
+        }
+
+        .fig-grow .fg-plus-ring {
+            fill: none;
+            stroke: #BF953F;
+            stroke-width: 1.5;
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: tut-pulse 2.4s ease-out infinite;
+        }
+
+        @keyframes tut-pulse {
+            0%   { transform: scale(1); opacity: 0.9; }
+            100% { transform: scale(2.3); opacity: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .fig-gather .fg-dot,
+            .fig-gather .fg-silo,
+            .fig-gather .fg-axis,
+            .fig-gather .fg-label,
+            .fig-grow .fg-incoming,
+            .fig-grow .fg-plus-ring,
+            .rc-glow {
+                animation: none !important;
+            }
+
+            .fig-gather .fg-dot { transform: none; }
+            .fig-gather .fg-silo { opacity: 0; }
+            .fig-gather .fg-axis { stroke-dashoffset: 0; }
+            .fig-gather .fg-label { opacity: 1; }
+            .fig-grow .fg-incoming { opacity: 1; transform: none; }
+        }
+
+        /* --- telefono in verticale --- */
+        @media (max-width: 768px) {
+            .info-popup.tut {
+                width: calc(100% - 20px) !important;
+                height: calc(100vh - 24px) !important;
+                height: calc(100dvh - 24px) !important;
+                padding: 0.9rem 1.05rem 0.75rem !important;
+                font-size: 1rem !important;
+                border-radius: 14px;
+            }
+
+            .tut .tutorial-step.tut-split.active {
+                display: flex;
+                flex-direction: column;
+                gap: 0.6rem;
+                min-height: 0;
+            }
+
+            .tut-figure svg {
+                max-height: 150px;
+                max-width: 300px;
+            }
+
+            .tut-logo {
+                height: 32px;
+                margin-bottom: 0.7rem;
+            }
+
+            .info-popup.tut h3 {
+                font-size: 1.7rem !important;
+                margin-bottom: 0.7rem !important;
+            }
+
+            .info-popup.tut h3.tut-center {
+                margin-bottom: 1.1rem !important;
+            }
+
+            .tut p {
+                font-size: 0.9rem;
+                line-height: 1.58;
+            }
+
+            .tut p.tut-lead {
+                font-size: 0.94rem;
+            }
+
+            .tut-keys {
+                grid-template-columns: 1fr;
+                gap: 1.1rem;
+            }
+
+            .tut-key {
+                grid-template-columns: 86px minmax(0, 1fr);
+                gap: 0.8rem;
+            }
+
+            .tut-rep {
+                height: 48px;
+                overflow: hidden;
+            }
+
+            /* la replica dello zoom (4 elementi) va rimpicciolita per stare
+               nel riquadro stretto */
+            .rep-zoom {
+                transform: scale(0.78);
+            }
+
+            .tut-key h4 {
+                font-size: 1.15rem;
+            }
+
+            .tut-key p {
+                font-size: 0.85rem;
+            }
+
+            .tut-cats > div {
+                grid-template-columns: 1fr;
+                gap: 0.05rem;
+                padding: 0.3rem 0.6rem 0.4rem 0.55rem;
+            }
+
+            .tut-cat-label {
+                font-size: 1.05rem;
+            }
+
+            .tut-figure .fig-ui {
+                max-height: 210px;
+                max-width: 360px;
+            }
+
+            .tut-steps li {
+                font-size: 0.86rem;
+                line-height: 1.55;
+            }
+
+            .tut-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+                justify-items: center;
+            }
+
+            .tut-row-fig {
+                max-width: 220px;
+            }
+
+            .tut-row p {
+                font-size: 0.9rem;
+                text-align: center;
+            }
+
+            .tut-rows {
+                gap: 1.2rem;
+            }
+
+            .tut .tut-closing p {
+                font-size: 1.5rem;
+            }
+
+            .tut-closing {
+                margin-top: 1.2rem;
+            }
+
+
+
+            .tut-arrow {
+                width: 36px;
+                height: 36px;
+            }
+
+            .tut p.tut-count {
+                margin-top: 0.4rem;
+                font-size: 1.1rem;
+            }
+
+            .tut-nav {
+                padding-top: 0.7rem;
+            }
+
+            .tut-btn {
+                padding: 0.45rem 1rem;
+                font-size: 0.84rem;
+            }
+        }
+
+        /* --- telefono in orizzontale: figura e testo affiancati, compatti --- */
+        @media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+            .info-popup.tut {
+                width: calc(100% - 28px) !important;
+                height: calc(100vh - 20px) !important;
+                height: calc(100dvh - 20px) !important;
+                padding: 0.7rem 1.4rem 0.6rem !important;
+            }
+
+            .tut .tutorial-body {
+                padding-top: 0.8rem;
+            }
+
+            .tut .tutorial-step.tut-split.active {
+                display: grid;
+                grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+                gap: 1.6rem;
+                align-items: start;
+            }
+
+            .tut-figure svg {
+                max-height: 170px;
+            }
+
+            .tut-logo {
+                height: 28px;
+                margin-bottom: 0.5rem;
+            }
+
+            .info-popup.tut h3 {
+                font-size: 1.45rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+
+            .tut-keys {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.9rem 1.6rem;
+            }
+
+            .tut p {
+                font-size: 0.84rem;
+                line-height: 1.5;
+                margin-bottom: 0.55rem;
+            }
+
+            .tut p.tut-lead {
+                font-size: 0.88rem;
+            }
+
+            .info-popup.tut h3.tut-center {
+                margin-bottom: 0.8rem !important;
+            }
+
+            .tut-key {
+                grid-template-columns: 84px minmax(0, 1fr);
+                gap: 0.75rem;
+            }
+
+            .tut-rep {
+                height: 44px;
+                overflow: hidden;
+            }
+
+            .rep-zoom {
+                transform: scale(0.78);
+            }
+
+            .tut-key h4 {
+                font-size: 1.08rem;
+                margin-bottom: 0.2rem;
+            }
+
+            .tut-key p {
+                font-size: 0.8rem;
+                line-height: 1.45;
+            }
+
+            .tut-cats {
+                margin-top: 0.6rem;
+                gap: 0.3rem;
+            }
+
+            .tut-cats > div {
+                font-size: 0.76rem;
+                grid-template-columns: 8.2rem minmax(0, 1fr);
+                gap: 0.6rem;
+            }
+
+            .tut-cat-label {
+                font-size: 0.98rem;
+            }
+
+            .tut-steps {
+                gap: 0.4rem;
+            }
+
+            .tut-row {
+                grid-template-columns: 170px minmax(0, 1fr);
+                gap: 1.2rem;
+            }
+
+            .tut-row p {
+                font-size: 0.84rem;
+            }
+
+            .tut-rows {
+                gap: 0.8rem;
+            }
+
+            .tut .tut-closing p {
+                font-size: 1.3rem;
+            }
+
+            .tut-steps li {
+                font-size: 0.8rem;
+                line-height: 1.45;
+            }
+
+            .tut-arrow {
+                width: 34px;
+                height: 34px;
+            }
+
+            .tut-tags {
+                margin-top: 0.6rem;
+            }
+
+            .tut-nav {
+                margin-top: 0.4rem;
+                padding-top: 0.5rem;
+            }
+
+            .tut-btn {
+                padding: 0.38rem 1rem;
+                font-size: 0.82rem;
+            }
+        }
+
         /* ---- Banner cookie ---- */
         .cookie-banner {
             position: fixed;
@@ -3123,20 +4498,376 @@ body.detail-open {
 
         let langMode = 'it'
 
+        // ---------------------------------------------------------------
+        // TUTORIAL INIZIALE: 5 schermate (vedi #tutorialPopup)
+        // ---------------------------------------------------------------
+        const TUTORIAL_STEPS = 5;
+        const TUTORIAL_HIDE_KEY = 'sychro-hide-intro';
         let tutorialStep = 1;
+
+        function tutorialHidden() {
+            try { return localStorage.getItem(TUTORIAL_HIDE_KEY) === '1'; } catch (e) { return false; }
+        }
+
+        function setTutorialHidden(hide) {
+            try {
+                if (hide) localStorage.setItem(TUTORIAL_HIDE_KEY, '1');
+                else localStorage.removeItem(TUTORIAL_HIDE_KEY);
+            } catch (e) {}
+        }
+
+        // --- figure animate (disegnate con gli elementi della timeline) ---
+        const SVG_NS = 'http://www.w3.org/2000/svg';
+        function svgEl(tag, attrs, parent) {
+            const el = document.createElementNS(SVG_NS, tag);
+            Object.keys(attrs || {}).forEach(k => el.setAttribute(k, attrs[k]));
+            if (parent) parent.appendChild(el);
+            return el;
+        }
+        // numeri pseudo-casuali ma sempre uguali (la figura non "cambia" a ogni apertura)
+        function seeded(seed) {
+            let x = seed;
+            return () => { x = (x * 9301 + 49297) % 233280; return x / 233280; };
+        }
+        const TAG_COLORS = ['#BFB11B', '#A42134', '#2564BF', '#4CAF50'];
+        const CAT_COLORS = ['#ca6b58', '#ff964c', '#8d6e63', '#4db6ac', '#3c87b5'];
+
+        // pallino come nella timeline: alone dorato + anello bianco attenuato
+        function figDot(parent, x, y, r, fill, extraClass, opacity) {
+            const g = svgEl('g', opacity !== undefined ? { opacity: opacity } : {}, parent);
+            if (opacity === undefined || opacity > 0.5) svgEl('circle', { class: 'fg-halo', cx: x, cy: y, r: r + Math.min(2.6, r * 0.6) }, g);
+            return svgEl('circle', { class: 'fg-dot' + (extraClass ? ' ' + extraClass : ''), cx: x, cy: y, r: r, fill: fill }, g);
+        }
+
+        // totale reale dei contenuti (0 finché i dati non sono caricati)
+        function tutorialTotal() {
+            return Object.values(timelineData || {}).reduce((n, l) => n + (l || []).length, 0);
+        }
+
+        // 1 · una sola linea del tempo: mentre l'anno scorre dal 1850 al 2026,
+        //     i contenuti compaiono nel punto in cui nascono, sempre più fitti
+        //     verso il presente (dove si impilano leggermente). Il conteggio è
+        //     quello reale e compare solo quando i dati sono caricati.
+        let timeRaf = null;
+        let timeCountLabel = null;
+        let timeProgress = 0;
+        function drawTimeFigure() {
+            const svg = document.getElementById('figTime');
+            if (!svg) return;
+            svg.innerHTML = '';
+            cancelAnimationFrame(timeRaf);
+            const Y0 = 1850, Y1 = 2026, X0 = 16, X1 = 304, LINE = 120;
+            const toX = y => X0 + (y - Y0) / (Y1 - Y0) * (X1 - X0);
+            svgEl('line', { class: 'fg-axis-neutral', x1: X0, y1: LINE, x2: X1, y2: LINE }, svg);
+
+            let years = [];
+            Object.values(timelineData || {}).forEach(l => (l || []).forEach(ev => {
+                if (ev.year >= Y0 && ev.year <= Y1) years.push(ev.year);
+            }));
+            const rnd = seeded(5);
+            if (!years.length) {
+                for (let k = 0; k < 120; k++) years.push(Y0 + (Y1 - Y0) * Math.pow(rnd(), 0.26));
+            }
+            years.sort((p, q) => p - q);
+            if (years.length > 120) {
+                const step = years.length / 120;
+                years = years.filter((_, k) => Math.floor(k % step) === 0);
+            }
+            // andamento esponenziale: pochissimi all'inizio, poi sempre di più.
+            // I contenuti più antichi vengono diradati in proporzione alla loro
+            // distanza dal presente (il conteggio resta quello reale).
+            years = years.filter(yr => rnd() < Math.pow((yr - Y0) / (Y1 - Y0), 1.6) + 0.06);
+            // dove i nodi sono troppo vicini si impilano sopra e sotto la linea
+            // al massimo tre livelli sopra e tre sotto: oltre, i nodi si
+            // sovrappongono a quelli già presenti (come nella timeline vera)
+            const slots = {};
+            const items = years.map(yr => {
+                const x = toX(yr);
+                const key = Math.round(x / 6);
+                const n = slots[key] = (slots[key] || 0) + 1;
+                const level = Math.min(3, Math.floor(n / 2));
+                const offset = n === 1 ? 0 : (n % 2 === 0 ? -1 : 1) * level * 6.5;
+                return { yr, x, y: LINE + offset };
+            });
+
+            const dotsLayer = svgEl('g', {}, svg);
+            const cursor = svgEl('line', { class: 'fg-vline', x1: X0, y1: 40, x2: X0, y2: 168 }, svg);
+            const yearLabel = svgEl('text', { class: 'fg-year', x: X0, y: 32, 'text-anchor': 'middle' }, svg);
+            timeCountLabel = svgEl('text', { class: 'fg-label', x: X1, y: 192, 'text-anchor': 'end' }, svg);
+
+            const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const DURATION = 5000;
+            let shown = 0;
+            const start = performance.now() + 400;
+            const frame = (now) => {
+                const t = reduce ? 1 : Math.max(0, Math.min(1, (now - start) / DURATION));
+                const year = Y0 + (Y1 - Y0) * t;
+                while (shown < items.length && items[shown].yr <= year) {
+                    const it = items[shown];
+                    const g = svgEl('g', { class: 'fg-pop' }, dotsLayer);
+                    svgEl('circle', { class: 'fg-halo', cx: it.x.toFixed(1), cy: it.y.toFixed(1), r: 5.4 }, g);
+                    svgEl('circle', { class: 'fg-dot fg-neutral', cx: it.x.toFixed(1), cy: it.y.toFixed(1), r: 3.4 }, g);
+                    shown++;
+                }
+                const x = toX(year);
+                cursor.setAttribute('x1', x.toFixed(1));
+                cursor.setAttribute('x2', x.toFixed(1));
+                yearLabel.setAttribute('x', Math.min(Math.max(x, 20), 300).toFixed(1));
+                yearLabel.textContent = Math.floor(year);
+                timeProgress = items.length ? shown / items.length : 1;
+                updateTimeCount();
+                if (t < 1 && tutorialStep === 1 && document.getElementById('infoPopupOverlay').classList.contains('active')) {
+                    timeRaf = requestAnimationFrame(frame);
+                }
+            };
+            timeRaf = requestAnimationFrame(frame);
+        }
+
+        function updateTimeCount() {
+            if (!timeCountLabel) return;
+            const total = tutorialTotal();
+            if (!total) { timeCountLabel.textContent = ''; return; }
+            const n = Math.round(total * timeProgress);
+            timeCountLabel.textContent = langMode === 'it' ? `${n} contenuti` : `${n} entries`;
+        }
+
+        // 3 · esplorare: un nodo selezionato apre la sua scheda; l'asse verticale
+        //     attraversa le linee e i contenuti dello stesso cluster si illuminano
+        function drawNavigateFigure() {
+            const svg = document.getElementById('figNavigate');
+            if (!svg) return;
+            svg.innerHTML = '';
+            const rowsY = [44, 80, 116, 152, 188];
+            const rnd = seeded(11);
+            rowsY.forEach((y, i) => {
+                svgEl('line', { x1: 8, y1: y, x2: 214, y2: y, stroke: CAT_COLORS[i], 'stroke-width': 1.5, opacity: 0.8 }, svg);
+                for (let k = 0; k < 5; k++) {
+                    const x = 18 + rnd() * 186;
+                    if (Math.abs(x - 96) < 12) continue;
+                    figDot(svg, x.toFixed(1), y, 3.4, CAT_COLORS[i], '', 0.3);
+                }
+            });
+            svgEl('line', { class: 'fg-vline', x1: 96, y1: 26, x2: 96, y2: 204 }, svg);
+            [[58, 44, 0], [132, 152, 3], [176, 188, 4], [38, 116, 2]].forEach(p => {
+                svgEl('circle', { class: 'ui-glow', cx: p[0], cy: p[1], r: 7, fill: 'rgba(191,149,63,0.18)', stroke: '#BF953F', 'stroke-width': 2.2 }, svg);
+                figDot(svg, p[0], p[1], 3.8, CAT_COLORS[p[2]]);
+            });
+            figDot(svg, 96, 80, 5, CAT_COLORS[1]);
+            svgEl('circle', { cx: 96, cy: 80, r: 7.4, fill: 'none', stroke: 'var(--select-ring)', 'stroke-width': 1.6 }, svg);
+            svgEl('path', { d: 'M104 80 C 150 80, 180 52, 226 52', fill: 'none', stroke: '#BF953F', 'stroke-width': 1.2, 'stroke-dasharray': '3 3', opacity: 0.8 }, svg);
+            // scheda di approfondimento
+            const px = 226, py = 24;
+            svgEl('rect', { class: 'ui-panel', x: px, y: py, width: 106, height: 176, rx: 7 }, svg);
+            svgEl('rect', { x: px, y: py, width: 106, height: 176, rx: 7, fill: 'none', stroke: CAT_COLORS[1], 'stroke-width': 1.3 }, svg);
+            svgEl('rect', { x: px + 9, y: py + 12, width: 70, height: 6, rx: 2, fill: 'var(--text-80)' }, svg);
+            svgEl('rect', { x: px + 9, y: py + 22, width: 52, height: 6, rx: 2, fill: 'var(--text-80)' }, svg);
+            svgEl('rect', { x: px + 9, y: py + 34, width: 20, height: 4, rx: 2, fill: CAT_COLORS[1] }, svg);
+            [46, 53, 60, 67].forEach(dy => svgEl('rect', { x: px + 9, y: py + dy, width: dy === 67 ? 56 : 86, height: 3, rx: 1.5, fill: 'var(--text-50)' }, svg));
+            svgEl('line', { class: 'ui-line-soft', x1: px + 9, y1: py + 82, x2: px + 97, y2: py + 82 }, svg);
+            const lab = svgEl('text', { class: 'ui-text-strong', x: px + 9, y: py + 96 }, svg);
+            lab.textContent = langMode === 'it' ? 'Collegati' : 'Connected';
+            [0, 1, 2].forEach(k => {
+                const yy = py + 108 + k * 14;
+                svgEl('circle', { cx: px + 13, cy: yy, r: 2.6, fill: CAT_COLORS[[0, 3, 4][k]] }, svg);
+                svgEl('rect', { x: px + 20, y: yy - 1.8, width: 70 - k * 10, height: 3.6, rx: 1.8, fill: 'var(--text-60)' }, svg);
+            });
+        }
+
+        // 4 · filtrare e collegare: dall'icona dei filtri si apre il pannello;
+        //     a fianco la timeline filtrata (8 contenuti su 11 in primo piano)
+        //     e l'onda sui contenuti collegati
+        function drawFilterFigure() {
+            const svg = document.getElementById('figFilter');
+            if (!svg) return;
+            svg.innerHTML = '';
+            const it = langMode === 'it';
+            const rowsY = [44, 78, 112, 146, 180];
+            const rnd = seeded(29);
+            const waves = [];
+            const waveRows = { 0: 3, 2: 1, 3: 4, 4: 2 };   // linea -> quale nodo ha l'onda
+            rowsY.forEach((y, i) => {
+                svgEl('line', { x1: 8, y1: y, x2: 150, y2: y, stroke: CAT_COLORS[i], 'stroke-width': 1.5, opacity: 0.8 }, svg);
+                const n = 5 + (i % 2);
+                for (let k = 0; k < n; k++) {
+                    const x = 16 + Math.pow((k + rnd() * 0.6) / n, 0.6) * 128;
+                    const isWave = waveRows[i] === k;
+                    const match = isWave || rnd() < 8 / 11;
+                    figDot(svg, x.toFixed(1), y, 3.4, CAT_COLORS[i], '', match ? undefined : 0.12);
+                    if (isWave) waves.push([x, y]);
+                }
+            });
+            waves.forEach((w, k) => {
+                const c = svgEl('circle', { class: 'fg-wave', cx: w[0].toFixed(1), cy: w[1], r: 5 }, svg);
+                c.style.animationDelay = (k * 0.7) + 's';
+            });
+            // icona dei filtri (come nell'header) che apre il pannello
+            svgEl('circle', { cx: 318, cy: 14, r: 10, fill: '#BF953F' }, svg);
+            svgEl('path', { d: 'M312.5 10.5h11M314.8 14h6.4M317 17.5h2', stroke: '#1A1A1A', 'stroke-width': 1.8, 'stroke-linecap': 'round' }, svg);
+            // pannello filtri
+            const px = 164, py = 30;
+            svgEl('rect', { class: 'ui-panel', x: px, y: py, width: 168, height: 182, rx: 8 }, svg);
+            svgEl('rect', { x: px, y: py, width: 168, height: 182, rx: 8, fill: 'none', stroke: '#BF953F', 'stroke-width': 1.2 }, svg);
+            const sections = [
+                [it ? 'Parole chiave' : 'Keywords', [[it ? 'cibernetica ×' : 'cybernetics ×', true]]],
+                ['Tag', [['Systems Thinking', true], ['Sust.', false]]],
+                ['Cluster', [['Climate Policy', false], ['Ecology', true]]],
+                [it ? 'Periodo' : 'Period', [['1950 – 2000', true]]]
+            ];
+            sections.forEach((sec, k) => {
+                const y = py + 18 + k * 42;
+                const label = svgEl('text', { class: 'ui-text-strong', x: px + 12, y: y }, svg);
+                label.textContent = sec[0];
+                let cx = px + 12;
+                sec[1].forEach(chip => {
+                    const w = chip[0].length * 4.3 + 14;
+                    svgEl('rect', { class: chip[1] ? 'ui-chip-on' : 'ui-chip', x: cx, y: y + 7, width: w, height: 15, rx: 7.5 }, svg);
+                    const t = svgEl('text', { class: 'ui-text', x: cx + 7, y: y + 17.5 }, svg);
+                    t.textContent = chip[0];
+                    cx += w + 5;
+                });
+                if (k < 3) svgEl('line', { class: 'ui-line-soft', x1: px + 10, y1: y + 30, x2: px + 158, y2: y + 30 }, svg);
+            });
+        }
+
+        // 2 · cinque linee parallele attraversate da un asse verticale che,
+        //     scorrendo, accende ciò che accade "nello stesso momento"
+        let layersRaf = null;
+        function drawLayersFigure() {
+            const svg = document.getElementById('figLayers');
+            if (!svg) return;
+            svg.innerHTML = '';
+            cancelAnimationFrame(layersRaf);
+            const rnd = seeded(23);
+            const dots = [];
+            CAT_COLORS.forEach((c, i) => {
+                const y = 22 + i * 40;
+                svgEl('line', { x1: 10, y1: y, x2: 310, y2: y, stroke: c, 'stroke-width': 2, 'stroke-linecap': 'round', opacity: 0.85 }, svg);
+                const n = 4 + Math.floor(rnd() * 3);
+                for (let k = 0; k < n; k++) {
+                    const x = 22 + Math.pow(rnd(), 0.55) * 276;
+                    dots.push({ x, el: figDot(svg, x.toFixed(1), y, 4.5, c) });
+                }
+            });
+            const vline = svgEl('line', { class: 'fg-vline', x1: 160, y1: 6, x2: 160, y2: 204 }, svg);
+            // popup schematico (niente testo vero), come quello della timeline
+            const pop = svgEl('g', { class: 'fg-pop-card', opacity: 0 }, svg);
+            const popBg = svgEl('rect', { class: 'pc-bg', x: 0, y: 0, width: 62, height: 30, rx: 4 }, pop);
+            svgEl('rect', { x: 7, y: 7, width: 18, height: 3.5, rx: 1.5, fill: 'var(--gold-text)' }, pop);
+            svgEl('rect', { x: 7, y: 14, width: 46, height: 3.5, rx: 1.5, fill: 'var(--text-80)' }, pop);
+            svgEl('rect', { x: 7, y: 21, width: 32, height: 3.5, rx: 1.5, fill: 'var(--text-50)' }, pop);
+            let popDot = null;
+            const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const start = performance.now();
+            const tick = (now) => {
+                const t = reduce ? 0.5 : (Math.sin((now - start) / 2600 - Math.PI / 2) + 1) / 2;
+                const x = 40 + t * 240;
+                vline.setAttribute('x1', x.toFixed(1));
+                vline.setAttribute('x2', x.toFixed(1));
+                let nearest = null;
+                dots.forEach(d => {
+                    const dist = Math.abs(d.x - x);
+                    const hit = dist < 11;
+                    d.el.classList.toggle('hit', hit);
+                    d.el.setAttribute('r', hit ? 6 : 4.5);
+                    if (dist < 5 && (!nearest || dist < nearest.dist)) nearest = { d, dist };
+                });
+                // il popup compare sul nodo che la linea sta attraversando
+                if (nearest) {
+                    if (popDot !== nearest.d) {
+                        popDot = nearest.d;
+                        const cy = Number(popDot.el.getAttribute('cy'));
+                        const px = Math.max(2, Math.min(256, popDot.x - 31));
+                        const py = cy - 42 < 0 ? cy + 10 : cy - 40;
+                        pop.setAttribute('transform', `translate(${px.toFixed(1)} ${py})`);
+                        popBg.setAttribute('stroke', popDot.el.getAttribute('fill'));
+                    }
+                    pop.setAttribute('opacity', 1);
+                } else if (popDot && Math.abs(popDot.x - x) > 14) {
+                    pop.setAttribute('opacity', 0);
+                    popDot = null;
+                }
+                if (!reduce && tutorialStep === 2 && document.getElementById('infoPopupOverlay').classList.contains('active')) {
+                    layersRaf = requestAnimationFrame(tick);
+                }
+            };
+            layersRaf = requestAnimationFrame(tick);
+        }
+
+        // 5 · la linea dei contenuti esistenti prosegue tratteggiata verso il
+        //     futuro: nuovi contributi arrivano da fuori e la allungano
+        function drawGrowFigure() {
+            const svg = document.getElementById('figGrow');
+            if (!svg) return;
+            svg.innerHTML = '';
+            const rnd = seeded(41);
+            const y = 112;
+            svgEl('line', { x1: 12, y1: y, x2: 214, y2: y, stroke: '#BF953F', 'stroke-width': 2, 'stroke-linecap': 'round' }, svg);
+            svgEl('line', { class: 'fg-future', x1: 220, y1: y, x2: 290, y2: y }, svg);
+            for (let i = 0; i < 16; i++) {
+                figDot(svg, (20 + Math.pow(i / 15, 0.55) * 190).toFixed(1), y, 4.5, CAT_COLORS[Math.floor(rnd() * 5)]);
+            }
+            const incoming = [[228, -70, -60], [244, 60, 70], [258, -40, 80], [272, 30, -75], [236, -90, 40], [264, 80, -40]];
+            incoming.forEach((p, i) => {
+                const d = svgEl('circle', { class: 'fg-dot fg-incoming', cx: p[0], cy: y, r: 4.5, fill: CAT_COLORS[i % 5] }, svg);
+                d.style.setProperty('--dx', p[1] + 'px');
+                d.style.setProperty('--dy', p[2] + 'px');
+                d.style.animationDelay = (i * 0.9) + 's';
+            });
+            svgEl('circle', { class: 'fg-plus-ring', cx: 304, cy: y, r: 9 }, svg);
+            svgEl('circle', { cx: 304, cy: y, r: 9, fill: '#BF953F' }, svg);
+            svgEl('path', { d: `M300 ${y}h8M304 ${y - 4}v8`, stroke: '#1A1A1A', 'stroke-width': 2, 'stroke-linecap': 'round' }, svg);
+        }
+
+        // quanti contenuti ci sono oggi nel database (schermata 5)
+        function updateTutorialCount() {
+            if (typeof updateTimeCount === 'function') updateTimeCount();
+            const el = document.getElementById('tutCount');
+            if (!el) return;
+            let n = 0;
+            Object.values(timelineData || {}).forEach(list => { n += (list || []).length; });
+            el.textContent = n ? (langMode === 'it' ? `${n} contenuti, finora.` : `${n} entries so far.`) : '';
+        }
+
         function showTutorialStep(n) {
+            n = Math.max(1, Math.min(TUTORIAL_STEPS, n));
             tutorialStep = n;
+            const popup = document.getElementById('tutorialPopup');
+            if (popup) popup.setAttribute('data-step', String(n));
             document.querySelectorAll('.tutorial-step').forEach(el => {
                 el.classList.toggle('active', parseInt(el.dataset.step, 10) === n);
             });
             document.querySelectorAll('.tutorial-dot').forEach(dot => {
-                dot.classList.toggle('active', parseInt(dot.dataset.step, 10) === n);
+                const d = parseInt(dot.dataset.step, 10);
+                dot.classList.toggle('active', d === n);
+                dot.classList.toggle('done', d < n);
+                dot.setAttribute('aria-current', d === n ? 'step' : 'false');
             });
+            const body = popup ? popup.querySelector('.tutorial-body') : null;
+            if (body) body.scrollTop = 0;
+            // le figure si ridisegnano a ogni ingresso: così l'animazione riparte
+            if (n === 1) drawTimeFigure();
+            if (n === 2) drawLayersFigure();
+            if (n === 4) drawFilterFigure();
+            if (n === 5) { drawGrowFigure(); updateTutorialCount(); }
+            const hide = document.getElementById('tutHide');
+            if (hide) hide.checked = tutorialHidden();
+        }
+
+        function openTutorial(step) {
+            document.getElementById('infoPopupOverlay').classList.add('active');
+            showTutorialStep(step || 1);
+        }
+
+        function closeTutorial() {
+            document.getElementById('infoPopupOverlay').classList.remove('active');
+            cancelAnimationFrame(layersRaf);
+            cancelAnimationFrame(timeRaf);
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-document.getElementById('infoPopupOverlay').classList.add('active');
-if (typeof showTutorialStep === 'function') showTutorialStep(1);
+// Il tutorial si apre da solo all'avvio, a meno che il visitatore abbia
+// spuntato "Non mostrare all'avvio" (resta sempre disponibile dall'icona i)
+if (!tutorialHidden()) openTutorial(1);
             
             const initDomLinks = () => {
 
@@ -3348,6 +5079,11 @@ document.getElementById('menuIcon').addEventListener('click', () => {
         updateEventVisibility();
         populateClusterChips();
         renderKeywordChips();
+        if (typeof updateTutorialCount === 'function') updateTutorialCount();
+        // tutorial aperto: le figure con testi si ridisegnano nella nuova lingua
+        if (document.getElementById('infoPopupOverlay').classList.contains('active') && typeof showTutorialStep === 'function') {
+            showTutorialStep(tutorialStep);
+        }
         if (dataLoadingFinished) {
             hideDataLoadingMessage();
         }
@@ -3368,23 +5104,16 @@ document.getElementById('menuIcon').addEventListener('click', () => {
                 if (infoIcon) {
 
 
-                    infoIcon.addEventListener('click', () => {
-                        infoPopupOverlay.classList.add('active');
-                        showTutorialStep(1);
-                    });
+                    infoIcon.addEventListener('click', () => openTutorial(1));
                 }
 
                 if (closeInfoPopup) {
-                    closeInfoPopup.addEventListener('click', () => {
-                        infoPopupOverlay.classList.remove('active');
-                    });
+                    closeInfoPopup.addEventListener('click', closeTutorial);
                 }
 
                 if (infoPopupOverlay) {
                     infoPopupOverlay.addEventListener('click', (e) => {
-                        if (e.target === infoPopupOverlay) {
-                            infoPopupOverlay.classList.remove('active');
-                        }
+                        if (e.target === infoPopupOverlay) closeTutorial();
                     });
                 }
 
@@ -3393,18 +5122,38 @@ document.getElementById('menuIcon').addEventListener('click', () => {
                     dot.addEventListener('click', () => showTutorialStep(parseInt(dot.dataset.step, 10)));
                 });
 
-                document.querySelectorAll('.tutorial-skip-btn').forEach(btn => {
-                    btn.addEventListener('click', () => infoPopupOverlay.classList.remove('active'));
-                });
-
                 document.querySelectorAll('.tutorial-next-btn').forEach(btn => {
                     btn.addEventListener('click', () => {
-                        if (tutorialStep < 4) {
-                            showTutorialStep(tutorialStep + 1);
-                        } else {
-                            infoPopupOverlay.classList.remove('active');
-                        }
+                        if (tutorialStep < TUTORIAL_STEPS) showTutorialStep(tutorialStep + 1);
+                        else closeTutorial();
                     });
+                });
+
+                document.querySelectorAll('.tutorial-prev-btn').forEach(btn => {
+                    btn.addEventListener('click', () => showTutorialStep(tutorialStep - 1));
+                });
+
+                document.querySelectorAll('.tutorial-skip-btn, .tut-finish').forEach(btn => {
+                    btn.addEventListener('click', closeTutorial);
+                });
+
+                // "Non mostrare all'avvio": scelta ricordata nel browser
+                const tutHide = document.getElementById('tutHide');
+                if (tutHide) {
+                    tutHide.checked = tutorialHidden();
+                    tutHide.addEventListener('change', () => {
+                        setTutorialHidden(tutHide.checked);
+                        if (window.sychroTrack) window.sychroTrack('tutorial_hide_toggle', { hidden: tutHide.checked }, tutHide.checked ? 'nascosto' : 'visibile');
+                    });
+                }
+
+                // tastiera: Esc chiude, frecce sinistra/destra cambiano schermata
+                document.addEventListener('keydown', (e) => {
+                    if (!infoPopupOverlay.classList.contains('active')) return;
+                    if (e.target && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) && e.target.type !== 'checkbox') return;
+                    if (e.key === 'Escape') closeTutorial();
+                    else if (e.key === 'ArrowRight') showTutorialStep(tutorialStep + 1);
+                    else if (e.key === 'ArrowLeft') showTutorialStep(tutorialStep - 1);
                 });
 
             }
@@ -3483,6 +5232,7 @@ systemdynamic,
             renderTimelines();
             populateClusterChips();
             hideDataLoadingMessage();
+            if (typeof updateTutorialCount === 'function') updateTutorialCount();
         })
         .catch(error => {
             console.error(`Errore nel caricamento dei dati (tentativo ${attempt}/${MAX_ATTEMPTS}):`, error);
@@ -4806,108 +6556,182 @@ window.addEventListener('wheel', function(e) {
         </div>
     </div>
     <div class="info-popup-overlay" id="infoPopupOverlay">
-       <div class="info-popup" id="tutorialPopup" style="width: 78%; max-width: 1400px; padding: 40px; margin-left: auto; margin-right: auto">
-            <button class="info-popup-close" id="closeInfoPopup">×</button>
+       <div class="info-popup tut" id="tutorialPopup" role="dialog" aria-modal="true" aria-labelledby="tutTitle1">
+            <button class="info-popup-close" id="closeInfoPopup" aria-label="Chiudi / Close">×</button>
+
+            <!-- Avanzamento: una piccola timeline, un pallino per schermata -->
+            <div class="tutorial-breadcrumbs tut-progress" id="tutorialBreadcrumbs">
+                <span class="tut-progress-line" aria-hidden="true"></span>
+                <button class="tutorial-dot active" data-step="1" aria-label="1 / 5"></button>
+                <button class="tutorial-dot" data-step="2" aria-label="2 / 5"></button>
+                <button class="tutorial-dot" data-step="3" aria-label="3 / 5"></button>
+                <button class="tutorial-dot" data-step="4" aria-label="4 / 5"></button>
+                <button class="tutorial-dot" data-step="5" aria-label="5 / 5"></button>
+            </div>
 
             <div class="tutorial-body">
 
-            <div class="tutorial-breadcrumbs" id="tutorialBreadcrumbs">
-                <button class="tutorial-dot active" data-step="1" aria-label="Step 1"></button>
-                <button class="tutorial-dot" data-step="2" aria-label="Step 2"></button>
-                <button class="tutorial-dot" data-step="3" aria-label="Step 3"></button>
-                <button class="tutorial-dot" data-step="4" aria-label="Step 4"></button>
+            <!-- 1 · COS'È SYCHRO E PERCHÉ -->
+            <section class="tutorial-step tut-split active" data-step="1">
+                <div class="tut-figure" aria-hidden="true">
+                    <svg class="fig-time" viewBox="0 0 320 200" id="figTime"></svg>
+                </div>
+                <div class="tut-text">
+                    <img class="tut-logo" src="LOGO SyChro 1.svg" alt="SyChro – Collective Systemic Chronography">
+                    <div class="it-lang">
+                        <h3 id="tutTitle1">Un punto di riferimento per le discipline sistemiche</h3>
+                        <p>La conoscenza sistemica è vasta, frammentata e suddivisa tra discipline e istituzioni. Manca ancora un <strong>punto di riferimento centralizzato</strong>, essenziale per sintetizzare le informazioni e favorire lo scambio di conoscenza.</p>
+                        <p><strong>SyChro</strong> raccoglie i dati storici dispersi in un <strong>database strutturato</strong> e li traduce in una <strong>timeline interattiva multilivello</strong>: un'unica piattaforma per esplorare, collegare e mettere in relazione le nozioni e le figure rilevanti del campo sistemico, a partire da quattro discipline cardine: Systems Thinking, System Dynamics, Systemic Design e Sostenibilità.</p>
+                    </div>
+                    <div class="en-lang" style="display:none">
+                        <h3>A reference point for the systemic disciplines</h3>
+                        <p>Systemic knowledge is vast, fragmented and siloed across disciplines and institutions. A <strong>centralised reference point</strong>, essential to synthesise information and exchange knowledge, is still missing.</p>
+                        <p><strong>SyChro</strong> consolidates scattered historical data into a <strong>structured database</strong> and translates it into an <strong>interactive, multi-layered timeline</strong>: a single platform to explore, connect and correlate the notable notions and figures of the systemic field, starting from four pivotal disciplines: Systems Thinking, System Dynamics, Systemic Design and Sustainability.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2 · LA TIMELINE MULTILIVELLO -->
+            <section class="tutorial-step tut-split" data-step="2">
+                <div class="tut-figure" aria-hidden="true">
+                    <svg class="fig-layers" viewBox="0 0 320 210" id="figLayers"></svg>
+                </div>
+                <div class="tut-text">
+                    <div class="it-lang">
+                        <h3>Una timeline multilivello</h3>
+                        <p>I contenuti sono stratificati su <strong>cinque timeline parallele</strong>: nodi interconnessi in un unico spazio temporale, per cogliere <strong>sviluppi paralleli</strong> e <strong>influenze reciproche</strong>.</p>
+                        <div class="tut-cats">
+                            <div style="--c:#ca6b58"><span class="tut-cat-label" style="--t:var(--cat-def-text)">Definizioni</span><span>termini, concetti e quadri teorici nuovi</span></div>
+                            <div style="--c:#ff964c"><span class="tut-cat-label" style="--t:var(--cat-doc-text)">Documentazione</span><span>testi e materiali che hanno segnato la letteratura</span></div>
+                            <div style="--c:#8d6e63"><span class="tut-cat-label" style="--t:var(--cat-ent-text)">Enti</span><span>istituzioni, centri di ricerca e programmi formativi</span></div>
+                            <div style="--c:#4db6ac"><span class="tut-cat-label" style="--t:var(--cat-evt-text)">Eventi</span><span>conferenze, workshop e mostre sul tema</span></div>
+                            <div style="--c:#3c87b5"><span class="tut-cat-label" style="--t:var(--cat-sto-text)">Storia Generale</span><span>le tappe storiche di riferimento</span></div>
+                        </div>
+                    </div>
+                    <div class="en-lang" style="display:none">
+                        <h3>A multi-layered timeline</h3>
+                        <p>Contents are stratified across <strong>five parallel timelines</strong>: interconnected nodes in a unified temporal space, to perceive <strong>parallel developments</strong> and <strong>reciprocal influences</strong>.</p>
+                        <div class="tut-cats">
+                            <div style="--c:#ca6b58"><span class="tut-cat-label" style="--t:var(--cat-def-text)">Definitions</span><span>new terms, concepts and theoretical frameworks</span></div>
+                            <div style="--c:#ff964c"><span class="tut-cat-label" style="--t:var(--cat-doc-text)">Documentation</span><span>texts and materials that shaped the literature</span></div>
+                            <div style="--c:#8d6e63"><span class="tut-cat-label" style="--t:var(--cat-ent-text)">Organizations</span><span>institutions, research centres and training programmes</span></div>
+                            <div style="--c:#4db6ac"><span class="tut-cat-label" style="--t:var(--cat-evt-text)">Events</span><span>conferences, workshops and exhibitions on the topic</span></div>
+                            <div style="--c:#3c87b5"><span class="tut-cat-label" style="--t:var(--cat-sto-text)">General History</span><span>the historical milestones of reference</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3 · ESPLORARE: due blocchi, ciascuno con una piccola animazione -->
+            <section class="tutorial-step tut-rows-step" data-step="3">
+                <div class="it-lang"><h3 class="tut-center">Esplorare</h3></div>
+                <div class="en-lang" style="display:none"><h3 class="tut-center">Exploring</h3></div>
+                <div class="tut-rows">
+                    <div class="tut-row">
+                        <svg class="tut-row-fig fig-ui fig-node" viewBox="0 0 200 120" aria-hidden="true">
+                            <line x1="10" y1="96" x2="190" y2="96" stroke="#ff964c" stroke-width="1.6" opacity=".55"/>
+                            <circle class="fg-halo nd-halo" cx="60" cy="96" r="9"/>
+                            <circle class="fg-dot nd-dot" cx="60" cy="96" r="6" fill="#ff964c"/>
+                            <circle class="nd-tap" cx="60" cy="96" r="6"/>
+                            <g class="nd-card">
+                                <rect class="ui-panel" x="82" y="8" width="108" height="76" rx="7"/>
+                                <rect x="82" y="8" width="108" height="76" rx="7" fill="none" stroke="#ff964c" stroke-width="1.3"/>
+                                <rect x="92" y="18" width="66" height="6" rx="2" class="sk-strong"/>
+                                <rect x="92" y="28" width="46" height="6" rx="2" class="sk-strong"/>
+                                <rect x="92" y="40" width="18" height="4" rx="2" fill="#ff964c"/>
+                                <rect x="92" y="51" width="86" height="3" rx="1.5" class="sk-soft"/>
+                                <rect x="92" y="58" width="86" height="3" rx="1.5" class="sk-soft"/>
+                                <rect x="92" y="65" width="60" height="3" rx="1.5" class="sk-soft"/>
+                                <path d="M66 90 L82 70" stroke="#ff964c" stroke-width="1.2" opacity=".6"/>
+                            </g>
+                        </svg>
+                        <div class="it-lang"><p>Ogni nodo è un contenuto: passandoci sopra se ne leggono anno e titolo, selezionandolo si apre la <strong>scheda di approfondimento</strong>.</p></div>
+                        <div class="en-lang" style="display:none"><p>Each node is an entry: hover to read its year and title, select it to open its <strong>detail window</strong>.</p></div>
+                    </div>
+                    <div class="tut-row">
+                        <svg class="tut-row-fig fig-ui fig-zoom" viewBox="0 0 200 120" aria-hidden="true">
+                            <g class="zm-track">
+                                <line x1="10" y1="40" x2="190" y2="40" stroke="#4db6ac" stroke-width="1.6" opacity=".55"/>
+                                <circle class="fg-dot" cx="34" cy="40" r="4" fill="#4db6ac"/>
+                                <circle class="fg-dot" cx="170" cy="40" r="4" fill="#4db6ac"/>
+                                <rect class="zm-bar" x="80" y="35" width="38" height="10" rx="5" fill="#4db6ac"/>
+                                <g class="zm-dots">
+                                    <circle class="fg-dot" cx="84" cy="40" r="4" fill="#4db6ac"/>
+                                    <circle class="fg-dot" cx="94" cy="40" r="4" fill="#4db6ac"/>
+                                    <circle class="fg-dot" cx="103" cy="40" r="4" fill="#4db6ac"/>
+                                    <circle class="fg-dot" cx="113" cy="40" r="4" fill="#4db6ac"/>
+                                </g>
+                            </g>
+                            <circle cx="52" cy="92" r="13" fill="#BF953F"/><path d="M46 92h12" stroke="#1A1A1A" stroke-width="2.2" stroke-linecap="round"/>
+                            <rect x="70" y="82" width="38" height="20" rx="10" class="zm-level"/>
+                            <text x="89" y="92.5" class="ui-text zm-pct" text-anchor="middle" dominant-baseline="central">100%</text>
+                            <circle class="zm-plus" cx="126" cy="92" r="13" fill="#33449E"/><path d="M120 92h12M126 86v12" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+                            <circle cx="158" cy="92" r="13" fill="#BF953F"/><path d="M152.5 92a5.5 5.5 0 1 0 1.6-3.9M152.5 86.5v3.6h3.6" fill="none" stroke="#1A1A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <div class="it-lang"><p>Con lo <strong>zoom</strong> si passa dalla visione d'insieme al dettaglio dei singoli anni; <strong>↺</strong> riporta alla vista iniziale. Dove i contenuti sono molti, sono raggruppati in <strong>barrette</strong> che si aprono ingrandendo.</p></div>
+                        <div class="en-lang" style="display:none"><p><strong>Zoom</strong> takes you from the overview to the detail of single years; <strong>↺</strong> brings back the initial view. Where entries are many, they are grouped into <strong>bars</strong> that open as you zoom in.</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4 · VISTE FILTRATE -->
+            <section class="tutorial-step tut-split tut-map" data-step="4">
+                <div class="tut-figure" aria-hidden="true">
+                    <svg viewBox="0 0 340 220" class="fig-ui" id="figFilter"></svg>
+                </div>
+                <div class="tut-text tut-text-narrow">
+                    <div class="it-lang">
+                        <h3>Filtrare e collegare</h3>
+                        <p>Dall'icona dei filtri <span class="tut-inline-filter" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M8 12h8M11 18h2"/></svg></span> puoi restringere la timeline per <strong>parola chiave</strong>, <strong>tag</strong>, <strong>cluster</strong> o <strong>periodo</strong>, e combinarli tra loro: i contenuti corrispondenti restano in primo piano, gli altri sfumano sullo sfondo.</p>
+                        <p>Quando apri una scheda, i contenuti dello stesso cluster si illuminano; dall'elenco <strong>Collegati</strong>, un'<strong>onda</strong> indica dove si trova ciascuno sulla timeline.</p>
+                    </div>
+                    <div class="en-lang" style="display:none">
+                        <h3>Filtering and connecting</h3>
+                        <p>From the filters icon <span class="tut-inline-filter" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M8 12h8M11 18h2"/></svg></span> you can narrow the timeline by <strong>keyword</strong>, <strong>tag</strong>, <strong>cluster</strong> or <strong>period</strong> and combine them: matching entries stay in the foreground, the others fade into the background.</p>
+                        <p>When you open a card, entries of the same cluster light up; from the <strong>Connected</strong> list, a <strong>wave</strong> shows where each one sits on the timeline.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5 · IL DATABASE COLLETTIVO -->
+            <section class="tutorial-step tut-split" data-step="5">
+                <div class="tut-figure" aria-hidden="true">
+                    <svg class="fig-grow" viewBox="0 0 320 210" id="figGrow"></svg>
+                    <p class="tut-count" id="tutCount"></p>
+                </div>
+                <div class="tut-text tut-text-narrow">
+                    <div class="it-lang">
+                        <h3>Un database collettivo</h3>
+                        <p>Una visione <strong>aggiornata, esaustiva e globale</strong> del campo sistemico non può essere il lavoro di un solo gruppo di ricerca.</p>
+                        <p>Per questo il database di SyChro è <strong>aperto e crowdsourced</strong>: chiunque può proporre nuovi contenuti o correzioni, valutati secondo i criteri di selezione.</p>
+                    </div>
+                    <div class="en-lang" style="display:none">
+                        <h3>A collective database</h3>
+                        <p>An <strong>updated, exhaustive and global</strong> overview of the systemic field cannot be the work of a single research group.</p>
+                        <p>For this reason the SyChro database is <strong>open and crowdsourced</strong>: anyone can propose new contents or corrections, evaluated against the selection criteria.</p>
+                    </div>
+                    <div class="tut-cta">
+                        <a class="tut-btn tut-btn-ghost" id="tutContribute" href="https://forms.gle/MdyjtAE9DozBvcBf6" target="_blank" rel="noopener"><span class="it-lang">Proponi un contenuto</span><span class="en-lang" style="display:none">Suggest an entry</span></a>
+                    </div>
+                    <div class="tut-closing it-lang"><span class="tut-closing-mark" aria-hidden="true"></span><p>Inizia a esplorare<br>la storia del pensiero sistemico</p></div>
+                    <div class="tut-closing en-lang" style="display:none"><span class="tut-closing-mark" aria-hidden="true"></span><p>Start exploring<br>the history of systemic thinking</p></div>
+                </div>
+            </section>
+
             </div>
 
-            <!-- STEP 1 -->
-            <div class="tutorial-step active" data-step="1">
-                <h3 class="it-lang" style="text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Benvenut@!</h3>
-                <h3 class="en-lang" style="display:none; text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Welcome!</h3>
-                <div class="it-lang" style="color: var(--text); line-height: 1.5; text-align: left;">
-                    <p style="text-align: center; margin-bottom: 15px;">Questa timeline multilivello ti permette di esplorare tutti i fattori che storicamente hanno contribuito al delinearsi
-                    <br>di un approccio di pensiero olistico, multidisciplinare e sistemico, toccando tematiche ambientali, sociali, economiche, educative e filosofiche.
-                    <br>Più imparerai, più guarderai il mondo da una nuova prospettiva!</p>
-                </div>
-                <div class="en-lang" style="display:none; color: var(--text); line-height: 1.5; text-align: left;">
-                    <p style="text-align: center; margin-bottom: 15px;">This multilevel timeline allows you to explore all the factors that have historically contributed to the emergence of a holistic,
-                    <br>multidisciplinary, and systemic approach to thinking, touching on environmental, social, economic, educational, and philosophical issues.
-                    <br>The more you learn, the more you'll see the world from a new perspective!</p>
-                </div>
-            </div>
-
-            <!-- STEP 2 -->
-            <div class="tutorial-step" data-step="2">
-                <h3 class="it-lang" style="text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Le informazioni della timeline:</h3>
-                <h3 class="en-lang" style="display:none; text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Timeline information:</h3>
-                <div class="it-lang" style="color: var(--text); line-height: 1.5; text-align: left;">
-                    <p style="margin-bottom: 14px;">Al centro troverai cinque linee del tempo per cinque diverse tipologie di contenuti:</p>
-                    <div class="tutorial-category-row" style="border-left-color: #ca6b58;"><strong style="color: var(--cat-def-text);">Definizioni</strong> — formalizzazione e introduzione di termini, concetti, quadri teorici o branche di studio completamente nuovi.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #ff964c;"><strong style="color: var(--cat-doc-text);">Documentazione</strong> — libri, testi, riviste, articoli, paper, filme e materiali audiovisivi che hanno apportato contribuiti significativi alla letteratura.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #8d6e63;"><strong style="color: var(--cat-ent-text);">Enti</strong> — istituzioni, associazioni, centri di ricerca o programmi formativi che hanno contribuito alla definizione del pensiero sistemico.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #4db6ac;"><strong style="color: var(--cat-evt-text);">Eventi</strong> — conferenze, congressi, workshop formativi, mostre tematiche che hanno contribuito al dialogo scientifico-culturale sul tema.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #3c87b5; margin-bottom: 0;"><strong style="color: var(--cat-sto-text);">Storia Generale</strong> — le tappe storiche significative che danno un quadro di riferimento temporale.</div>
-                </div>
-                <div class="en-lang" style="display:none; color: var(--text); line-height: 1.5; text-align: left;">
-                    <p style="margin-bottom: 14px;">In the center you will find five timelines for five different types of content:</p>
-                    <div class="tutorial-category-row" style="border-left-color: #ca6b58;"><strong style="color: var(--cat-def-text);">Definitions</strong> — formalization and introduction of completely new terms, concepts, theoretical frameworks or branches of study.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #ff964c;"><strong style="color: var(--cat-doc-text);">Documentation</strong> — books, texts, magazines, articles, papers, films and audiovisual materials that have made significant contributions to literature.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #8d6e63;"><strong style="color: var(--cat-ent-text);">Organizations</strong> — associations, research centers or training programs that have contributed to the definition of systems thinking.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #4db6ac;"><strong style="color: var(--cat-evt-text);">Events</strong> — conferences, congresses, training workshops, thematic exhibitions that have contributed to the scientific-cultural dialogue on the topic.</div>
-                    <div class="tutorial-category-row" style="border-left-color: #3c87b5; margin-bottom: 0;"><strong style="color: var(--cat-sto-text);">General History</strong> — the significant historical stages that provide a temporal framework.</div>
-                </div>
-            </div>
-
-            <!-- STEP 3 -->
-            <div class="tutorial-step" data-step="3">
-                <h3 class="it-lang" style="text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Come usare la timeline:</h3>
-                <h3 class="en-lang" style="display:none; text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">How to use the timeline:</h3>
-                <div class="it-lang" style="color: var(--text); line-height: 1.5; text-align: left;">
-                    <ul style="list-style: disc; padding-left: 1.4rem; margin: 0;">
-                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Scopri i contenuti</strong><br>Toccando un punto colorato lungo le timeline si apre un pop-up con i dettagli di un evento.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Tag colorati (●)</strong><br>Ogni contenuto è associato a uno o più tag, spiegati nella legenda in basso.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Zoom (↘ in basso a destra)</strong><br>Usa + / − per zoomare sulle linee temporali, ↺ per tornare alla visualizzazione iniziale.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Ricerca (↗ in alto a destra)</strong><br>Cerca i contenuti per parola chiave o per data.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Cambio lingua (↖ in alto a sinistra)</strong><br>Cambia la lingua dell'interfaccia (IT⇄EN).</li>
-                        <li style="margin-bottom: 0;"><strong style="color: var(--gold-title);">Tutorial (ⓘ in alto a sinistra)</strong><br>Riapri questa finestra di istruzioni in qualsiasi momento.</li>
-                    </ul>
-                </div>
-                <div class="en-lang" style="display:none; color: var(--text); line-height: 1.5; text-align: left;">
-                    <ul style="list-style: disc; padding-left: 1.4rem; margin: 0;">
-                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Discover the content</strong><br>Tapping a colored dot along the timelines opens a pop-up with an event's details.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Colored tags (●)</strong><br>Each piece of content is linked to one or more tags, explained in the legend below.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Zoom (↘ bottom right)</strong><br>Use + / − to zoom in on the timelines, ↺ to return to the initial view.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Search (↗ top right)</strong><br>Search for content by keyword or by date.</li>
-                        <li style="margin-bottom: 14px;"><strong style="color: var(--gold-title);">Language (↖ top left)</strong><br>Switch the interface language (EN⇄IT).</li>
-                        <li style="margin-bottom: 0;"><strong style="color: var(--gold-title);">Tutorial (ⓘ top left)</strong><br>Reopen this instructions window anytime.</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- STEP 4 -->
-            <div class="tutorial-step" data-step="4">
-                <h3 class="it-lang" style="text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Come nutrire la timeline:</h3>
-                <h3 class="en-lang" style="display:none; text-align: center;color: var(--gold-title); font-weight: bold; margin-bottom: 15px;">Contribute to the timeline:</h3>
-                <div class="it-lang" style="color: var(--text); line-height: 1.5; text-align: left;">
-                    <p class="tutorial-indent" style="margin-bottom: 15px;">Vuoi contribuire al database sistemico? Clicca sul pulsante in basso a sinistra (↙) per proporre un contenuto o per scrivere un feedback.</p>
-                    <p style="text-align: center; font-weight: bold; color: var(--gold-title); margin-top: 6rem; font-size: 1.3em;">Grazie e buona esplorazione!</p>
-                    <p class="rights-note">Testi, struttura e database di SyChro © 2025 Serena Treppiedi — Tutti i diritti riservati. Non è consentito copiare o riutilizzare i contenuti senza autorizzazione.</p>
-                </div>
-                <div class="en-lang" style="display:none; color: var(--text); line-height: 1.5; text-align: left;">
-                    <p class="tutorial-indent" style="margin-bottom: 15px;">Want to contribute to the systemic database? Click the button at the bottom left (↙) to submit content or leave feedback.</p>
-                    <p style="text-align: center; font-weight: bold; color: var(--gold-title); margin-top: 6rem; font-size: 1.3em;">Thank you and enjoy your exploration!</p>
-                    <p class="rights-note">SyChro texts, structure and database © 2025 Serena Treppiedi — All rights reserved. Copying or reusing the content without permission is not allowed.</p>
-                </div>
-            </div>
-
-            </div>
-
-            <div class="tutorial-nav">
-                <div>
-                    <button class="skip-btn it-lang tutorial-skip-btn">Salta</button>
-                    <button class="skip-btn en-lang tutorial-skip-btn" style="display:none">Skip</button>
-                </div>
-                <div>
-                    <button class="continue-btn it-lang tutorial-next-btn">Prosegui</button>
-                    <button class="continue-btn en-lang tutorial-next-btn" style="display:none">Continue</button>
+            <div class="tutorial-nav tut-nav">
+                <!-- schermate 1-4: "Salta"; ultima: "Non mostrare più" -->
+                <button type="button" class="tut-skip tutorial-skip-btn"><span class="it-lang">Salta</span><span class="en-lang" style="display:none">Skip</span></button>
+                <label class="tut-hide">
+                    <input type="checkbox" id="tutHide">
+                    <span class="it-lang">Non mostrare più</span>
+                    <span class="en-lang" style="display:none">Don't show again</span>
+                </label>
+                <div class="tut-nav-btns">
+                    <button type="button" class="tut-arrow tutorial-prev-btn" id="tutPrev" aria-label="Indietro / Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+                    <button type="button" class="tut-arrow tut-arrow-next tutorial-next-btn" id="tutNext" aria-label="Avanti / Next"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+                    <button type="button" class="tut-btn tut-btn-primary tut-finish" id="tutFinish"><span class="it-lang">Esplora</span><span class="en-lang" style="display:none">Explore</span></button>
                 </div>
             </div>
         </div>
@@ -5352,7 +7176,10 @@ try {
 
         // --- tutorial ---
         if (t.closest('.tutorial-next-btn')) return track('tutorial_next', { from_step: tutorialStep }, 'da-step-' + tutorialStep);
+        if (t.closest('.tutorial-prev-btn')) return track('tutorial_prev', { from_step: tutorialStep }, 'da-step-' + tutorialStep);
         if (t.closest('.tutorial-skip-btn')) return track('tutorial_skip', { at_step: tutorialStep }, 'allo-step-' + tutorialStep);
+        if (t.closest('.tut-finish')) return track('tutorial_finish', {});
+        if (t.closest('#tutContribute')) return track('contribute_click', { source: 'tutorial', transport_type: 'beacon' }, 'dal-tutorial');
         if ((el = t.closest('.tutorial-dot'))) return track('tutorial_dot', { to_step: el.dataset.step }, 'step-' + el.dataset.step);
         if (t.closest('#closeInfoPopup')) return track('tutorial_close', { at_step: tutorialStep }, 'allo-step-' + tutorialStep);
 

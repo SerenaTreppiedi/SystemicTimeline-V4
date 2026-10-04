@@ -1775,7 +1775,7 @@ body.detail-open {
 
         .tut-logo {
             display: block;
-            height: 44px;
+            height: 66px;
             width: auto;
             margin: 0 0 1.1rem;
         }
@@ -1991,7 +1991,7 @@ body.detail-open {
 
         .tut-row {
             display: grid;
-            grid-template-columns: 230px minmax(0, 1fr);
+            grid-template-columns: 270px minmax(0, 1fr);
             gap: 2rem;
             align-items: center;
         }
@@ -2008,6 +2008,37 @@ body.detail-open {
         }
 
         .sk-strong { fill: var(--text-80); }
+        .sk-media { fill: var(--tint-strong); }
+        .sk-media-icon { fill: var(--text-50); }
+
+        .fig-ui .ui-link {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 8px;
+            font-weight: 700;
+            fill: var(--gold-text);
+            text-decoration: underline;
+        }
+
+        /* "Collegati" nella lingua attiva (la figura è statica nell'HTML) */
+        .fig-node .nd-coll-en { display: none; }
+        html[lang="en"] .fig-node .nd-coll-it { display: none; }
+        html[lang="en"] .fig-node .nd-coll-en { display: inline; }
+
+        /* la percentuale dello zoom cambia insieme all'ingrandimento */
+        .fig-zoom .zm-pct-a { animation: zm-pct-a 4.5s ease infinite; }
+        .fig-zoom .zm-pct-b { animation: zm-pct-b 4.5s ease infinite; opacity: 0; }
+
+        @keyframes zm-pct-a {
+            0%, 26%  { opacity: 1; }
+            30%, 92% { opacity: 0; }
+            96%, 100% { opacity: 1; }
+        }
+
+        @keyframes zm-pct-b {
+            0%, 26%  { opacity: 0; }
+            30%, 92% { opacity: 1; }
+            96%, 100% { opacity: 0; }
+        }
         .sk-soft { fill: var(--text-50); }
         .zm-level { fill: var(--tint-strong); }
 
@@ -2126,6 +2157,50 @@ body.detail-open {
             stroke-linecap: round;
         }
 
+        /* schermata 4, in ciclo di 6 s: icona spenta -> accesa -> pannello
+           filtri -> timeline filtrata -> di nuovo tutto spento */
+        .fig-ui .ff-icon-bg {
+            animation: ff-icon-bg 6s ease infinite;
+        }
+
+        .fig-ui .ff-icon-glyph {
+            animation: ff-icon-glyph 6s ease infinite;
+        }
+
+        @keyframes ff-icon-bg {
+            0%, 14%   { fill: transparent; stroke: #BF953F; stroke-width: 1; }
+            20%, 86%  { fill: #BF953F; stroke: #BF953F; stroke-width: 1; }
+            94%, 100% { fill: transparent; stroke: #BF953F; stroke-width: 1; }
+        }
+
+        @keyframes ff-icon-glyph {
+            0%, 14%   { stroke: #BF953F; }
+            20%, 86%  { stroke: #1A1A1A; }
+            94%, 100% { stroke: #BF953F; }
+        }
+
+        .fig-ui .ff-panel {
+            transform-box: fill-box;
+            transform-origin: top right;
+            animation: ff-panel 6s ease infinite;
+        }
+
+        @keyframes ff-panel {
+            0%, 20%   { opacity: 0; transform: scale(0.94); }
+            28%, 84%  { opacity: 1; transform: scale(1); }
+            92%, 100% { opacity: 0; transform: scale(0.97); }
+        }
+
+        .fig-ui .ff-dim {
+            animation: ff-dim 6s ease infinite;
+        }
+
+        @keyframes ff-dim {
+            0%, 30%   { opacity: 1; }
+            38%, 84%  { opacity: 0.12; }
+            92%, 100% { opacity: 1; }
+        }
+
         /* onda sui contenuti collegati (come nella timeline) */
         .fg-wave {
             fill: none;
@@ -2142,6 +2217,10 @@ body.detail-open {
         }
 
         /* popup schematico che compare sui nodi attraversati (schermata 2) */
+        .fg-pop-card {
+            transition: opacity 0.25s ease;
+        }
+
         .fg-pop-card rect.pc-bg {
             fill: var(--popup-bg);
             stroke-width: 1;
@@ -2154,8 +2233,17 @@ body.detail-open {
             .fig-zoom .zm-dots circle,
             .fig-zoom .zm-bar,
             .fig-zoom .zm-dots,
-            .fg-wave {
+            .fig-zoom .zm-pct-a,
+            .fig-zoom .zm-pct-b,
+            .fg-wave,
+            .fig-ui .ff-icon-bg,
+            .fig-ui .ff-icon-glyph,
+            .fig-ui .ff-dim {
                 animation: none !important;
+            }
+            .fig-ui .ff-panel {
+                animation: none !important;
+                opacity: 1;
             }
             .fig-node .nd-card {
                 animation: none !important;
@@ -2800,7 +2888,7 @@ body.detail-open {
             }
 
             .tut-logo {
-                height: 32px;
+                height: 46px;
                 margin-bottom: 0.7rem;
             }
 
@@ -2945,7 +3033,7 @@ body.detail-open {
             }
 
             .tut-logo {
-                height: 28px;
+                height: 38px;
                 margin-bottom: 0.5rem;
             }
 
@@ -4544,10 +4632,11 @@ body.detail-open {
             return Object.values(timelineData || {}).reduce((n, l) => n + (l || []).length, 0);
         }
 
-        // 1 · una sola linea del tempo: mentre l'anno scorre dal 1850 al 2026,
-        //     i contenuti compaiono nel punto in cui nascono, sempre più fitti
-        //     verso il presente (dove si impilano leggermente). Il conteggio è
-        //     quello reale e compare solo quando i dati sono caricati.
+        // 1 · una sola linea del tempo divisa in nove intervalli uguali (1850-2026):
+        //     in ciascuno compaiono 1, 1, 2, 3, 5, 8, 13, 21, 34 contenuti
+        //     (sequenza di Fibonacci), disposti in piccole colonne simmetriche
+        //     rispetto alla linea. Il conteggio è quello reale del database e
+        //     compare solo quando i dati sono caricati.
         let timeRaf = null;
         let timeCountLabel = null;
         let timeProgress = 0;
@@ -4556,47 +4645,36 @@ body.detail-open {
             if (!svg) return;
             svg.innerHTML = '';
             cancelAnimationFrame(timeRaf);
-            const Y0 = 1850, Y1 = 2026, X0 = 16, X1 = 304, LINE = 120;
-            const toX = y => X0 + (y - Y0) / (Y1 - Y0) * (X1 - X0);
+            const Y0 = 1850, Y1 = 2026, X0 = 16, X1 = 304, LINE = 104;
+            const FIB = [1, 1, 2, 3, 5, 8, 13, 21, 34];
+            const SEG = (X1 - X0) / FIB.length;
+            const GAP = 6.4;                       // distanza tra i nodi
+            const ORDER = [0, -1, 1, -2, 2, -3, 3]; // riempimento verticale simmetrico
             svgEl('line', { class: 'fg-axis-neutral', x1: X0, y1: LINE, x2: X1, y2: LINE }, svg);
 
-            let years = [];
-            Object.values(timelineData || {}).forEach(l => (l || []).forEach(ev => {
-                if (ev.year >= Y0 && ev.year <= Y1) years.push(ev.year);
-            }));
-            const rnd = seeded(5);
-            if (!years.length) {
-                for (let k = 0; k < 120; k++) years.push(Y0 + (Y1 - Y0) * Math.pow(rnd(), 0.26));
-            }
-            years.sort((p, q) => p - q);
-            if (years.length > 120) {
-                const step = years.length / 120;
-                years = years.filter((_, k) => Math.floor(k % step) === 0);
-            }
-            // andamento esponenziale: pochissimi all'inizio, poi sempre di più.
-            // I contenuti più antichi vengono diradati in proporzione alla loro
-            // distanza dal presente (il conteggio resta quello reale).
-            years = years.filter(yr => rnd() < Math.pow((yr - Y0) / (Y1 - Y0), 1.6) + 0.06);
-            // dove i nodi sono troppo vicini si impilano sopra e sotto la linea
-            // al massimo tre livelli sopra e tre sotto: oltre, i nodi si
-            // sovrappongono a quelli già presenti (come nella timeline vera)
-            const slots = {};
-            const items = years.map(yr => {
-                const x = toX(yr);
-                const key = Math.round(x / 6);
-                const n = slots[key] = (slots[key] || 0) + 1;
-                const level = Math.min(3, Math.floor(n / 2));
-                const offset = n === 1 ? 0 : (n % 2 === 0 ? -1 : 1) * level * 6.5;
-                return { yr, x, y: LINE + offset };
+            const items = [];
+            FIB.forEach((count, s) => {
+                const cols = Math.ceil(count / ORDER.length);
+                const width = (cols - 1) * GAP;
+                const cx0 = X0 + SEG * s + SEG / 2 - width / 2;
+                for (let k = 0; k < count; k++) {
+                    const col = Math.floor(k / ORDER.length);
+                    const row = ORDER[k % ORDER.length];
+                    // anno "di nascita": distribuito dentro l'intervallo
+                    const yr = Y0 + (Y1 - Y0) * (s + (k + 0.5) / count) / FIB.length;
+                    items.push({ yr, x: cx0 + col * GAP, y: LINE + row * GAP });
+                }
             });
+            items.sort((p, q) => p.yr - q.yr);
 
             const dotsLayer = svgEl('g', {}, svg);
-            const cursor = svgEl('line', { class: 'fg-vline', x1: X0, y1: 40, x2: X0, y2: 168 }, svg);
-            const yearLabel = svgEl('text', { class: 'fg-year', x: X0, y: 32, 'text-anchor': 'middle' }, svg);
-            timeCountLabel = svgEl('text', { class: 'fg-label', x: X1, y: 192, 'text-anchor': 'end' }, svg);
+            const cursor = svgEl('line', { class: 'fg-vline', x1: X0, y1: 52, x2: X0, y2: 156 }, svg);
+            const yearLabel = svgEl('text', { class: 'fg-year', x: X0, y: 44, 'text-anchor': 'middle' }, svg);
+            timeCountLabel = svgEl('text', { class: 'fg-label', x: X1, y: 180, 'text-anchor': 'end' }, svg);
+            const l1 = svgEl('text', { class: 'fg-label', x: X0, y: 180 }, svg); l1.textContent = '1850';
 
             const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            const DURATION = 5000;
+            const DURATION = 5200;
             let shown = 0;
             const start = performance.now() + 400;
             const frame = (now) => {
@@ -4605,11 +4683,11 @@ body.detail-open {
                 while (shown < items.length && items[shown].yr <= year) {
                     const it = items[shown];
                     const g = svgEl('g', { class: 'fg-pop' }, dotsLayer);
-                    svgEl('circle', { class: 'fg-halo', cx: it.x.toFixed(1), cy: it.y.toFixed(1), r: 5.4 }, g);
-                    svgEl('circle', { class: 'fg-dot fg-neutral', cx: it.x.toFixed(1), cy: it.y.toFixed(1), r: 3.4 }, g);
+                    svgEl('circle', { class: 'fg-halo', cx: it.x.toFixed(1), cy: it.y.toFixed(1), r: 4.4 }, g);
+                    svgEl('circle', { class: 'fg-dot fg-neutral', cx: it.x.toFixed(1), cy: it.y.toFixed(1), r: 2.7 }, g);
                     shown++;
                 }
-                const x = toX(year);
+                const x = X0 + (X1 - X0) * t;
                 cursor.setAttribute('x1', x.toFixed(1));
                 cursor.setAttribute('x2', x.toFixed(1));
                 yearLabel.setAttribute('x', Math.min(Math.max(x, 20), 300).toFixed(1));
@@ -4673,18 +4751,19 @@ body.detail-open {
             });
         }
 
-        // 4 · filtrare e collegare: dall'icona dei filtri si apre il pannello;
-        //     a fianco la timeline filtrata (8 contenuti su 11 in primo piano)
-        //     e l'onda sui contenuti collegati
+        // 4 · filtrare e collegare (in ciclo): barra di ricerca e icona dei
+        //     filtri come nell'header; l'icona si accende, compare il pannello e
+        //     la timeline si filtra (8 contenuti su 11 restano in primo piano);
+        //     sui contenuti collegati, l'onda
         function drawFilterFigure() {
             const svg = document.getElementById('figFilter');
             if (!svg) return;
             svg.innerHTML = '';
             const it = langMode === 'it';
-            const rowsY = [44, 78, 112, 146, 180];
+            const rowsY = [52, 84, 116, 148, 180];
             const rnd = seeded(29);
             const waves = [];
-            const waveRows = { 0: 3, 2: 1, 3: 4, 4: 2 };   // linea -> quale nodo ha l'onda
+            const waveRows = { 0: 3, 2: 1, 3: 4, 4: 2 };
             rowsY.forEach((y, i) => {
                 svgEl('line', { x1: 8, y1: y, x2: 150, y2: y, stroke: CAT_COLORS[i], 'stroke-width': 1.5, opacity: 0.8 }, svg);
                 const n = 5 + (i % 2);
@@ -4692,21 +4771,30 @@ body.detail-open {
                     const x = 16 + Math.pow((k + rnd() * 0.6) / n, 0.6) * 128;
                     const isWave = waveRows[i] === k;
                     const match = isWave || rnd() < 8 / 11;
-                    figDot(svg, x.toFixed(1), y, 3.4, CAT_COLORS[i], '', match ? undefined : 0.12);
+                    // i non corrispondenti sfumano solo quando il filtro è attivo
+                    const g = svgEl('g', { class: match ? '' : 'ff-dim' }, svg);
+                    figDot(g, x.toFixed(1), y, 3.4, CAT_COLORS[i]);
                     if (isWave) waves.push([x, y]);
                 }
             });
             waves.forEach((w, k) => {
-                const c = svgEl('circle', { class: 'fg-wave', cx: w[0].toFixed(1), cy: w[1], r: 5 }, svg);
+                const c = svgEl('circle', { class: 'fg-wave ff-wave', cx: w[0].toFixed(1), cy: w[1], r: 5 }, svg);
                 c.style.animationDelay = (k * 0.7) + 's';
             });
-            // icona dei filtri (come nell'header) che apre il pannello
-            svgEl('circle', { cx: 318, cy: 14, r: 10, fill: '#BF953F' }, svg);
-            svgEl('path', { d: 'M312.5 10.5h11M314.8 14h6.4M317 17.5h2', stroke: '#1A1A1A', 'stroke-width': 1.8, 'stroke-linecap': 'round' }, svg);
-            // pannello filtri
-            const px = 164, py = 30;
-            svgEl('rect', { class: 'ui-panel', x: px, y: py, width: 168, height: 182, rx: 8 }, svg);
-            svgEl('rect', { x: px, y: py, width: 168, height: 182, rx: 8, fill: 'none', stroke: '#BF953F', 'stroke-width': 1.2 }, svg);
+
+            // barra di ricerca + icona dei filtri, come nell'header
+            svgEl('rect', { x: 170, y: 4, width: 128, height: 20, rx: 10, fill: 'var(--input-bg)', stroke: 'var(--gold-border)', 'stroke-width': 1 }, svg);
+            const ph = svgEl('text', { class: 'ui-text', x: 180, y: 17 }, svg);
+            ph.textContent = it ? 'Cerca eventi…' : 'Search events…';
+            const ico = svgEl('g', { class: 'ff-icon' }, svg);
+            svgEl('circle', { class: 'ff-icon-bg', cx: 316, cy: 14, r: 10 }, ico);
+            svgEl('path', { class: 'ff-icon-glyph', d: 'M310.5 10.5h11M312.8 14h6.4M315 17.5h2', 'stroke-width': 1.8, 'stroke-linecap': 'round' }, ico);
+
+            // pannello filtri (compare quando l'icona si accende)
+            const panel = svgEl('g', { class: 'ff-panel' }, svg);
+            const px = 164, py = 34;
+            svgEl('rect', { class: 'ui-panel', x: px, y: py, width: 168, height: 178, rx: 8 }, panel);
+            svgEl('rect', { x: px, y: py, width: 168, height: 178, rx: 8, fill: 'none', stroke: '#BF953F', 'stroke-width': 1.2 }, panel);
             const sections = [
                 [it ? 'Parole chiave' : 'Keywords', [[it ? 'cibernetica ×' : 'cybernetics ×', true]]],
                 ['Tag', [['Systems Thinking', true], ['Sust.', false]]],
@@ -4714,83 +4802,66 @@ body.detail-open {
                 [it ? 'Periodo' : 'Period', [['1950 – 2000', true]]]
             ];
             sections.forEach((sec, k) => {
-                const y = py + 18 + k * 42;
-                const label = svgEl('text', { class: 'ui-text-strong', x: px + 12, y: y }, svg);
+                const y = py + 18 + k * 41;
+                const label = svgEl('text', { class: 'ui-text-strong', x: px + 12, y: y }, panel);
                 label.textContent = sec[0];
                 let cx = px + 12;
                 sec[1].forEach(chip => {
                     const w = chip[0].length * 4.3 + 14;
-                    svgEl('rect', { class: chip[1] ? 'ui-chip-on' : 'ui-chip', x: cx, y: y + 7, width: w, height: 15, rx: 7.5 }, svg);
-                    const t = svgEl('text', { class: 'ui-text', x: cx + 7, y: y + 17.5 }, svg);
+                    svgEl('rect', { class: chip[1] ? 'ui-chip-on' : 'ui-chip', x: cx, y: y + 7, width: w, height: 15, rx: 7.5 }, panel);
+                    const t = svgEl('text', { class: 'ui-text', x: cx + 7, y: y + 17.5 }, panel);
                     t.textContent = chip[0];
                     cx += w + 5;
                 });
-                if (k < 3) svgEl('line', { class: 'ui-line-soft', x1: px + 10, y1: y + 30, x2: px + 158, y2: y + 30 }, svg);
+                if (k < 3) svgEl('line', { class: 'ui-line-soft', x1: px + 10, y1: y + 29, x2: px + 158, y2: y + 29 }, panel);
             });
         }
 
-        // 2 · cinque linee parallele attraversate da un asse verticale che,
-        //     scorrendo, accende ciò che accade "nello stesso momento"
-        let layersRaf = null;
+        // 2 · cinque linee parallele: su nodi scelti in ordine casuale compare,
+        //     uno alla volta, un popup schematico come quello della timeline
+        let layersTimer = null;
         function drawLayersFigure() {
             const svg = document.getElementById('figLayers');
             if (!svg) return;
             svg.innerHTML = '';
-            cancelAnimationFrame(layersRaf);
+            clearTimeout(layersTimer);
             const rnd = seeded(23);
             const dots = [];
             CAT_COLORS.forEach((c, i) => {
-                const y = 22 + i * 40;
+                const y = 26 + i * 40;
                 svgEl('line', { x1: 10, y1: y, x2: 310, y2: y, stroke: c, 'stroke-width': 2, 'stroke-linecap': 'round', opacity: 0.85 }, svg);
                 const n = 4 + Math.floor(rnd() * 3);
                 for (let k = 0; k < n; k++) {
                     const x = 22 + Math.pow(rnd(), 0.55) * 276;
-                    dots.push({ x, el: figDot(svg, x.toFixed(1), y, 4.5, c) });
+                    dots.push({ x, y, c, el: figDot(svg, x.toFixed(1), y, 4.5, c) });
                 }
             });
-            const vline = svgEl('line', { class: 'fg-vline', x1: 160, y1: 6, x2: 160, y2: 204 }, svg);
-            // popup schematico (niente testo vero), come quello della timeline
-            const pop = svgEl('g', { class: 'fg-pop-card', opacity: 0 }, svg);
+            const pop = svgEl('g', { class: 'fg-pop-card' }, svg);
             const popBg = svgEl('rect', { class: 'pc-bg', x: 0, y: 0, width: 62, height: 30, rx: 4 }, pop);
             svgEl('rect', { x: 7, y: 7, width: 18, height: 3.5, rx: 1.5, fill: 'var(--gold-text)' }, pop);
             svgEl('rect', { x: 7, y: 14, width: 46, height: 3.5, rx: 1.5, fill: 'var(--text-80)' }, pop);
             svgEl('rect', { x: 7, y: 21, width: 32, height: 3.5, rx: 1.5, fill: 'var(--text-50)' }, pop);
-            let popDot = null;
+            pop.style.opacity = 0;
+
             const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            const start = performance.now();
-            const tick = (now) => {
-                const t = reduce ? 0.5 : (Math.sin((now - start) / 2600 - Math.PI / 2) + 1) / 2;
-                const x = 40 + t * 240;
-                vline.setAttribute('x1', x.toFixed(1));
-                vline.setAttribute('x2', x.toFixed(1));
-                let nearest = null;
-                dots.forEach(d => {
-                    const dist = Math.abs(d.x - x);
-                    const hit = dist < 11;
-                    d.el.classList.toggle('hit', hit);
-                    d.el.setAttribute('r', hit ? 6 : 4.5);
-                    if (dist < 5 && (!nearest || dist < nearest.dist)) nearest = { d, dist };
-                });
-                // il popup compare sul nodo che la linea sta attraversando
-                if (nearest) {
-                    if (popDot !== nearest.d) {
-                        popDot = nearest.d;
-                        const cy = Number(popDot.el.getAttribute('cy'));
-                        const px = Math.max(2, Math.min(256, popDot.x - 31));
-                        const py = cy - 42 < 0 ? cy + 10 : cy - 40;
-                        pop.setAttribute('transform', `translate(${px.toFixed(1)} ${py})`);
-                        popBg.setAttribute('stroke', popDot.el.getAttribute('fill'));
-                    }
-                    pop.setAttribute('opacity', 1);
-                } else if (popDot && Math.abs(popDot.x - x) > 14) {
-                    pop.setAttribute('opacity', 0);
-                    popDot = null;
-                }
-                if (!reduce && tutorialStep === 2 && document.getElementById('infoPopupOverlay').classList.contains('active')) {
-                    layersRaf = requestAnimationFrame(tick);
-                }
+            let last = null;
+            let order = [];
+            const showNext = () => {
+                if (tutorialStep !== 2 || !document.getElementById('infoPopupOverlay').classList.contains('active')) return;
+                if (!order.length) order = dots.map((_, k) => k).sort(() => Math.random() - 0.5);
+                const d = dots[order.pop()];
+                if (last) { last.el.classList.remove('hit'); last.el.setAttribute('r', 4.5); }
+                d.el.classList.add('hit');
+                d.el.setAttribute('r', 6);
+                const px = Math.max(2, Math.min(256, d.x - 31));
+                const py = d.y - 42 < 0 ? d.y + 10 : d.y - 40;
+                pop.setAttribute('transform', `translate(${px.toFixed(1)} ${py})`);
+                popBg.setAttribute('stroke', d.c);
+                pop.style.opacity = 1;
+                last = d;
+                if (!reduce) layersTimer = setTimeout(showNext, 1300);
             };
-            layersRaf = requestAnimationFrame(tick);
+            layersTimer = setTimeout(showNext, 500);
         }
 
         // 5 · la linea dei contenuti esistenti prosegue tratteggiata verso il
@@ -4860,7 +4931,7 @@ body.detail-open {
 
         function closeTutorial() {
             document.getElementById('infoPopupOverlay').classList.remove('active');
-            cancelAnimationFrame(layersRaf);
+            clearTimeout(layersTimer);
             cancelAnimationFrame(timeRaf);
         }
 
@@ -5059,6 +5130,7 @@ document.getElementById('menuIcon').addEventListener('click', () => {
         translateNode(document.body);
 
         langMode = langMode == 'it' ? 'en' : 'it';
+        document.documentElement.lang = langMode;
         document.getElementById('menuIcon').innerHTML = langMode == 'it' ? 'EN' : 'IT';
 
         const updateModal = (infos, mode) => {
@@ -6579,12 +6651,12 @@ window.addEventListener('wheel', function(e) {
                 <div class="tut-text">
                     <img class="tut-logo" src="LOGO SyChro 1.svg" alt="SyChro – Collective Systemic Chronography">
                     <div class="it-lang">
-                        <h3 id="tutTitle1">Un punto di riferimento per le discipline sistemiche</h3>
+                        <h3 id="tutTitle1">Un hub per le discipline sistemiche</h3>
                         <p>La conoscenza sistemica è vasta, frammentata e suddivisa tra discipline e istituzioni. Manca ancora un <strong>punto di riferimento centralizzato</strong>, essenziale per sintetizzare le informazioni e favorire lo scambio di conoscenza.</p>
                         <p><strong>SyChro</strong> raccoglie i dati storici dispersi in un <strong>database strutturato</strong> e li traduce in una <strong>timeline interattiva multilivello</strong>: un'unica piattaforma per esplorare, collegare e mettere in relazione le nozioni e le figure rilevanti del campo sistemico, a partire da quattro discipline cardine: Systems Thinking, System Dynamics, Systemic Design e Sostenibilità.</p>
                     </div>
                     <div class="en-lang" style="display:none">
-                        <h3>A reference point for the systemic disciplines</h3>
+                        <h3>A hub for the systemic disciplines</h3>
                         <p>Systemic knowledge is vast, fragmented and siloed across disciplines and institutions. A <strong>centralised reference point</strong>, essential to synthesise information and exchange knowledge, is still missing.</p>
                         <p><strong>SyChro</strong> consolidates scattered historical data into a <strong>structured database</strong> and translates it into an <strong>interactive, multi-layered timeline</strong>: a single platform to explore, connect and correlate the notable notions and figures of the systemic field, starting from four pivotal disciplines: Systems Thinking, System Dynamics, Systemic Design and Sustainability.</p>
                     </div>
@@ -6628,25 +6700,34 @@ window.addEventListener('wheel', function(e) {
                 <div class="en-lang" style="display:none"><h3 class="tut-center">Exploring</h3></div>
                 <div class="tut-rows">
                     <div class="tut-row">
-                        <svg class="tut-row-fig fig-ui fig-node" viewBox="0 0 200 120" aria-hidden="true">
-                            <line x1="10" y1="96" x2="190" y2="96" stroke="#ff964c" stroke-width="1.6" opacity=".55"/>
-                            <circle class="fg-halo nd-halo" cx="60" cy="96" r="9"/>
-                            <circle class="fg-dot nd-dot" cx="60" cy="96" r="6" fill="#ff964c"/>
-                            <circle class="nd-tap" cx="60" cy="96" r="6"/>
+                        <svg class="tut-row-fig fig-ui fig-node" viewBox="0 0 220 150" aria-hidden="true">
+                            <line x1="6" y1="128" x2="214" y2="128" stroke="#ff964c" stroke-width="1.6" opacity=".55"/>
+                            <circle class="fg-halo nd-halo" cx="40" cy="128" r="9"/>
+                            <circle class="fg-dot nd-dot" cx="40" cy="128" r="6" fill="#ff964c"/>
+                            <circle class="nd-tap" cx="40" cy="128" r="6"/>
                             <g class="nd-card">
-                                <rect class="ui-panel" x="82" y="8" width="108" height="76" rx="7"/>
-                                <rect x="82" y="8" width="108" height="76" rx="7" fill="none" stroke="#ff964c" stroke-width="1.3"/>
-                                <rect x="92" y="18" width="66" height="6" rx="2" class="sk-strong"/>
-                                <rect x="92" y="28" width="46" height="6" rx="2" class="sk-strong"/>
-                                <rect x="92" y="40" width="18" height="4" rx="2" fill="#ff964c"/>
-                                <rect x="92" y="51" width="86" height="3" rx="1.5" class="sk-soft"/>
-                                <rect x="92" y="58" width="86" height="3" rx="1.5" class="sk-soft"/>
-                                <rect x="92" y="65" width="60" height="3" rx="1.5" class="sk-soft"/>
-                                <path d="M66 90 L82 70" stroke="#ff964c" stroke-width="1.2" opacity=".6"/>
+                                <path d="M47 122 L84 104" stroke="#ff964c" stroke-width="1.2" stroke-dasharray="3 3" opacity=".7"/>
+                                <rect class="ui-panel" x="84" y="2" width="132" height="146" rx="7"/>
+                                <rect x="84" y="2" width="132" height="146" rx="7" fill="none" stroke="#ff964c" stroke-width="1.3"/>
+                                <rect x="93" y="10" width="114" height="34" rx="4" class="sk-media"/>
+                                <path d="M138 34 l9 -10 l7 7 l5 -5 l9 8 z" class="sk-media-icon"/>
+                                <circle cx="146" cy="19" r="3" class="sk-media-icon"/>
+                                <rect x="93" y="50" width="88" height="5.5" rx="2" class="sk-strong"/>
+                                <rect x="93" y="59" width="60" height="5.5" rx="2" class="sk-strong"/>
+                                <rect x="93" y="69" width="18" height="4" rx="2" fill="#ff964c"/>
+                                <rect x="93" y="78" width="112" height="3" rx="1.5" class="sk-soft"/>
+                                <rect x="93" y="84" width="112" height="3" rx="1.5" class="sk-soft"/>
+                                <rect x="93" y="90" width="80" height="3" rx="1.5" class="sk-soft"/>
+                                <text x="93" y="103" class="ui-link">↗ link</text>
+                                <line x1="93" y1="109" x2="207" y2="109" class="ui-line-soft"/>
+                                <text x="93" y="119" class="ui-text-strong nd-coll-it">Collegati</text>
+                                <text x="93" y="119" class="ui-text-strong nd-coll-en">Connected</text>
+                                <circle cx="96" cy="128" r="2.6" fill="#ca6b58"/><rect x="102" y="126.2" width="70" height="3.6" rx="1.8" class="sk-soft"/>
+                                <circle cx="96" cy="139" r="2.6" fill="#4db6ac"/><rect x="102" y="137.2" width="56" height="3.6" rx="1.8" class="sk-soft"/>
                             </g>
                         </svg>
-                        <div class="it-lang"><p>Ogni nodo è un contenuto: passandoci sopra se ne leggono anno e titolo, selezionandolo si apre la <strong>scheda di approfondimento</strong>.</p></div>
-                        <div class="en-lang" style="display:none"><p>Each node is an entry: hover to read its year and title, select it to open its <strong>detail window</strong>.</p></div>
+                        <div class="it-lang"><p>Ogni nodo è un contenuto: passandoci sopra se ne leggono anno e titolo. Selezionandolo si apre la <strong>scheda di approfondimento</strong>, con immagini, descrizione estesa, collegamenti ad altri contenuti e un link che porta direttamente alla <strong>fonte</strong>.</p></div>
+                        <div class="en-lang" style="display:none"><p>Each node is an entry: hover to read its year and title. Selecting it opens the <strong>detail window</strong>, with images, an extended description, connections to other entries and a link that leads directly to the <strong>source</strong>.</p></div>
                     </div>
                     <div class="tut-row">
                         <svg class="tut-row-fig fig-ui fig-zoom" viewBox="0 0 200 120" aria-hidden="true">
@@ -6664,7 +6745,8 @@ window.addEventListener('wheel', function(e) {
                             </g>
                             <circle cx="52" cy="92" r="13" fill="#BF953F"/><path d="M46 92h12" stroke="#1A1A1A" stroke-width="2.2" stroke-linecap="round"/>
                             <rect x="70" y="82" width="38" height="20" rx="10" class="zm-level"/>
-                            <text x="89" y="92.5" class="ui-text zm-pct" text-anchor="middle" dominant-baseline="central">100%</text>
+                            <text x="89" y="92.5" class="ui-text zm-pct zm-pct-a" text-anchor="middle" dominant-baseline="central">100%</text>
+                            <text x="89" y="92.5" class="ui-text zm-pct zm-pct-b" text-anchor="middle" dominant-baseline="central">400%</text>
                             <circle class="zm-plus" cx="126" cy="92" r="13" fill="#33449E"/><path d="M120 92h12M126 86v12" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
                             <circle cx="158" cy="92" r="13" fill="#BF953F"/><path d="M152.5 92a5.5 5.5 0 1 0 1.6-3.9M152.5 86.5v3.6h3.6" fill="none" stroke="#1A1A1A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -6683,12 +6765,12 @@ window.addEventListener('wheel', function(e) {
                     <div class="it-lang">
                         <h3>Filtrare e collegare</h3>
                         <p>Dall'icona dei filtri <span class="tut-inline-filter" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M8 12h8M11 18h2"/></svg></span> puoi restringere la timeline per <strong>parola chiave</strong>, <strong>tag</strong>, <strong>cluster</strong> o <strong>periodo</strong>, e combinarli tra loro: i contenuti corrispondenti restano in primo piano, gli altri sfumano sullo sfondo.</p>
-                        <p>Quando apri una scheda, i contenuti dello stesso cluster si illuminano; dall'elenco <strong>Collegati</strong>, un'<strong>onda</strong> indica dove si trova ciascuno sulla timeline.</p>
+                        <p>Quando apri una scheda, i contenuti dello stesso cluster si illuminano, rendendo visibili le <strong>interconnessioni strutturali</strong> tra eventi diversi: è ciò che restituisce la <strong>natura sistemica</strong> dei contenuti. Dall'elenco <strong>Collegati</strong>, un'<strong>onda</strong> indica dove si trova ciascuno sulla timeline.</p>
                     </div>
                     <div class="en-lang" style="display:none">
                         <h3>Filtering and connecting</h3>
                         <p>From the filters icon <span class="tut-inline-filter" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M8 12h8M11 18h2"/></svg></span> you can narrow the timeline by <strong>keyword</strong>, <strong>tag</strong>, <strong>cluster</strong> or <strong>period</strong> and combine them: matching entries stay in the foreground, the others fade into the background.</p>
-                        <p>When you open a card, entries of the same cluster light up; from the <strong>Connected</strong> list, a <strong>wave</strong> shows where each one sits on the timeline.</p>
+                        <p>When you open a card, entries of the same cluster light up, revealing the <strong>structural interconnections</strong> between different events: this is what conveys the <strong>systemic nature</strong> of the contents. From the <strong>Connected</strong> list, a <strong>wave</strong> shows where each one sits on the timeline.</p>
                     </div>
                 </div>
             </section>
@@ -6702,19 +6784,19 @@ window.addEventListener('wheel', function(e) {
                 <div class="tut-text tut-text-narrow">
                     <div class="it-lang">
                         <h3>Un database collettivo</h3>
-                        <p>Una visione <strong>aggiornata, esaustiva e globale</strong> del campo sistemico non può essere il lavoro di un solo gruppo di ricerca.</p>
+                        <p>Una visione <strong>aggiornata, esaustiva e globale</strong> del campo sistemico può essere efficace solo se è <strong>collettiva</strong> e inclusiva delle voci e dei contributi di chi opera nel settore.</p>
                         <p>Per questo il database di SyChro è <strong>aperto e crowdsourced</strong>: chiunque può proporre nuovi contenuti o correzioni, valutati secondo i criteri di selezione.</p>
                     </div>
                     <div class="en-lang" style="display:none">
                         <h3>A collective database</h3>
-                        <p>An <strong>updated, exhaustive and global</strong> overview of the systemic field cannot be the work of a single research group.</p>
+                        <p>An <strong>updated, exhaustive and global</strong> overview of the systemic field can only be effective if it is <strong>collective</strong> and inclusive of the voices and contributions of those working in the field.</p>
                         <p>For this reason the SyChro database is <strong>open and crowdsourced</strong>: anyone can propose new contents or corrections, evaluated against the selection criteria.</p>
                     </div>
                     <div class="tut-cta">
                         <a class="tut-btn tut-btn-ghost" id="tutContribute" href="https://forms.gle/MdyjtAE9DozBvcBf6" target="_blank" rel="noopener"><span class="it-lang">Proponi un contenuto</span><span class="en-lang" style="display:none">Suggest an entry</span></a>
                     </div>
-                    <div class="tut-closing it-lang"><span class="tut-closing-mark" aria-hidden="true"></span><p>Inizia a esplorare<br>la storia del pensiero sistemico</p></div>
-                    <div class="tut-closing en-lang" style="display:none"><span class="tut-closing-mark" aria-hidden="true"></span><p>Start exploring<br>the history of systemic thinking</p></div>
+                    <div class="tut-closing it-lang"><span class="tut-closing-mark" aria-hidden="true"></span><p>Inizia a esplorare<br>la storia dell'approccio sistemico</p></div>
+                    <div class="tut-closing en-lang" style="display:none"><span class="tut-closing-mark" aria-hidden="true"></span><p>Start exploring<br>the history of the systemic approach</p></div>
                 </div>
             </section>
 

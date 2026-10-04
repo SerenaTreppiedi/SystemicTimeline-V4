@@ -1753,19 +1753,28 @@ body.detail-open {
 
         /* ogni schermata: titolo in alto (sempre nella stessa posizione),
            sotto figura a sinistra e testo a destra */
+        /* due colonne identiche in tutte le schermate: il titolo e i paragrafi
+           partono sempre dallo stesso punto (colonna di destra), la figura
+           principale occupa la colonna di sinistra */
+        .tut {
+            --tut-fig-col: 1fr;
+            --tut-text-col: 1fr;
+            --tut-col-gap: 3rem;
+        }
+
         .tut .tutorial-step.tut-split.active {
             display: grid;
-            grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+            grid-template-columns: minmax(0, var(--tut-fig-col)) minmax(0, var(--tut-text-col));
             grid-template-rows: auto 1fr;
-            grid-template-areas: "title title" "fig text";
-            column-gap: 3rem;
-            align-items: center;
+            grid-template-areas: "fig title" "fig text";
+            column-gap: var(--tut-col-gap);
+            align-items: start;
             min-height: 100%;
         }
 
-        .tut-split > .tut-title { grid-area: title; align-self: start; }
-        .tut-split > .tut-figure { grid-area: fig; }
-        .tut-split > .tut-text { grid-area: text; }
+        .tut-split > .tut-title { grid-area: title; }
+        .tut-split > .tut-figure { grid-area: fig; align-self: center; }
+        .tut-split > .tut-text { grid-area: text; padding-top: 0.6rem; }
 
         .tut-title {
             margin-bottom: 0.4rem;
@@ -1795,7 +1804,7 @@ body.detail-open {
 
         .tut-logo {
             display: block;
-            height: 66px;
+            height: 86px;
             width: auto;
             margin: 0 0 1.1rem;
         }
@@ -1895,9 +1904,6 @@ body.detail-open {
 
         /* schermate 3 e 4: illustrazione dell'interfaccia con numeri e
            testo in sequenza con gli stessi numeri */
-        .tut .tutorial-step.tut-map.active {
-            grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-        }
 
         .tut p.tut-lead-plain {
             color: var(--text);
@@ -2001,19 +2007,30 @@ body.detail-open {
             min-height: 100%;
         }
 
+        /* stesso allineamento delle altre schermate: titolo e testo nella
+           colonna di destra, le figure centrate in quella di sinistra */
+        .tut-rows-step > .tut-title {
+            margin-left: calc((100% - var(--tut-col-gap)) * var(--tut-split, 0.5) + var(--tut-col-gap));
+        }
+
         .tut-rows {
             display: grid;
-            gap: 2.8rem;
-            max-width: 780px;
-            margin: auto;
+            gap: 3.4rem;
+            margin: 0 0 auto;
+            padding: 0.6rem 0 1rem;
             width: 100%;
         }
 
         .tut-row {
             display: grid;
-            grid-template-columns: 270px minmax(0, 1fr);
-            gap: 2rem;
-            align-items: center;
+            grid-template-columns: minmax(0, var(--tut-fig-col)) minmax(0, var(--tut-text-col));
+            column-gap: var(--tut-col-gap);
+            align-items: start;
+        }
+
+        .tut-row-fig {
+            justify-self: center;
+            max-width: 270px;
         }
 
         .tut-row-fig {
@@ -2330,13 +2347,6 @@ body.detail-open {
         }
 
         /* schermate "legenda" (3 e 4): contenuto centrato in verticale */
-        .tut .tutorial-step:not(.tut-split).active {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            min-height: 100%;
-        }
-
         /* "legenda" delle funzioni: replica dell'elemento vero + testo */
         .tut-keys {
             display: grid;
@@ -2910,8 +2920,20 @@ body.detail-open {
                 min-height: 0;
             }
 
-            .tut-title {
-                margin-bottom: 0.2rem;
+            .tut-split > .tut-text { padding-top: 0; }
+
+            .tut-title,
+            .tut-rows-step > .tut-title {
+                margin: 0.9rem 0 0.2rem;
+            }
+
+            /* figure principali delle schermate 2 e 5: a tutta larghezza */
+            .tut-figure svg.fig-layers,
+            .tut-figure svg.fig-grow {
+                max-width: none;
+                max-height: none;
+                width: calc(100% + 1rem);
+                margin: 0 -0.5rem;
             }
 
             .tut-rows {
@@ -2936,8 +2958,8 @@ body.detail-open {
             }
 
             .tut-logo {
-                height: 46px;
-                margin-bottom: 0.7rem;
+                height: 60px;
+                margin: 0 auto 0.9rem;
             }
 
             .info-popup.tut h3 {
@@ -3010,7 +3032,6 @@ body.detail-open {
             .tut-row {
                 grid-template-columns: 1fr;
                 gap: 0.5rem;
-                justify-items: center;
             }
 
             .tut-row-fig {
@@ -3019,7 +3040,7 @@ body.detail-open {
 
             .tut-row p {
                 font-size: 0.9rem;
-                text-align: center;
+                text-align: left;
             }
 
             .tut-rows {
@@ -3069,11 +3090,11 @@ body.detail-open {
                 padding-top: 0.8rem;
             }
 
-            .tut .tutorial-step.tut-split.active {
-                display: grid;
-                grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-                gap: 1.6rem;
-                align-items: start;
+            .tut {
+                --tut-fig-col: 0.8fr;
+                --tut-text-col: 1.2fr;
+                --tut-col-gap: 1.6rem;
+                --tut-split: 0.4;
             }
 
             .tut-figure svg {
@@ -3081,7 +3102,7 @@ body.detail-open {
             }
 
             .tut-logo {
-                height: 38px;
+                height: 49px;
                 margin-bottom: 0.5rem;
             }
 
@@ -3152,9 +3173,8 @@ body.detail-open {
                 gap: 0.4rem;
             }
 
-            .tut-row {
-                grid-template-columns: 170px minmax(0, 1fr);
-                gap: 1.2rem;
+            .tut-row-fig {
+                max-width: 170px;
             }
 
             .tut-row p {
@@ -4734,7 +4754,7 @@ body.detail-open {
             const l1 = svgEl('text', { class: 'fg-label', x: X0, y: 190 }, svg); l1.textContent = '1850';
 
             const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            const DURATION = 5200;
+            const DURATION = 6800;   // +30%
             let shown = 0;
             const start = performance.now() + 400;
             const frame = (now) => {
@@ -6531,6 +6551,27 @@ window.addEventListener('wheel', function(e) {
     user-select: none;
   }
   #intro-remember:hover { color: rgba(255, 255, 255, 0.7); }
+  /* con la lingua ricordata: piccolo link per tornare alla scelta */
+  #intro-change-lang {
+    display: block;
+    margin: 1.6rem auto 0;
+    background: none;
+    border: 0;
+    padding: 0.3rem 0.5rem;
+    color: rgba(255, 255, 255, 0.42);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+  #intro-change-lang.visible { opacity: 1; pointer-events: auto; }
+  #intro-change-lang:hover { color: rgba(255, 255, 255, 0.75); }
+
   #intro-remember input {
     width: 11px;
     height: 11px;
@@ -6597,8 +6638,9 @@ window.addEventListener('wheel', function(e) {
             <button class="intro-lang-btn intro-lang-primary" id="introLangEn">English</button>
             <button class="intro-lang-btn intro-lang-secondary" id="introLangIt">Italiano</button>
         </div>
-        <label id="intro-remember"><input type="checkbox" id="introRemember"> Remember my choice · Ricorda la scelta</label>
+        <label id="intro-remember"><input type="checkbox" id="introRemember"> Remember my choice</label>
     </div>
+    <button type="button" id="intro-change-lang">Change language</button>
 </div>
 </div>
 
@@ -6645,10 +6687,22 @@ window.addEventListener('wheel', function(e) {
       closeIntro();
     }
 
+    const changeLang = document.getElementById('intro-change-lang');
     if (saved === 'it' || saved === 'en') {
-      // Lingua ricordata: solo il logo, poi si entra direttamente nel sito
-      setTimeout(() => { useLang(saved); closeIntro(); }, 2300);
+      // Lingua ricordata: solo il logo, poi si entra direttamente nel sito.
+      // Un piccolo link "Change language" permette di tornare alla scelta.
+      langSelect.style.display = 'none';
+      changeLang.classList.add('visible');
+      const auto = setTimeout(() => { useLang(saved); closeIntro(); }, 3000);
+      changeLang.addEventListener('click', () => {
+        clearTimeout(auto);
+        changeLang.remove();
+        remember.checked = true;
+        langSelect.style.display = '';
+        requestAnimationFrame(() => langSelect.classList.add('visible'));
+      });
     } else {
+      changeLang.remove();
       // Dopo qualche secondo (tempo per il logo di comparire) compare la
       // scelta della lingua. Si chiude solo quando l'utente sceglie.
       setTimeout(() => {
@@ -6774,7 +6828,7 @@ window.addEventListener('wheel', function(e) {
                     <!-- su mobile l'animazione viene spostata qui, tra i due paragrafi -->
                     <div class="tut-fig-slot" id="figTimeSlot" aria-hidden="true"></div>
                     <div class="it-lang">
-                        <p><strong>SyChro</strong> raccoglie i dati storici dispersi in un <strong>database strutturato</strong> e li traduce in una <strong>timeline interattiva multilivello</strong>: un'unica piattaforma per esplorare, collegare e mettere in relazione le nozioni e le figure rilevanti del campo sistemico, a partire da quattro discipline cardine: Systems Thinking, System Dynamics, Systemic Design e Sostenibilità.</p>
+                        <p><strong>SyChro</strong> raccoglie i dati storici dispersi in un <strong>database strutturato</strong> e li traduce in una <strong>timeline interattiva multilivello</strong>: un'unica piattaforma per esplorare, collegare e mettere in relazione le nozioni e le figure rilevanti degli ambiti sistemici, a partire da quattro discipline cardine: Systems Thinking, System Dynamics, Systemic Design e Sostenibilità.</p>
                     </div>
                     <div class="en-lang" style="display:none">
                         <p><strong>SyChro</strong> consolidates scattered historical data into a <strong>structured database</strong> and translates it into an <strong>interactive, multi-layered timeline</strong>: a single platform to explore, connect and correlate the notable notions and figures of the systemic field, starting from four pivotal disciplines: Systems Thinking, System Dynamics, Systemic Design and Sustainability.</p>
@@ -6818,8 +6872,8 @@ window.addEventListener('wheel', function(e) {
             <!-- 3 · ESPLORARE: due blocchi, ciascuno con una piccola animazione -->
             <section class="tutorial-step tut-rows-step" data-step="3">
                 <div class="tut-title">
-                    <h3 class="it-lang">Esplorare</h3>
-                    <h3 class="en-lang" style="display:none">Exploring</h3>
+                    <h3 class="it-lang">Esplorare nel dettaglio</h3>
+                    <h3 class="en-lang" style="display:none">Exploring in detail</h3>
                 </div>
                 <div class="tut-rows">
                     <div class="tut-row">
@@ -6912,12 +6966,12 @@ window.addEventListener('wheel', function(e) {
                 </div>
                 <div class="tut-text tut-text-narrow">
                     <div class="it-lang">
-                        <p>Una visione <strong>aggiornata, esaustiva e globale</strong> del campo sistemico può essere efficace solo se è <strong>collettiva</strong> e inclusiva delle voci e dei contributi di chi opera nel settore.</p>
-                        <p>Per questo il database di SyChro è <strong>aperto e crowdsourced</strong>: chiunque può proporre nuovi contenuti o correzioni, valutati secondo i criteri di selezione.</p>
+                        <p>Una visione <strong>aggiornata, esaustiva e globale</strong> degli ambiti sistemici può essere efficace solo se è <strong>collettiva</strong> e inclusiva delle voci e dei contributi di chi opera nel settore.</p>
+                        <p>Per questo il database di SyChro è <strong>aperto e crowdsourced</strong>, alimentato dai contributi dell'intera <strong>comunità sistemica</strong>: ricercatori, docenti e professionisti possono proporre nuovi contenuti o correzioni, valutati secondo i criteri di selezione.</p>
                     </div>
                     <div class="en-lang" style="display:none">
                         <p>An <strong>updated, exhaustive and global</strong> overview of the systemic field can only be effective if it is <strong>collective</strong> and inclusive of the voices and contributions of those working in the field.</p>
-                        <p>For this reason the SyChro database is <strong>open and crowdsourced</strong>: anyone can propose new contents or corrections, evaluated against the selection criteria.</p>
+                        <p>For this reason the SyChro database is <strong>open and crowdsourced</strong>, fed by contributions from the whole <strong>systemic community</strong>: researchers, educators and practitioners can propose new entries or corrections, evaluated against the selection criteria.</p>
                     </div>
                     <div class="tut-cta">
                         <a class="tut-btn tut-btn-ghost" id="tutContribute" href="https://forms.gle/MdyjtAE9DozBvcBf6" target="_blank" rel="noopener"><span class="it-lang">Proponi un contenuto</span><span class="en-lang" style="display:none">Suggest an entry</span></a>

@@ -3010,16 +3010,12 @@ body.detail-open {
             }
 
             .tut p {
-                font-size: 0.95rem;
+                font-size: 0.9rem;
                 line-height: 1.58;
             }
 
             .tut p.tut-lead {
-                font-size: 0.98rem;
-            }
-
-            .tut-cats > div {
-                font-size: 0.88rem;
+                font-size: 0.94rem;
             }
 
             .tut-keys {
@@ -3081,7 +3077,7 @@ body.detail-open {
             }
 
             .tut-row p {
-                font-size: 0.95rem;
+                font-size: 0.9rem;
                 text-align: left;
             }
 
@@ -3163,7 +3159,7 @@ body.detail-open {
             }
 
             .tut p {
-                font-size: 0.88rem;
+                font-size: 0.84rem;
                 line-height: 1.5;
                 margin-bottom: 0.55rem;
             }
@@ -3224,7 +3220,7 @@ body.detail-open {
             }
 
             .tut-row p {
-                font-size: 0.88rem;
+                font-size: 0.84rem;
             }
 
             .tut-rows {
@@ -3795,23 +3791,32 @@ body.detail-open {
                "fixed" riposizionata via JS, che su alcuni telefoni si
                staccava dalla riga (sfasata in orizzontale o in verticale) e
                lasciava intravedere un doppio bordo. */
+            /* la fascia resta lunga quanto tutta la timeline, come prima,
+               ma senza bordo colorato (quello è dell'etichetta) */
             .timeline-header {
-                width: max-content;
-                max-width: calc(100vw - 2rem);
-                left: 1rem;
-                padding: 0.25rem 0.5rem;
+                position: relative;
+                left: auto;
+                padding: 0;
                 margin-bottom: 0.15rem;
-                border-left-width: 3px;
+                border-left: 0;
                 will-change: auto;
             }
 
+            /* l'etichetta scorre dentro la fascia e resta ferma a sinistra */
             .timeline-title {
                 visibility: visible;
+                position: sticky;
+                left: 1rem;
+                width: max-content;
                 font-size: 0.9rem;
                 font-weight: var(--label-weight);
                 color: var(--timeline-text, var(--timeline-color));
                 white-space: nowrap;
                 line-height: 1.25;
+                padding: 0.25rem 0.5rem;
+                background: var(--popup-bg-95);
+                border-left: 3px solid var(--timeline-color);
+                border-radius: 6px;
             }
 
             .fixed-label {
@@ -4018,18 +4023,8 @@ body.detail-open {
             .mobile-popup .date {
                 color: var(--gold-text);
                 font-weight: 600;
-                font-size: 0.9rem;
+                font-size: 0.85rem;
             }
-
-            /* testi della scheda un filo più grandi sul telefono */
-            #mobilePopupBody .detail-desc { font-size: 0.9rem; }
-            #mobilePopupBody .detail-year { font-size: 0.9rem; }
-            #mobilePopupBody .detail-place { font-size: 0.86rem; }
-            #mobilePopupBody .detail-link { font-size: 0.95rem; }
-            #mobilePopupBody .related-name { font-size: 0.84rem; }
-            #mobilePopupBody .related-year,
-            #mobilePopupBody .related-cluster { font-size: 0.8rem; }
-            #mobilePopupBody .related-hint { font-size: 0.68rem; }
 
             .mobile-popup h4 {
                 font-family: 'Darker Grotesque', sans-serif;

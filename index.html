@@ -118,7 +118,7 @@
 </script>
   
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -184,6 +184,31 @@
             /* Spazio per il footer fisso in basso */
             background-attachment: fixed;
             overscroll-behavior-x: none;
+        }
+
+        /* ---- Telefoni e tablet (touch): scorrimento orizzontale "blindato" ----
+           - la pagina non si ingrandisce col pizzico né col doppio tocco: il
+             pizzico sulla timeline comanda lo zoom del sito (vedi JS
+             "Pizzico = zoom della timeline"). Lo zoom della pagina sui
+             telefoni spostava header, footer ed etichette e faceva scorrere
+             la pagina "all'infinito" verso destra;
+           - la radice (html) non scorre mai in orizzontale: scorre solo il
+             body, fino alla fine esatta della timeline;
+           - niente al suo interno può allargare l'area scorrevole oltre la
+             timeline (anelli animati, etichette dell'ultimo anno...). */
+        @media (pointer: coarse) {
+            html,
+            body {
+                touch-action: pan-x pan-y;
+            }
+
+            html {
+                overflow-x: hidden;
+            }
+
+            .timeline-container {
+                overflow-x: clip;
+            }
         }
 
         /* Nasconde la scrollbar orizzontale nativa (solo visivamente):
@@ -2985,12 +3010,16 @@ body.detail-open {
             }
 
             .tut p {
-                font-size: 0.9rem;
+                font-size: 0.95rem;
                 line-height: 1.58;
             }
 
             .tut p.tut-lead {
-                font-size: 0.94rem;
+                font-size: 0.98rem;
+            }
+
+            .tut-cats > div {
+                font-size: 0.88rem;
             }
 
             .tut-keys {
@@ -3052,7 +3081,7 @@ body.detail-open {
             }
 
             .tut-row p {
-                font-size: 0.9rem;
+                font-size: 0.95rem;
                 text-align: left;
             }
 
@@ -3134,7 +3163,7 @@ body.detail-open {
             }
 
             .tut p {
-                font-size: 0.84rem;
+                font-size: 0.88rem;
                 line-height: 1.5;
                 margin-bottom: 0.55rem;
             }
@@ -3195,7 +3224,7 @@ body.detail-open {
             }
 
             .tut-row p {
-                font-size: 0.84rem;
+                font-size: 0.88rem;
             }
 
             .tut-rows {
@@ -3760,13 +3789,43 @@ body.detail-open {
                colorata mobile), ma il suo box occupa comunque spazio nel
                flusso normale della pagina: va ridotto insieme al resto,
                altrimenti resta una fascia grigia vuota sopra ogni riga. */
+            /* Etichetta della categoria: è il titolo stesso della riga, che
+               resta fermo a sinistra durante lo scroll orizzontale grazie a
+               position: sticky (nativo del browser). Prima era una copia
+               "fixed" riposizionata via JS, che su alcuni telefoni si
+               staccava dalla riga (sfasata in orizzontale o in verticale) e
+               lasciava intravedere un doppio bordo. */
             .timeline-header {
-                padding: 0.15rem 0.4rem;
+                width: max-content;
+                max-width: calc(100vw - 2rem);
+                left: 1rem;
+                padding: 0.25rem 0.5rem;
                 margin-bottom: 0.15rem;
+                border-left-width: 3px;
+                will-change: auto;
             }
 
             .timeline-title {
+                visibility: visible;
                 font-size: 0.9rem;
+                font-weight: var(--label-weight);
+                color: var(--timeline-text, var(--timeline-color));
+                white-space: nowrap;
+                line-height: 1.25;
+            }
+
+            .fixed-label {
+                display: none !important;
+            }
+
+            /* 1850 e l'ultimo anno restano dentro lo schermo: invece di
+               centrarsi sulla tacca, partono (o finiscono) proprio lì */
+            .year-marker.year-marker-start {
+                transform: translateX(-3px);
+            }
+
+            .year-marker.year-marker-end {
+                transform: translateX(calc(-100% + 3px));
             }
 
             .timeline-track {
@@ -3959,8 +4018,18 @@ body.detail-open {
             .mobile-popup .date {
                 color: var(--gold-text);
                 font-weight: 600;
-                font-size: 0.85rem;
+                font-size: 0.9rem;
             }
+
+            /* testi della scheda un filo più grandi sul telefono */
+            #mobilePopupBody .detail-desc { font-size: 0.9rem; }
+            #mobilePopupBody .detail-year { font-size: 0.9rem; }
+            #mobilePopupBody .detail-place { font-size: 0.86rem; }
+            #mobilePopupBody .detail-link { font-size: 0.95rem; }
+            #mobilePopupBody .related-name { font-size: 0.84rem; }
+            #mobilePopupBody .related-year,
+            #mobilePopupBody .related-cluster { font-size: 0.8rem; }
+            #mobilePopupBody .related-hint { font-size: 0.68rem; }
 
             .mobile-popup h4 {
                 font-family: 'Darker Grotesque', sans-serif;
@@ -5966,6 +6035,8 @@ function showDataLoadingError() {
                 marker.className = 'year-marker';
                 marker.textContent = year;
                 marker.style.left = ((year - minYear) / yearRange * 100) + '%';
+                if (year === minYear) marker.classList.add('year-marker-start');
+                if (year === maxYear) marker.classList.add('year-marker-end');
                 yearMarkersContainer.appendChild(marker);
             }
         }
@@ -7271,6 +7342,39 @@ function updateSideGutter() {
     }
 }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(updateSideGutter);
+
+// ---- Pizzico = zoom della timeline (telefoni e tablet) ----
+// La pagina non si ingrandisce più col pizzico (vedi touch-action nel CSS):
+// allargando o stringendo due dita si fa lo stesso zoom dei bottoni + e −,
+// un passo alla volta. Non agisce quando è aperto il tutorial o una scheda.
+(function () {
+    if (!window.matchMedia('(pointer: coarse)').matches) return;
+    let startDist = 0;
+    const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    const blocked = () =>
+        document.getElementById('infoPopupOverlay')?.classList.contains('active') ||
+        document.getElementById('mobilePopupOverlay')?.classList.contains('active') ||
+        !!document.getElementById('intro-overlay');
+    document.addEventListener('touchstart', (e) => {
+        startDist = (e.touches.length === 2 && !blocked()) ? dist(e.touches) : 0;
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+        if (!startDist || e.touches.length !== 2) return;
+        const ratio = dist(e.touches) / startDist;
+        if (ratio > 1.35 && currentZoom < 10) {
+            zoomIn();
+            startDist = dist(e.touches);
+            if (window.sychroTrack) window.sychroTrack('timeline_pinch_zoom', { direction: 'in', level: Math.round(currentZoom * 100) });
+        } else if (ratio < 0.74 && currentZoom > 1) {
+            zoomOut();
+            startDist = dist(e.touches);
+            if (window.sychroTrack) window.sychroTrack('timeline_pinch_zoom', { direction: 'out', level: Math.round(currentZoom * 100) });
+        }
+    }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) startDist = 0;
+    }, { passive: true });
+})();
 
 // ---- Schermo intero sul telefono (verticale e orizzontale) ----
 // Sul telefono il sito si comporta come un'app: passa a schermo intero al

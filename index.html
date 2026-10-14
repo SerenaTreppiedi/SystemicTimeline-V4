@@ -7943,7 +7943,7 @@ function buildEventDetailHtml(event, color) {
     if (event.systemicdesign) tags += '<span class="detail-dot" style="background:#2564BF" title="Systemic Design"></span>';
     if (event.systemdynamic) tags += '<span class="detail-dot" style="background:#A42134" title="System Dynamic"></span>';
 
-    const imageHtml = event.image ? `<img class="detail-image" src="${event.image}" alt="" onerror="this.style.display='none'">` : '';
+    const imageHtml = event.image ? `<img class="detail-image" src="${event.image}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none'">` : '';const imageHtml = event.image ? `<img class="detail-image" src="${event.image}" alt="" onerror="this.style.display='none'">` : '';
     const place = langMode === 'it' ? event.place : (event.placeEN || event.place);
     const placeHtml = place ? `<div class="detail-place">${place}</div>` : '';
     const descHtml = desc ? `<p class="detail-desc">${desc}</p>` : '';
